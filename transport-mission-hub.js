@@ -1066,6 +1066,236 @@ function nearTransportBounds(point,bounds,radiusMeters){
   lon:Math.min(east,Math.max(west,point.lon))
  })<=radiusMeters;
 }
+// 21/11/2026 : audit systématique après le bug Y51/Albertville (bounds trop étroites qui désactivaient
+// silencieusement tout un réseau pour une mission touchant son propre terminus). 13 réseaux avaient le même
+// défaut (zone déclarée ne couvrant pas un bout réel de ligne, écart >8 km mesuré sur les arrêts réels du
+// GTFS) : synchro, cars_isere, cars_haute_savoie, ondea, ginko_besancon, zoom_chalon, grandole_dole,
+// altigo_briancon, fil_bleu_tours, lia_le_havre, trema_macon, cars_ain, cars_ardeche — bounds recalculées
+// sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
+// ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
+const LOCAL_GTFS_NETWORKS=[
+ ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
+ ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.494,5.814,45.779,6.196]],
+ ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
+ ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.534,4.728,45.913,6.308]],
+ ['cars_savoie','Cars Région Savoie','cars-region-savoie.zip',[45.05,5.62,45.80,7.19]],
+ // 18/11/2026 : Cars Région Haute-Savoie (Y02, Y51, Y91-Y94 à la demande…) découpé sur Faucigny / Giffre / Chablais.
+ // 21/11/2026 : bbox élargie vers le sud/ouest — la ligne Y51 (Albertville ↔ Annecy) a son terminus à
+ // Albertville (lat ≈ 45,675), hors de l'ancienne emprise (min lat 45,90) : le fournisseur n'était donc
+ // jamais activé (enabled exige task.from ET task.to dans bounds) pour toute mission touchant Albertville,
+ // malgré un GTFS cars-region-haute-savoie.zip qui contient bien la ligne en entier (extract() ne filtre
+ // pas par bbox, seulement par agence). Nouvelle limite sud alignée sur celle de TRA Albertville.
+ ['cars_haute_savoie','Cars Région Haute-Savoie','cars-region-haute-savoie.zip',[45.639,5.792,46.409,6.957]],
+ // 18/11/2026 : réseaux présents dans data/gtfs mais absents de ce moteur (audit de couverture).
+ ['mreso_grenoble','M Réso Grenoble','mreso-grenoble.zip',[45.0,5.5,45.45,6.0]],
+ ['mreso_gresivaudan','M Réso Grésivaudan','mreso-gresivaudan.zip',[45.15,5.7,45.5,6.15]],
+ ['mreso_voironnais','M Réso Pays Voironnais','mreso-voironnais.zip',[45.22,5.44,45.57,5.75]],
+ ['ondea','Ondéa Aix-les-Bains (Grand Lac)','ondea-grand-lac.zip',[45.54,5.749,45.989,6.042]],
+ ['sibra','Sibra Annecy','sibra-annecy.zip',[45.7,5.9,46.1,6.5]],
+ ['start_thonon','Star’t Thonon','start-thonon.zip',[46.25,6.3,46.45,6.65]],
+ ['ginko_besancon','Ginko (Besançon)','ginko-besancon.zip',[47.086,5.76,47.402,6.231]],
+ ['zoom_chalon','Zoom (Chalon-sur-Saône)','zoom-chalon.zip',[46.625,4.604,46.986,5.024]],
+ ['grandole_dole','Grandole Mobilités (Dole)','grandole-dole.zip',[46.92,5.295,47.315,5.681]],
+ ['evolity_montbeliard','évolitY (Montbéliard)','evolity-montbeliard.zip',[47.4,6.65,47.6,6.95]],
+ ['orizo_avignon','Orizo (Grand Avignon)','orizo-avignon.zip',[43.85,4.65,44.07,5.05]],
+ ['agglo_bus_gap','L’Agglo en Bus (Gap)','agglo-bus-gap.zip',[44.4,5.95,44.75,6.25]],
+ ['altigo_briancon','Altigo (Briançonnais)','altigo-briancon.zip',[44.827,6.253,45.087,6.756]],
+ ['divia_dijon','Divia Mobilités (Dijon)','divia-dijon.zip',[47.2,4.95,47.45,5.2]],
+ ['tango_nimes','Tango (Nîmes Métropole)','tango-nimes.zip',[43.65,4.11,44.0,4.59]],
+ ['alesy_ales',"Ales'y (Alès)",'alesy-ales.zip',[43.89,3.81,44.42,4.4]],
+ ['sankeo_perpignan','Sankéo (Perpignan)','sankeo-perpignan.zip',[42.59,2.59,42.89,3.06]],
+ ['beemob_beziers','beeMob (Béziers Méditerranée)','beemob-beziers.zip',[43.22,3.15,43.49,3.4]],
+ ['citibus_narbonne','Citibus (Narbonne)','citibus-narbonne.zip',[42.82,2.8,43.34,3.25]],
+ ['lebus_frejus',"Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)",'lebus-frejus.zip',[43.3,6.6,43.57,6.97]],
+ ['envibus_antibes','Envibus (Antibes Sophia Antipolis)','envibus-antibes.zip',[43.52,6.95,43.72,7.17]],
+ ['ge_le_fil','Le Fil (Syndicat Mixte des transports du Pays du Bassin de Briey)','ge-le-fil.zip',[49.12,5.76,49.39,6.06]],
+ ['ge_pays_du_sel_vermois','CC des Pays du Sel et du Vermois (bus)','ge-pays-du-sel-vermois.zip',[48.57,6.26,48.66,6.39]],
+ ['ge_le_sit','Le SIT (CC du Bassin de Pompey)','ge-le-sit.zip',[48.7,6.02,48.82,6.25]],
+ ['ge_bus_pont_a_mousson','Le Bus (Pont-à-Mousson)','ge-bus-pont-a-mousson.zip',[48.77,5.92,48.99,6.18]],
+ ['ge_sub','SUB (SMT Suburbains de Nancy)','ge-sub.zip',[48.58,6.06,48.81,6.37]],
+ ['ge_linggo_en_ville','Linggo En Ville (PETR du pays de Langres)','ge-linggo-en-ville.zip',[47.81,5.29,47.9,5.38]],
+ ['ge_riv_connect','Riv\'Connect (CC Rives de Moselle)','ge-riv-connect.zip',[49.16,6.12,49.27,6.26]],
+ ['ge_lulu_en_bus','Lulu en bus (PETR du Pays du Lunevillois)','ge-lulu-en-bus.zip',[48.55,6.46,48.63,6.55]],
+ ['ge_forbus','Forbus (Agglomération de Forbach)','ge-forbus.zip',[49.01,6.69,49.26,7.1]],
+ ['ge_ritmo','Ritmo (CA de Haguenau)','ge-ritmo.zip',[48.69,7.59,48.87,7.89]],
+ ['ge_tum','TUM (Commune de Sainte-Ménéhould)','ge-tum.zip',[49.06,4.86,49.13,5.02]],
+ ['ge_stan','STAN (Métropole du Grand Nancy)','ge-stan.zip',[48.59,6.09,48.75,6.29]],
+ ['ge_cmonbus','Cmonbus (CA de Chaumont)','ge-cmonbus.zip',[48.05,4.98,48.14,5.18]],
+ ['ge_rezo','REZO (CA du Grand Verdun)','ge-rezo.zip',[49.1,5.28,49.2,5.44]],
+ ['ge_colibri','Colibri (CC Terres Touloises)','ge-colibri.zip',[48.6,5.7,48.86,6.05]],
+ ['ge_sitac','SITAC (CA de Châlons-en-Champagne)','ge-sitac.zip',[48.69,4.09,49.21,4.49]],
+ ['ge_t_mm','T\'MM (CC Moselle et Madon)','ge-t-mm.zip',[48.51,6.01,48.67,6.23]],
+ ['ge_isibus','Isibus (CC Sarrebourg Moselle Sud)','ge-isibus.zip',[48.7,7.01,48.77,7.12]],
+ ['ge_temo_b','Temo\'b (SMT Urbains Thionville-Fensch)','ge-temo-b.zip',[49.27,5.9,49.52,6.36]],
+ ['ge_grand_reims_mobilites','Grand Reims Mobilités (CU du Grand Reims)','ge-grand-reims-mobilites.zip',[49.15,3.66,49.41,4.39]],
+ ['ge_mouveo','Mouvéo (CA Epernay Coteaux et Plaine de Champagne)','ge-mouveo.zip',[48.88,3.9,49.09,4.07]],
+ ['ge_ticea','TICEA (CA de St Dizier, Der et Blaise)','ge-ticea.zip',[48.47,4.85,48.68,5.01]],
+ ['ge_trace','TRACE (Colmar Agglomération)','ge-trace.zip',[47.98,7.2,48.15,7.47]],
+ ['ge_pass_o','Pass\'O (Ville d\'Obernai)','ge-pass-o.zip',[48.43,7.44,48.49,7.54]],
+ ['ge_imagine','Imagine (CA d\'Epinal)','ge-imagine.zip',[47.93,6.02,48.43,6.56]],
+ ['ge_elsa','ELSA (PETR Sélestat Alsace Centrale)','ge-elsa.zip',[48.21,7.16,48.33,7.56]],
+ ['ge_tac','TAC (CA Ardenne Métropole)','ge-tac.zip',[49.63,4.59,49.88,5.01]],
+ ['ge_cabus','CABUS (CA Sarreguemines Confluences)','ge-cabus.zip',[48.93,6.85,49.18,7.21]],
+ ['ge_le_met','Le MET (CA Metz Métropole)','ge-le-met.zip',[48.96,5.98,49.22,6.34]],
+ ['ge_transavold','Transavold (CA Saint-Avold Synergie)','ge-transavold.zip',[48.9,6.56,49.19,6.8]],
+ ['ge_solea','Soléa (CA Mulhouse Alsace Agglomération)','ge-solea.zip',[47.65,7.07,47.89,7.57]],
+ ['ge_distribus','Distribus (CA Saint-Louis Agglomération)','ge-distribus.zip',[47.48,7.22,47.71,7.65]],
+ ['ge_tcat','TCAT (CA Troyes Champagne Métropole)','ge-tcat.zip',[48.16,3.89,48.42,4.26]],
+ ['ge_sylvia','SYLVIA (CA Saint Dié des Vosges)','ge-sylvia.zip',[48.1,6.76,48.53,7.17]],
+ ['ge_tub','TUB (CA Bar-le-Duc Sud Meuse)','ge-tub.zip',[48.61,5.01,48.86,5.41]],
+ ['twisto_caen','Twisto (Caen la mer)','twisto-caen.zip',[49.05,-0.58,49.33,-0.15]],
+ ['setram_lemans','SETRAM (Le Mans Métropole)','setram-lemans.zip',[47.89,0.05,48.1,0.37]],
+ ['transurbain_evreux','Transurbain (Évreux Portes de Normandie)','transurbain-evreux.zip',[48.94,1.04,49.1,1.21]],
+ ['choletbus','Choletbus (Cholet Agglomération)','choletbus.zip',[46.98,-1.05,47.22,-0.35]],
+ ['dkbus_dunkerque','DK\'Bus (Dunkerque)','dkbus-dunkerque.zip',[50.92,2.08,51.1,2.62]],
+ ['simouv_valenciennes','Transvilles / SIMOUV (Valenciennes)','simouv-valenciennes.zip',[50.22,3.23,50.53,3.71]],
+ ['pastel_saint_quentin','Pastel (Saint-Quentin)','pastel-saint-quentin.zip',[49.8,3.23,49.89,3.35]],
+ ['bibus_brest','Bibus (Brest Métropole)','bibus-brest.zip',[48.32,-4.64,48.48,-4.33]],
+ ['astuce_rouen','Astuce (Métropole Rouen Normandie)','astuce-rouen.zip',[49.24,0.71,49.56,1.28]],
+ ['izilo_lorient','Izilo (Lorient Agglomération)','izilo-lorient.zip',[47.61,-3.55,48.04,-3.05]],
+ ['tul_laval','TUL (Laval Agglomération)','tul-laval.zip',[47.97,-1.09,48.2,-0.61]],
+ ['sitac_calais','Sitac (Calais)','sitac-calais.zip',[50.84,1.69,51.01,2.0]],
+ ['tic_compiegne','TIC (Compiègne)','tic-compiegne.zip',[49.36,2.74,49.47,2.91]],
+ ['envia_arles','Envia (Arles, Tarascon)','envia-arles.zip',[43.33,4.35,43.89,4.84]],
+ ['zest_menton','Zest (Menton, Riviera Française)','zest-menton.zip',[43.71,7.38,44.14,7.69]],
+ ['libebus_salon','Libébus (Salon-de-Provence)','libebus-salon.zip',[43.41,4.93,43.77,5.37]],
+ ['agglobus_aubagne',"Lignes de l'Agglo (Aubagne)",'agglobus-aubagne.zip',[43.25,5.48,43.45,5.75]],
+ ['ulysse_istres','Ulysse (Istres, Fos, Miramas)','ulysse-istres.zip',[43.31,4.77,43.72,5.46]],
+ ['tedbus_draguignan','TEDbus (Draguignan, Dracénie)','tedbus-draguignan.zip',[43.3,6.2,43.7,6.7]],
+ ['libellus_castres','Libellus (Castres)','libellus-castres.zip',[43.46,2.17,43.65,2.43]],
+ ['alliance_auch','Alliance bus (Auch)','alliance-auch.zip',[43.59,0.54,43.73,0.65]],
+ ['tlp_tarbes','TLP Mobilités (Tarbes, Lourdes)','tlp-tarbes-lourdes.zip',[43.06,-0.1,43.31,0.14]],
+ ['tempo_agen','Tempo Bus (Agen)','tempo-agen.zip',[44.04,0.46,44.33,0.91]],
+ ['agglobus_foix',"L'agglo-Bus (Foix, Varilhes)",'agglobus-foix.zip',[42.9,1.54,43.1,1.67]],
+ ['idelis_pau','Idelis (Pau Béarn Pyrénées)','idelis-pau.zip',[43.2,-0.5,43.43,-0.22]],
+ ['libeo_brive','Libéo (Brive)','libeo-brive.zip',[45.07,1.39,45.22,1.61]],
+ ['tulle_agglo','Tulle Agglo (bus urbains)','tulle-agglo.zip',[45.22,1.72,45.31,1.8]],
+ ['na_val_de_garonne','CA Val de Garonne (Marmande, bus)','na-val-de-garonne.zip',[44.37,0.08,44.55,0.34]],
+ ['na_bergeracoise','CA Bergeracoise (Bergerac, bus)','na-bergeracoise.zip',[44.81,0.36,44.89,0.56]],
+ ['na_saintes','CA Saintes (bus)','na-saintes.zip',[45.7,-0.7,45.78,-0.58]],
+ ['na_limoges','Limoges Métropole (bus, trolleybus)','na-limoges.zip',[45.73,1.06,45.99,1.44]],
+ ['na_rochefort','CA Rochefort Océan (bus)','na-rochefort.zip',[45.77,-1.14,46.06,-0.75]],
+ ['na_perigueux','Grand Périgueux (bus)','na-perigueux.zip',[44.93,0.52,45.61,0.96]],
+ ['na_pays_basque','CA Pays Basque (Bayonne, Biarritz, bus)','na-pays-basque.zip',[43.05,-1.68,43.54,-0.84]],
+ ['na_grand_dax','Grand Dax (bus)','na-grand-dax.zip',[43.65,-1.13,43.8,-0.97]],
+ ['na_libournais','CA du Libournais (bus)','na-libournais.zip',[44.8,-0.41,45.08,0.05]],
+ ['na_grand_cognac','Grand Cognac (bus)','na-grand-cognac.zip',[45.5,-0.44,45.82,0.03]],
+ ['na_grand_angouleme','Grand Angoulême (bus)','na-grand-angouleme.zip',[45.49,-0.04,45.8,0.41]],
+ ['na_la_rochelle','La Rochelle (bus)','na-la-rochelle.zip',[46.0,-1.24,46.27,-0.9]],
+ ['na_chatellerault','Grand Châtellerault (bus)','na-chatellerault.zip',[46.63,0.31,47.02,0.83]],
+ ['na_niortais','CA du Niortais (bus)','na-niortais.zip',[46.13,-0.73,46.41,-0.34]],
+ ['na_marsan','CA du Marsan (Mont-de-Marsan, bus)','na-marsan.zip',[43.84,-0.55,43.95,-0.42]],
+ ['na_royan','Royan Atlantique (bus)','na-royan.zip',[45.43,-1.2,45.87,-0.7]],
+ ['na_bressuirais','CA du Bocage Bressuirais (bus)','na-bressuirais.zip',[46.61,-0.92,47.1,-0.27]],
+ ['rtca_carcassonne','RTCA (Carcassonne Agglo)','rtca-carcassonne.zip',[43.0,2.1,43.45,2.75]],
+ ['sam_sete','Sète Agglopôle Mobilité','sam-sete.zip',[43.25,3.45,43.57,3.87]],
+ ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.37,1.13,43.85,1.71]],
+ ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.22]],
+ // 20/11/2026 : réseaux urbains présents dans data/gtfs mais absents de ce moteur (audit de couverture).
+ // CTS Strasbourg, STAR Rennes, TBM Bordeaux et TAO Orléans ont depuis été ajoutés plus bas (horizon réduit).
+ ['agglobus_bourges',"Agglobus (Bourges)",'agglobus-bourges.zip',[47.035,2.321,47.134,2.459]],
+ ['ametis_amiens',"Ametis (Amiens Métropole)",'ametis-amiens.zip',[49.846,2.235,49.939,2.391]],
+ ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
+ ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
+ ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
+ ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.31,0.591,47.489,0.878]],
+ ['filibus_chartres',"Filibus (Chartres)",'filibus-chartres.zip',[48.344,1.337,48.545,1.602]],
+ ['ilevia_lille',"ilévia (Lille)",'ilevia-lille.zip',[50.569,2.876,50.74,3.193]],
+ ['irigo_angers',"Irigo (Angers)",'irigo-angers.zip',[47.396,-0.667,47.537,-0.428]],
+ ['kiceo_vannes',"KICEO (Vannes)",'kiceo-vannes.zip',[47.524,-2.922,47.788,-2.57]],
+ ['lia_le_havre',"LiA (Le Havre)",'lia-le-havre.zip',[49.429,0.039,49.735,0.463]],
+ ['vitalis_poitiers',"Vitalis (Poitiers)",'vitalis-poitiers.zip',[46.522,0.263,46.682,0.434]],
+ ['aixenbus_aix','Aix en Bus','aixenbus-aix.zip',[43.41,5.29,43.65,5.56]],
+ ['tam_montpellier','TaM (Montpellier, urbain et suburbain)','tam-montpellier.zip',[43.45,3.5,43.95,4.15]],
+ ['palmbus_cannes','Palmbus (Cannes Pays de Lérins)','palmbus-cannes.zip',[43.45,6.85,43.7,7.15]],
+ ['lignes_azur_nice',"Lignes d'Azur (Nice)",'lignes-azur-nice.zip',[43.63,7.06,43.9,7.4]],
+ ['rtm_marseille','RTM (Marseille)','rtm-marseille.zip',[43.23,5.33,43.36,5.48]],
+ ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.092,4.401,46.537,4.945]],
+ ['lio_occitanie_nord','liO Occitanie (Gard, Lozère)','lio-occitanie-nord.zip',[44.0,3.3,44.95,4.7]],
+ ['mobigo_bfc_jura','Mobigo Bourgogne-Franche-Comté (Jura)','mobigo-bfc-jura.zip',[46.2,5.3,47.1,6.3]],
+ ['zou_express_nord','ZOU ! Express (Alpes du Sud)','zou-express-nord.zip',[44.0,5.0,45.2,7.2]],
+ ['zou_proximite_nord','ZOU ! Proximité (Hautes-Alpes, Vaucluse nord)','zou-proximite-nord.zip',[44.0,5.0,45.0,7.0]],
+ ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.535,4.688,46.527,6.09]],
+ ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
+ ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
+ // 15/11/2026 : autres réseaux de l'agrégat officiel Oùra (extraits par la tâche serveur, emprises relevées).
+ ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg.zip', [46.15,5.05,46.52,5.41]],
+ ['evad', "ÉVA'D Évian", 'evad-evian.zip', [46.24,6.45,46.42,6.86]],
+ ['chamonix', "Chamonix Bus", 'chamonix-bus.zip', [45.87,6.74,46.06,6.96]],
+ ['proximiti', "Proxim iTi Bonneville – La Roche", 'proximiti-bonneville.zip', [45.91,6.17,46.23,6.53]],
+ ['mobivals', "Mobi'Vals Valserhône", 'mobivals-valserhone.zip', [46.08,5.76,46.16,5.87]],
+ ['tra', "TRA Mobilité Albertville", 'tra-albertville.zip', [45.55,6.22,45.77,6.59]],
+ ['duobus', "Duobus Oyonnax", 'duobus-oyonnax.zip', [46.19,5.59,46.34,5.7]],
+ ['ruban', "Ruban Bourgoin-Jallieu", 'ruban-bourgoin.zip', [45.48,5.08,45.71,5.4]],
+ ['lva', "L'va Vienne", 'lva-vienne.zip', [45.39,4.59,45.69,5.49]],
+ ['colibri', "Colibri Miribel", 'colibri-miribel.zip', [45.8,4.89,45.85,5.04]],
+ ['tico', "TICO Montluel", 'tico-montluel.zip', [45.81,5.03,45.88,5.15]],
+ ['saonibus', "Saônibus Trévoux", 'saonibus-trevoux.zip', [45.86,4.7,45.97,4.85]],
+ ['cars_express', "Cars Région Express", 'cars-region-express.zip', [44.35,2.8,46.78,6.15]],
+ ['cars_loire', "Cars Région Loire", 'cars-region-loire.zip', [45.23,3.68,46.22,4.88]],
+ ['cars_drome', "Cars Région Drôme", 'cars-region-drome.zip', [44.04,4.63,45.38,6.1]],
+ ['cars_ardeche', "Cars Région Ardèche", 'cars-region-ardeche.zip', [43.893,3.824,45.402,4.925]],
+ ['cars_allier', "Cars Région Allier", 'cars-region-allier.zip', [46.02,2.18,46.85,4.07]],
+ ['cars_cantal', "Cars Région Cantal", 'cars-region-cantal.zip', [44.67,2.18,45.79,3.32]],
+ ['cars_haute_loire', "Cars Région Haute-Loire", 'cars-region-haute-loire.zip', [44.71,3.23,45.56,4.41]],
+ ['coqueligo', "CoqueliGO Annonay", 'coqueligo-annonay.zip', [45.21,4.62,45.29,4.72]],
+ ['toutenbus', "Tout'enbus Aubenas", 'toutenbus-aubenas.zip', [44.54,4.3,44.69,4.47]],
+ ['transcab', "Trans'Cab Aurillac", 'transcab-aurillac.zip', [44.8,2.22,45.09,2.68]],
+ ['montelibus', "Montélibus Montélimar", 'montelibus-montelimar.zip', [44.44,4.69,44.73,5.02]],
+ ['maelis', "Maelis Montluçon", 'maelis-montlucon.zip', [46.15,2.49,46.42,2.74]],
+ ['aleo', "Aléo Moulins", 'aleo-moulins.zip', [46.49,3.27,46.65,3.46]],
+ ['tcap', "T'CAP Privas", 'tcap-privas.zip', [44.68,4.52,44.84,4.82]],
+ ['velay', "Mobilité en Velay (Le Puy)", 'velay-le-puy.zip', [44.97,3.83,45.09,4.01]],
+ ['rlv', "RLV Mobilités Riom", 'rlv-riom.zip', [45.83,3.02,45.98,3.24]],
+ ['star_roanne', "Star Roanne", 'star-roanne.zip', [45.96,3.78,46.22,4.26]],
+ ['lebus', "Le Bus Tain-Tournon", 'lebus-tain-tournon.zip', [44.99,4.52,45.16,5.07]],
+ ['smtut', "SMTUT Thiers", 'smtut-thiers.zip', [45.69,3.36,46.03,3.74]],
+ ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
+ ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
+ // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
+ // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel avant câblage. stas/t2c :
+ // bbox provisoire (cœur urbain estimé, flux non téléchargeable depuis le poste de développement) —
+ // confirmée correcte par le premier passage réel de build-regional-gtfs.yml (21 h 20, run 43757097623 :
+ // 30 trajets réels chacun via scripts/verifier-moteurs-regionaux.cjs), pas de resserrement nécessaire.
+ ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
+ ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
+ ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]],
+ // 20/11/2026 : 5 grandes métropoles encore absentes de ce moteur alors que leur extraction GTFS
+ // était déjà prévue (voire déjà publiée) côté scripts/build_regional_gtfs.py — entrées ajoutées
+ // ici pour que les fiches mission les utilisent réellement (mêmes emprises que le script).
+ ['cts_strasbourg', "CTS (Strasbourg Eurométropole)", 'cts-strasbourg.zip', [48.48,7.60,48.68,7.82]],
+ ['ilevia_lille', "ilévia (Métropole Européenne de Lille)", 'ilevia-lille.zip', [50.55,2.85,50.75,3.20]],
+ ['star_rennes', "STAR (Rennes Métropole)", 'star-rennes.zip', [47.98,-1.85,48.22,-1.55]],
+ // naolib_nantes volontairement absent : même avec un horizon réduit à 14 j, l'archive réelle décompresse
+ // à 178 Mo de stop_times.txt (réseau très dense, ~12,7 Mo/j), largement au-delà des 64 Mo maxFileBytes du
+ // moteur — « Expanded GTFS exceeds size limit » constaté en réel le 20/11/2026. La câbler demanderait un
+ // horizon de 4-5 j, trop court pour un cron hebdomadaire (voir transport-coverage.js pour le suivi).
+ ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]],
+ // TAO Orléans Métropole : horizon réduit à 15 j (scripts/build_regional_gtfs.py) ; archive réelle
+ // mesurée à 37,35 Mo (confortablement sous les 64 Mo maxFileBytes), ajoutée le 20/11/2026.
+ ['tao_orleans', "TAO (Orléans Métropole)", 'tao-orleans.zip', [47.80,1.78,47.95,2.05]],
+ // Île-de-France Mobilités (Paris intra-muros UNIQUEMENT — pas Roissy/Orly/La Défense/banlieue) :
+ // réseau si dense (métro+bus+RER) qu'il a fallu descendre l'horizon à 1 seul jour (après 5j puis 2j,
+ // tous deux encore au-dessus des 64 Mo maxFileBytes) pour que stop_times.txt tienne à 61,72 Mo — marge
+ // serrée (2,3 Mo), à resurveiller si le cron hebdomadaire fait grossir l'extrait. Ajouté le 21/11/2026.
+ ['idfm_paris', "Île-de-France Mobilités (Paris intra-muros)", 'idfm-paris.zip', [48.81,2.22,48.91,2.43]],
+ // SNCF Transilien/RER Île-de-France : dataset distinct d'IDFM, horizon réduit à 21 j (pas de limite au
+ // départ, stop_times.txt dépassait les 64 Mo à 66,53 Mo) ; mesuré ensuite à 30,01 Mo. Ajouté le 21/11/2026.
+ ['transilien_idf', "SNCF Transilien / RER (Île-de-France)", 'transilien-idf.zip', [48.05,1.35,49.25,3.60]],
+ // 21/11/2026 : 10 réseaux Bourgogne-Franche-Comté / Cherpa (escargot AURA→BFC), GTFS déjà publiés par
+ // build-regional-gtfs.yml (commit 0224953). Emprises calculées directement depuis l'extension réelle de
+ // stops.txt de chaque archive (min/max lat/lon, arrondi au millième vers l'extérieur), pas d'estimation.
+ ['cherpa_issoire', "Cherpa (Issoire)", 'cherpa-issoire.zip', [45.541,3.215,45.551,3.267]],
+ ['cotebus_beaune', "Côt'Bus (Beaune)", 'cotebus-beaune.zip', [46.904,4.626,47.078,4.890]],
+ ['intercom_sens', "Intercom'Sens (Sens)", 'intercom-sens.zip', [48.044,3.210,48.260,3.463]],
+ ['leo_auxerre', "Léo (Auxerre)", 'leo-auxerre.zip', [47.697,3.418,47.881,3.694]],
+ ['monrezo_creusot', "Monrézo (Le Creusot – Montceau-les-Mines)", 'monrezo-creusot.zip', [46.641,4.289,46.811,4.499]],
+ ['moova_vesoul', "Moova (Vesoul)", 'moova-vesoul.zip', [47.523,6.034,47.670,6.241]],
+ ['optymo_belfort', "Optymo (Belfort)", 'optymo-belfort.zip', [47.445,6.771,47.821,7.118]],
+ ['tallis_lons', "Tallis (Lons-le-Saunier)", 'tallis-lons.zip', [46.664,5.524,46.692,5.584]],
+ ['taneo_nevers', "Taneo (Nevers)", 'taneo-nevers.zip', [46.903,3.037,47.107,3.228]],
+ ['tea_autun', "TEA (Autun)", 'tea-autun.zip', [46.948,4.284,46.967,4.316]]
+];
 function makeProviders(r,opts={}){
   const dateParts=when=>{
    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
@@ -1189,236 +1419,7 @@ function makeProviders(r,opts={}){
  // bibliothèques GTFS locales ne sont pas chargées : aucun comportement existant ne change.
  let localNetworks=[],base='',deployedBase=null;
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
-  // 21/11/2026 : audit systématique après le bug Y51/Albertville (bounds trop étroites qui désactivaient
-  // silencieusement tout un réseau pour une mission touchant son propre terminus). 13 réseaux avaient le même
-  // défaut (zone déclarée ne couvrant pas un bout réel de ligne, écart >8 km mesuré sur les arrêts réels du
-  // GTFS) : synchro, cars_isere, cars_haute_savoie, ondea, ginko_besancon, zoom_chalon, grandole_dole,
-  // altigo_briancon, fil_bleu_tours, lia_le_havre, trema_macon, cars_ain, cars_ardeche — bounds recalculées
-  // sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
-  // ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
-  localNetworks=[
-   ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
-   ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.494,5.814,45.779,6.196]],
-   ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
-   ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.534,4.728,45.913,6.308]],
-   ['cars_savoie','Cars Région Savoie','cars-region-savoie.zip',[45.05,5.62,45.80,7.19]],
-   // 18/11/2026 : Cars Région Haute-Savoie (Y02, Y51, Y91-Y94 à la demande…) découpé sur Faucigny / Giffre / Chablais.
-   // 21/11/2026 : bbox élargie vers le sud/ouest — la ligne Y51 (Albertville ↔ Annecy) a son terminus à
-   // Albertville (lat ≈ 45,675), hors de l'ancienne emprise (min lat 45,90) : le fournisseur n'était donc
-   // jamais activé (enabled exige task.from ET task.to dans bounds) pour toute mission touchant Albertville,
-   // malgré un GTFS cars-region-haute-savoie.zip qui contient bien la ligne en entier (extract() ne filtre
-   // pas par bbox, seulement par agence). Nouvelle limite sud alignée sur celle de TRA Albertville.
-   ['cars_haute_savoie','Cars Région Haute-Savoie','cars-region-haute-savoie.zip',[45.639,5.792,46.409,6.957]],
-   // 18/11/2026 : réseaux présents dans data/gtfs mais absents de ce moteur (audit de couverture).
-   ['mreso_grenoble','M Réso Grenoble','mreso-grenoble.zip',[45.0,5.5,45.45,6.0]],
-   ['mreso_gresivaudan','M Réso Grésivaudan','mreso-gresivaudan.zip',[45.15,5.7,45.5,6.15]],
-   ['mreso_voironnais','M Réso Pays Voironnais','mreso-voironnais.zip',[45.22,5.44,45.57,5.75]],
-   ['ondea','Ondéa Aix-les-Bains (Grand Lac)','ondea-grand-lac.zip',[45.54,5.749,45.989,6.042]],
-   ['sibra','Sibra Annecy','sibra-annecy.zip',[45.7,5.9,46.1,6.5]],
-   ['start_thonon','Star’t Thonon','start-thonon.zip',[46.25,6.3,46.45,6.65]],
-   ['ginko_besancon','Ginko (Besançon)','ginko-besancon.zip',[47.086,5.76,47.402,6.231]],
-   ['zoom_chalon','Zoom (Chalon-sur-Saône)','zoom-chalon.zip',[46.625,4.604,46.986,5.024]],
-   ['grandole_dole','Grandole Mobilités (Dole)','grandole-dole.zip',[46.92,5.295,47.315,5.681]],
-   ['evolity_montbeliard','évolitY (Montbéliard)','evolity-montbeliard.zip',[47.4,6.65,47.6,6.95]],
-   ['orizo_avignon','Orizo (Grand Avignon)','orizo-avignon.zip',[43.85,4.65,44.07,5.05]],
-   ['agglo_bus_gap','L’Agglo en Bus (Gap)','agglo-bus-gap.zip',[44.4,5.95,44.75,6.25]],
-   ['altigo_briancon','Altigo (Briançonnais)','altigo-briancon.zip',[44.827,6.253,45.087,6.756]],
-   ['divia_dijon','Divia Mobilités (Dijon)','divia-dijon.zip',[47.2,4.95,47.45,5.2]],
-   ['tango_nimes','Tango (Nîmes Métropole)','tango-nimes.zip',[43.65,4.11,44.0,4.59]],
-   ['alesy_ales',"Ales'y (Alès)",'alesy-ales.zip',[43.89,3.81,44.42,4.4]],
-   ['sankeo_perpignan','Sankéo (Perpignan)','sankeo-perpignan.zip',[42.59,2.59,42.89,3.06]],
-   ['beemob_beziers','beeMob (Béziers Méditerranée)','beemob-beziers.zip',[43.22,3.15,43.49,3.4]],
-   ['citibus_narbonne','Citibus (Narbonne)','citibus-narbonne.zip',[42.82,2.8,43.34,3.25]],
-   ['lebus_frejus',"Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)",'lebus-frejus.zip',[43.3,6.6,43.57,6.97]],
-   ['envibus_antibes','Envibus (Antibes Sophia Antipolis)','envibus-antibes.zip',[43.52,6.95,43.72,7.17]],
-   ['ge_le_fil','Le Fil (Syndicat Mixte des transports du Pays du Bassin de Briey)','ge-le-fil.zip',[49.12,5.76,49.39,6.06]],
-   ['ge_pays_du_sel_vermois','CC des Pays du Sel et du Vermois (bus)','ge-pays-du-sel-vermois.zip',[48.57,6.26,48.66,6.39]],
-   ['ge_le_sit','Le SIT (CC du Bassin de Pompey)','ge-le-sit.zip',[48.7,6.02,48.82,6.25]],
-   ['ge_bus_pont_a_mousson','Le Bus (Pont-à-Mousson)','ge-bus-pont-a-mousson.zip',[48.77,5.92,48.99,6.18]],
-   ['ge_sub','SUB (SMT Suburbains de Nancy)','ge-sub.zip',[48.58,6.06,48.81,6.37]],
-   ['ge_linggo_en_ville','Linggo En Ville (PETR du pays de Langres)','ge-linggo-en-ville.zip',[47.81,5.29,47.9,5.38]],
-   ['ge_riv_connect','Riv\'Connect (CC Rives de Moselle)','ge-riv-connect.zip',[49.16,6.12,49.27,6.26]],
-   ['ge_lulu_en_bus','Lulu en bus (PETR du Pays du Lunevillois)','ge-lulu-en-bus.zip',[48.55,6.46,48.63,6.55]],
-   ['ge_forbus','Forbus (Agglomération de Forbach)','ge-forbus.zip',[49.01,6.69,49.26,7.1]],
-   ['ge_ritmo','Ritmo (CA de Haguenau)','ge-ritmo.zip',[48.69,7.59,48.87,7.89]],
-   ['ge_tum','TUM (Commune de Sainte-Ménéhould)','ge-tum.zip',[49.06,4.86,49.13,5.02]],
-   ['ge_stan','STAN (Métropole du Grand Nancy)','ge-stan.zip',[48.59,6.09,48.75,6.29]],
-   ['ge_cmonbus','Cmonbus (CA de Chaumont)','ge-cmonbus.zip',[48.05,4.98,48.14,5.18]],
-   ['ge_rezo','REZO (CA du Grand Verdun)','ge-rezo.zip',[49.1,5.28,49.2,5.44]],
-   ['ge_colibri','Colibri (CC Terres Touloises)','ge-colibri.zip',[48.6,5.7,48.86,6.05]],
-   ['ge_sitac','SITAC (CA de Châlons-en-Champagne)','ge-sitac.zip',[48.69,4.09,49.21,4.49]],
-   ['ge_t_mm','T\'MM (CC Moselle et Madon)','ge-t-mm.zip',[48.51,6.01,48.67,6.23]],
-   ['ge_isibus','Isibus (CC Sarrebourg Moselle Sud)','ge-isibus.zip',[48.7,7.01,48.77,7.12]],
-   ['ge_temo_b','Temo\'b (SMT Urbains Thionville-Fensch)','ge-temo-b.zip',[49.27,5.9,49.52,6.36]],
-   ['ge_grand_reims_mobilites','Grand Reims Mobilités (CU du Grand Reims)','ge-grand-reims-mobilites.zip',[49.15,3.66,49.41,4.39]],
-   ['ge_mouveo','Mouvéo (CA Epernay Coteaux et Plaine de Champagne)','ge-mouveo.zip',[48.88,3.9,49.09,4.07]],
-   ['ge_ticea','TICEA (CA de St Dizier, Der et Blaise)','ge-ticea.zip',[48.47,4.85,48.68,5.01]],
-   ['ge_trace','TRACE (Colmar Agglomération)','ge-trace.zip',[47.98,7.2,48.15,7.47]],
-   ['ge_pass_o','Pass\'O (Ville d\'Obernai)','ge-pass-o.zip',[48.43,7.44,48.49,7.54]],
-   ['ge_imagine','Imagine (CA d\'Epinal)','ge-imagine.zip',[47.93,6.02,48.43,6.56]],
-   ['ge_elsa','ELSA (PETR Sélestat Alsace Centrale)','ge-elsa.zip',[48.21,7.16,48.33,7.56]],
-   ['ge_tac','TAC (CA Ardenne Métropole)','ge-tac.zip',[49.63,4.59,49.88,5.01]],
-   ['ge_cabus','CABUS (CA Sarreguemines Confluences)','ge-cabus.zip',[48.93,6.85,49.18,7.21]],
-   ['ge_le_met','Le MET (CA Metz Métropole)','ge-le-met.zip',[48.96,5.98,49.22,6.34]],
-   ['ge_transavold','Transavold (CA Saint-Avold Synergie)','ge-transavold.zip',[48.9,6.56,49.19,6.8]],
-   ['ge_solea','Soléa (CA Mulhouse Alsace Agglomération)','ge-solea.zip',[47.65,7.07,47.89,7.57]],
-   ['ge_distribus','Distribus (CA Saint-Louis Agglomération)','ge-distribus.zip',[47.48,7.22,47.71,7.65]],
-   ['ge_tcat','TCAT (CA Troyes Champagne Métropole)','ge-tcat.zip',[48.16,3.89,48.42,4.26]],
-   ['ge_sylvia','SYLVIA (CA Saint Dié des Vosges)','ge-sylvia.zip',[48.1,6.76,48.53,7.17]],
-   ['ge_tub','TUB (CA Bar-le-Duc Sud Meuse)','ge-tub.zip',[48.61,5.01,48.86,5.41]],
-   ['twisto_caen','Twisto (Caen la mer)','twisto-caen.zip',[49.05,-0.58,49.33,-0.15]],
-   ['setram_lemans','SETRAM (Le Mans Métropole)','setram-lemans.zip',[47.89,0.05,48.1,0.37]],
-   ['transurbain_evreux','Transurbain (Évreux Portes de Normandie)','transurbain-evreux.zip',[48.94,1.04,49.1,1.21]],
-   ['choletbus','Choletbus (Cholet Agglomération)','choletbus.zip',[46.98,-1.05,47.22,-0.35]],
-   ['dkbus_dunkerque','DK\'Bus (Dunkerque)','dkbus-dunkerque.zip',[50.92,2.08,51.1,2.62]],
-   ['simouv_valenciennes','Transvilles / SIMOUV (Valenciennes)','simouv-valenciennes.zip',[50.22,3.23,50.53,3.71]],
-   ['pastel_saint_quentin','Pastel (Saint-Quentin)','pastel-saint-quentin.zip',[49.8,3.23,49.89,3.35]],
-   ['bibus_brest','Bibus (Brest Métropole)','bibus-brest.zip',[48.32,-4.64,48.48,-4.33]],
-   ['astuce_rouen','Astuce (Métropole Rouen Normandie)','astuce-rouen.zip',[49.24,0.71,49.56,1.28]],
-   ['izilo_lorient','Izilo (Lorient Agglomération)','izilo-lorient.zip',[47.61,-3.55,48.04,-3.05]],
-   ['tul_laval','TUL (Laval Agglomération)','tul-laval.zip',[47.97,-1.09,48.2,-0.61]],
-   ['sitac_calais','Sitac (Calais)','sitac-calais.zip',[50.84,1.69,51.01,2.0]],
-   ['tic_compiegne','TIC (Compiègne)','tic-compiegne.zip',[49.36,2.74,49.47,2.91]],
-   ['envia_arles','Envia (Arles, Tarascon)','envia-arles.zip',[43.33,4.35,43.89,4.84]],
-   ['zest_menton','Zest (Menton, Riviera Française)','zest-menton.zip',[43.71,7.38,44.14,7.69]],
-   ['libebus_salon','Libébus (Salon-de-Provence)','libebus-salon.zip',[43.41,4.93,43.77,5.37]],
-   ['agglobus_aubagne',"Lignes de l'Agglo (Aubagne)",'agglobus-aubagne.zip',[43.25,5.48,43.45,5.75]],
-   ['ulysse_istres','Ulysse (Istres, Fos, Miramas)','ulysse-istres.zip',[43.31,4.77,43.72,5.46]],
-   ['tedbus_draguignan','TEDbus (Draguignan, Dracénie)','tedbus-draguignan.zip',[43.3,6.2,43.7,6.7]],
-   ['libellus_castres','Libellus (Castres)','libellus-castres.zip',[43.46,2.17,43.65,2.43]],
-   ['alliance_auch','Alliance bus (Auch)','alliance-auch.zip',[43.59,0.54,43.73,0.65]],
-   ['tlp_tarbes','TLP Mobilités (Tarbes, Lourdes)','tlp-tarbes-lourdes.zip',[43.06,-0.1,43.31,0.14]],
-   ['tempo_agen','Tempo Bus (Agen)','tempo-agen.zip',[44.04,0.46,44.33,0.91]],
-   ['agglobus_foix',"L'agglo-Bus (Foix, Varilhes)",'agglobus-foix.zip',[42.9,1.54,43.1,1.67]],
-   ['idelis_pau','Idelis (Pau Béarn Pyrénées)','idelis-pau.zip',[43.2,-0.5,43.43,-0.22]],
-   ['libeo_brive','Libéo (Brive)','libeo-brive.zip',[45.07,1.39,45.22,1.61]],
-   ['tulle_agglo','Tulle Agglo (bus urbains)','tulle-agglo.zip',[45.22,1.72,45.31,1.8]],
-   ['na_val_de_garonne','CA Val de Garonne (Marmande, bus)','na-val-de-garonne.zip',[44.37,0.08,44.55,0.34]],
-   ['na_bergeracoise','CA Bergeracoise (Bergerac, bus)','na-bergeracoise.zip',[44.81,0.36,44.89,0.56]],
-   ['na_saintes','CA Saintes (bus)','na-saintes.zip',[45.7,-0.7,45.78,-0.58]],
-   ['na_limoges','Limoges Métropole (bus, trolleybus)','na-limoges.zip',[45.73,1.06,45.99,1.44]],
-   ['na_rochefort','CA Rochefort Océan (bus)','na-rochefort.zip',[45.77,-1.14,46.06,-0.75]],
-   ['na_perigueux','Grand Périgueux (bus)','na-perigueux.zip',[44.93,0.52,45.61,0.96]],
-   ['na_pays_basque','CA Pays Basque (Bayonne, Biarritz, bus)','na-pays-basque.zip',[43.05,-1.68,43.54,-0.84]],
-   ['na_grand_dax','Grand Dax (bus)','na-grand-dax.zip',[43.65,-1.13,43.8,-0.97]],
-   ['na_libournais','CA du Libournais (bus)','na-libournais.zip',[44.8,-0.41,45.08,0.05]],
-   ['na_grand_cognac','Grand Cognac (bus)','na-grand-cognac.zip',[45.5,-0.44,45.82,0.03]],
-   ['na_grand_angouleme','Grand Angoulême (bus)','na-grand-angouleme.zip',[45.49,-0.04,45.8,0.41]],
-   ['na_la_rochelle','La Rochelle (bus)','na-la-rochelle.zip',[46.0,-1.24,46.27,-0.9]],
-   ['na_chatellerault','Grand Châtellerault (bus)','na-chatellerault.zip',[46.63,0.31,47.02,0.83]],
-   ['na_niortais','CA du Niortais (bus)','na-niortais.zip',[46.13,-0.73,46.41,-0.34]],
-   ['na_marsan','CA du Marsan (Mont-de-Marsan, bus)','na-marsan.zip',[43.84,-0.55,43.95,-0.42]],
-   ['na_royan','Royan Atlantique (bus)','na-royan.zip',[45.43,-1.2,45.87,-0.7]],
-   ['na_bressuirais','CA du Bocage Bressuirais (bus)','na-bressuirais.zip',[46.61,-0.92,47.1,-0.27]],
-   ['rtca_carcassonne','RTCA (Carcassonne Agglo)','rtca-carcassonne.zip',[43.0,2.1,43.45,2.75]],
-   ['sam_sete','Sète Agglopôle Mobilité','sam-sete.zip',[43.25,3.45,43.57,3.87]],
-   ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.37,1.13,43.85,1.71]],
-   ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.22]],
-   // 20/11/2026 : réseaux urbains présents dans data/gtfs mais absents de ce moteur (audit de couverture).
-   // CTS Strasbourg, STAR Rennes, TBM Bordeaux et TAO Orléans ont depuis été ajoutés plus bas (horizon réduit).
-   ['agglobus_bourges',"Agglobus (Bourges)",'agglobus-bourges.zip',[47.035,2.321,47.134,2.459]],
-   ['ametis_amiens',"Ametis (Amiens Métropole)",'ametis-amiens.zip',[49.846,2.235,49.939,2.391]],
-   ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
-   ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
-   ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
-   ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.31,0.591,47.489,0.878]],
-   ['filibus_chartres',"Filibus (Chartres)",'filibus-chartres.zip',[48.344,1.337,48.545,1.602]],
-   ['ilevia_lille',"ilévia (Lille)",'ilevia-lille.zip',[50.569,2.876,50.74,3.193]],
-   ['irigo_angers',"Irigo (Angers)",'irigo-angers.zip',[47.396,-0.667,47.537,-0.428]],
-   ['kiceo_vannes',"KICEO (Vannes)",'kiceo-vannes.zip',[47.524,-2.922,47.788,-2.57]],
-   ['lia_le_havre',"LiA (Le Havre)",'lia-le-havre.zip',[49.429,0.039,49.735,0.463]],
-   ['vitalis_poitiers',"Vitalis (Poitiers)",'vitalis-poitiers.zip',[46.522,0.263,46.682,0.434]],
-   ['aixenbus_aix','Aix en Bus','aixenbus-aix.zip',[43.41,5.29,43.65,5.56]],
-   ['tam_montpellier','TaM (Montpellier, urbain et suburbain)','tam-montpellier.zip',[43.45,3.5,43.95,4.15]],
-   ['palmbus_cannes','Palmbus (Cannes Pays de Lérins)','palmbus-cannes.zip',[43.45,6.85,43.7,7.15]],
-   ['lignes_azur_nice',"Lignes d'Azur (Nice)",'lignes-azur-nice.zip',[43.63,7.06,43.9,7.4]],
-   ['rtm_marseille','RTM (Marseille)','rtm-marseille.zip',[43.23,5.33,43.36,5.48]],
-   ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.092,4.401,46.537,4.945]],
-   ['lio_occitanie_nord','liO Occitanie (Gard, Lozère)','lio-occitanie-nord.zip',[44.0,3.3,44.95,4.7]],
-   ['mobigo_bfc_jura','Mobigo Bourgogne-Franche-Comté (Jura)','mobigo-bfc-jura.zip',[46.2,5.3,47.1,6.3]],
-   ['zou_express_nord','ZOU ! Express (Alpes du Sud)','zou-express-nord.zip',[44.0,5.0,45.2,7.2]],
-   ['zou_proximite_nord','ZOU ! Proximité (Hautes-Alpes, Vaucluse nord)','zou-proximite-nord.zip',[44.0,5.0,45.0,7.0]],
-   ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.535,4.688,46.527,6.09]],
-   ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
-   ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
-   // 15/11/2026 : autres réseaux de l'agrégat officiel Oùra (extraits par la tâche serveur, emprises relevées).
-   ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg.zip', [46.15,5.05,46.52,5.41]],
-   ['evad', "ÉVA'D Évian", 'evad-evian.zip', [46.24,6.45,46.42,6.86]],
-   ['chamonix', "Chamonix Bus", 'chamonix-bus.zip', [45.87,6.74,46.06,6.96]],
-   ['proximiti', "Proxim iTi Bonneville – La Roche", 'proximiti-bonneville.zip', [45.91,6.17,46.23,6.53]],
-   ['mobivals', "Mobi'Vals Valserhône", 'mobivals-valserhone.zip', [46.08,5.76,46.16,5.87]],
-   ['tra', "TRA Mobilité Albertville", 'tra-albertville.zip', [45.55,6.22,45.77,6.59]],
-   ['duobus', "Duobus Oyonnax", 'duobus-oyonnax.zip', [46.19,5.59,46.34,5.7]],
-   ['ruban', "Ruban Bourgoin-Jallieu", 'ruban-bourgoin.zip', [45.48,5.08,45.71,5.4]],
-   ['lva', "L'va Vienne", 'lva-vienne.zip', [45.39,4.59,45.69,5.49]],
-   ['colibri', "Colibri Miribel", 'colibri-miribel.zip', [45.8,4.89,45.85,5.04]],
-   ['tico', "TICO Montluel", 'tico-montluel.zip', [45.81,5.03,45.88,5.15]],
-   ['saonibus', "Saônibus Trévoux", 'saonibus-trevoux.zip', [45.86,4.7,45.97,4.85]],
-   ['cars_express', "Cars Région Express", 'cars-region-express.zip', [44.35,2.8,46.78,6.15]],
-   ['cars_loire', "Cars Région Loire", 'cars-region-loire.zip', [45.23,3.68,46.22,4.88]],
-   ['cars_drome', "Cars Région Drôme", 'cars-region-drome.zip', [44.04,4.63,45.38,6.1]],
-   ['cars_ardeche', "Cars Région Ardèche", 'cars-region-ardeche.zip', [43.893,3.824,45.402,4.925]],
-   ['cars_allier', "Cars Région Allier", 'cars-region-allier.zip', [46.02,2.18,46.85,4.07]],
-   ['cars_cantal', "Cars Région Cantal", 'cars-region-cantal.zip', [44.67,2.18,45.79,3.32]],
-   ['cars_haute_loire', "Cars Région Haute-Loire", 'cars-region-haute-loire.zip', [44.71,3.23,45.56,4.41]],
-   ['coqueligo', "CoqueliGO Annonay", 'coqueligo-annonay.zip', [45.21,4.62,45.29,4.72]],
-   ['toutenbus', "Tout'enbus Aubenas", 'toutenbus-aubenas.zip', [44.54,4.3,44.69,4.47]],
-   ['transcab', "Trans'Cab Aurillac", 'transcab-aurillac.zip', [44.8,2.22,45.09,2.68]],
-   ['montelibus', "Montélibus Montélimar", 'montelibus-montelimar.zip', [44.44,4.69,44.73,5.02]],
-   ['maelis', "Maelis Montluçon", 'maelis-montlucon.zip', [46.15,2.49,46.42,2.74]],
-   ['aleo', "Aléo Moulins", 'aleo-moulins.zip', [46.49,3.27,46.65,3.46]],
-   ['tcap', "T'CAP Privas", 'tcap-privas.zip', [44.68,4.52,44.84,4.82]],
-   ['velay', "Mobilité en Velay (Le Puy)", 'velay-le-puy.zip', [44.97,3.83,45.09,4.01]],
-   ['rlv', "RLV Mobilités Riom", 'rlv-riom.zip', [45.83,3.02,45.98,3.24]],
-   ['star_roanne', "Star Roanne", 'star-roanne.zip', [45.96,3.78,46.22,4.26]],
-   ['lebus', "Le Bus Tain-Tournon", 'lebus-tain-tournon.zip', [44.99,4.52,45.16,5.07]],
-   ['smtut', "SMTUT Thiers", 'smtut-thiers.zip', [45.69,3.36,46.03,3.74]],
-   ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
-   ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
-   // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
-   // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel avant câblage. stas/t2c :
-   // bbox provisoire (cœur urbain estimé, flux non téléchargeable depuis le poste de développement) —
-   // confirmée correcte par le premier passage réel de build-regional-gtfs.yml (21 h 20, run 43757097623 :
-   // 30 trajets réels chacun via scripts/verifier-moteurs-regionaux.cjs), pas de resserrement nécessaire.
-   ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
-   ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
-   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]],
-   // 20/11/2026 : 5 grandes métropoles encore absentes de ce moteur alors que leur extraction GTFS
-   // était déjà prévue (voire déjà publiée) côté scripts/build_regional_gtfs.py — entrées ajoutées
-   // ici pour que les fiches mission les utilisent réellement (mêmes emprises que le script).
-   ['cts_strasbourg', "CTS (Strasbourg Eurométropole)", 'cts-strasbourg.zip', [48.48,7.60,48.68,7.82]],
-   ['ilevia_lille', "ilévia (Métropole Européenne de Lille)", 'ilevia-lille.zip', [50.55,2.85,50.75,3.20]],
-   ['star_rennes', "STAR (Rennes Métropole)", 'star-rennes.zip', [47.98,-1.85,48.22,-1.55]],
-   // naolib_nantes volontairement absent : même avec un horizon réduit à 14 j, l'archive réelle décompresse
-   // à 178 Mo de stop_times.txt (réseau très dense, ~12,7 Mo/j), largement au-delà des 64 Mo maxFileBytes du
-   // moteur — « Expanded GTFS exceeds size limit » constaté en réel le 20/11/2026. La câbler demanderait un
-   // horizon de 4-5 j, trop court pour un cron hebdomadaire (voir transport-coverage.js pour le suivi).
-   ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]],
-   // TAO Orléans Métropole : horizon réduit à 15 j (scripts/build_regional_gtfs.py) ; archive réelle
-   // mesurée à 37,35 Mo (confortablement sous les 64 Mo maxFileBytes), ajoutée le 20/11/2026.
-   ['tao_orleans', "TAO (Orléans Métropole)", 'tao-orleans.zip', [47.80,1.78,47.95,2.05]],
-   // Île-de-France Mobilités (Paris intra-muros UNIQUEMENT — pas Roissy/Orly/La Défense/banlieue) :
-   // réseau si dense (métro+bus+RER) qu'il a fallu descendre l'horizon à 1 seul jour (après 5j puis 2j,
-   // tous deux encore au-dessus des 64 Mo maxFileBytes) pour que stop_times.txt tienne à 61,72 Mo — marge
-   // serrée (2,3 Mo), à resurveiller si le cron hebdomadaire fait grossir l'extrait. Ajouté le 21/11/2026.
-   ['idfm_paris', "Île-de-France Mobilités (Paris intra-muros)", 'idfm-paris.zip', [48.81,2.22,48.91,2.43]],
-   // SNCF Transilien/RER Île-de-France : dataset distinct d'IDFM, horizon réduit à 21 j (pas de limite au
-   // départ, stop_times.txt dépassait les 64 Mo à 66,53 Mo) ; mesuré ensuite à 30,01 Mo. Ajouté le 21/11/2026.
-   ['transilien_idf', "SNCF Transilien / RER (Île-de-France)", 'transilien-idf.zip', [48.05,1.35,49.25,3.60]],
-   // 21/11/2026 : 10 réseaux Bourgogne-Franche-Comté / Cherpa (escargot AURA→BFC), GTFS déjà publiés par
-   // build-regional-gtfs.yml (commit 0224953). Emprises calculées directement depuis l'extension réelle de
-   // stops.txt de chaque archive (min/max lat/lon, arrondi au millième vers l'extérieur), pas d'estimation.
-   ['cherpa_issoire', "Cherpa (Issoire)", 'cherpa-issoire.zip', [45.541,3.215,45.551,3.267]],
-   ['cotebus_beaune', "Côt'Bus (Beaune)", 'cotebus-beaune.zip', [46.904,4.626,47.078,4.890]],
-   ['intercom_sens', "Intercom'Sens (Sens)", 'intercom-sens.zip', [48.044,3.210,48.260,3.463]],
-   ['leo_auxerre', "Léo (Auxerre)", 'leo-auxerre.zip', [47.697,3.418,47.881,3.694]],
-   ['monrezo_creusot', "Monrézo (Le Creusot – Montceau-les-Mines)", 'monrezo-creusot.zip', [46.641,4.289,46.811,4.499]],
-   ['moova_vesoul', "Moova (Vesoul)", 'moova-vesoul.zip', [47.523,6.034,47.670,6.241]],
-   ['optymo_belfort', "Optymo (Belfort)", 'optymo-belfort.zip', [47.445,6.771,47.821,7.118]],
-   ['tallis_lons', "Tallis (Lons-le-Saunier)", 'tallis-lons.zip', [46.664,5.524,46.692,5.584]],
-   ['taneo_nevers', "Taneo (Nevers)", 'taneo-nevers.zip', [46.903,3.037,47.107,3.228]],
-   ['tea_autun', "TEA (Autun)", 'tea-autun.zip', [46.948,4.284,46.967,4.316]]
-  ];
+  localNetworks=LOCAL_GTFS_NETWORKS;
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
   // when the Android app is served from another origin or an older deployment.
@@ -2569,7 +2570,8 @@ async function gtfsTablesForDaySchedule(raw){
     stop_times:csv('stop_times.txt'),calendar:csv('calendar.txt'),calendar_dates:csv('calendar_dates.txt')};
   })();
   dayScheduleTablesCache.set(key,promise);
-  promise.catch(()=>dayScheduleTablesCache.delete(key));
+  while(dayScheduleTablesCache.size>4)dayScheduleTablesCache.delete(dayScheduleTablesCache.keys().next().value);
+  promise.catch(()=>{if(dayScheduleTablesCache.get(key)===promise)dayScheduleTablesCache.delete(key);});
  }
  return promise;
 }
@@ -2580,17 +2582,35 @@ function scheduleSourceForLeg(l,useRaw=true){
  if(useRaw&&raw?.networkUrls?.length&&raw.routeId&&raw.from&&raw.to&&raw.serviceDate)return raw;
  const date=parisDayParts(l.departure)?.day;
  const fromPoint=pt(l.fromPoint),toPoint=pt(l.toPoint);
- if(!date||!fromPoint||!toPoint||!l.line)return null;
+ if(!date||!l.line)return null;
  const name=String(l.provider||'');
  const national=/sncf|\bter\b/i.test(name)?'sncf':/flixbus/i.test(name)?'flixbus':/blablacar.*bus/i.test(name)?'blablacarBus':null;
  const resource=root.CP_NATIONAL_GTFS_RESOURCES?.[national];
  const voiron={lat:45.373,lon:5.589};
- const isVoiron31=String(l.line).trim()==='31'&&[fromPoint,toPoint].every(point=>meters(point,voiron)<=5000);
- const networkUrls=isVoiron31?[
-  'https://at374.github.io/convoyage-app/data/gtfs/mreso-voironnais.zip',
-  'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/mreso-voironnais.zip'
- ]:resource?[resource.url,...(resource.fallbackUrls||[])]:null;
- return networkUrls?{networkUrls,serviceDate:date,line:String(l.line),fromPoint,toPoint}:null;
+ const isVoiron31=String(l.line).trim()==='31'&&[fromPoint,toPoint].every(point=>point&&meters(point,voiron)<=5000);
+ const provider=scheduleLabel(name);
+ const matches=LOCAL_GTFS_NETWORKS.filter(([id,label,,bounds])=>{
+  if([fromPoint,toPoint].some(point=>point&&!nearTransportBounds(point,bounds,200)))return false;
+  const aliases=[scheduleLabel(id),scheduleLabel(label)];
+  return provider&&aliases.some(alias=>alias===provider||(
+   provider.length>=3&&alias.startsWith(provider+' ')));
+ });
+ const file=isVoiron31?'mreso-voironnais.zip':matches.length===1?matches[0][2]:null;
+ const networkUrls=[
+  ...(raw?.networkUrls||[]),
+  ...(file?[
+   'https://at374.github.io/convoyage-app/data/gtfs/'+file,
+   'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,
+   'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/'+file
+  ]:[]),
+  ...(resource?[resource.url,...(resource.fallbackUrls||[])]:[])
+ ];
+ return networkUrls.length?{networkUrls:[...new Set(networkUrls)],serviceDate:raw?.serviceDate||date,
+  line:String(l.line),fromPoint,toPoint,fromName:l.from,toName:l.to}:null;
+}
+function scheduleLabel(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
 async function dayScheduleForLeg(raw){
  if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
@@ -2600,21 +2620,34 @@ async function dayScheduleForLeg(raw){
  const rides=(route,from,to)=>pl.datedInterurbanRides(tables,raw.serviceDate,String(route),String(from),String(to));
  let rows=[];
  if(raw.routeId&&raw.from&&raw.to)rows=rides(raw.routeId,raw.from,raw.to);
- else if(raw.line&&raw.fromPoint&&raw.toPoint){
-  const nearby=point=>tables.stops.map(stop=>({id:stop.stop_id,point:pt({lat:stop.stop_lat,lon:stop.stop_lon})}))
-   .filter(stop=>stop.point).map(stop=>({...stop,distance:meters(point,stop.point)}))
-   .filter(stop=>stop.distance<=200).sort((a,b)=>a.distance-b.distance).slice(0,4);
-  const routes=tables.routes.filter(route=>[route.route_short_name,route.route_long_name]
-   .some(name=>name&&raw.line.trim().toLowerCase()===name.trim().toLowerCase()));
-  const pairs=nearby(raw.fromPoint).flatMap(from=>nearby(raw.toPoint).map(to=>({from,to})))
-   .filter(({from,to})=>from.id!==to.id).sort((a,b)=>a.from.distance+a.to.distance-b.from.distance-b.to.distance);
-  for(const {from,to} of pairs){
-   rows=routes.flatMap(route=>rides(route.route_id,from.id,to.id));
-   if(rows.length)break;
+ else if(raw.line){
+  const matchingStops=(point,name)=>{
+   const label=scheduleLabel(name);
+   const stops=tables.stops.flatMap(stop=>{
+    const position=pt({lat:stop.stop_lat,lon:stop.stop_lon});
+    const distance=point&&position?meters(point,position):null;
+    const named=!!label&&scheduleLabel(stop.stop_name)===label;
+    return named||(distance!==null&&distance<=100)?[{id:stop.stop_id,named,distance}]:[];
+   });
+   const named=stops.filter(stop=>stop.named&&(!point||stop.distance!==null&&stop.distance<=300));
+   return (named.length?named:stops.filter(stop=>stop.distance!==null&&stop.distance<=100))
+    .sort((a,b)=>(a.distance||0)-(b.distance||0)).slice(0,4);
+  };
+  const line=scheduleLabel(raw.line);
+  const routes=tables.routes.filter(route=>[route.route_short_name,route.route_long_name,route.route_id]
+   .some(name=>name&&line===scheduleLabel(name)));
+  const fromStops=matchingStops(raw.fromPoint,raw.fromName);
+  const toStops=matchingStops(raw.toPoint,raw.toName);
+  for(const route of routes){
+   for(const from of fromStops){
+    for(const to of toStops){
+     if(from.id!==to.id)rows.push(...rides(route.route_id,from.id,to.id));
+    }
+   }
   }
  }
- return [...new Map(rows.map(r=>[r.trip_id+':'+r.departureSeconds,r])).values()]
-  .sort((a,b)=>a.departureSeconds-b.departureSeconds);
+ return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
+  .sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
 }
 function hmFromSeconds(sec){
  if(!Number.isFinite(sec))return '?';
@@ -2856,11 +2889,11 @@ function card(doc,j,labels,expanded=false,task=null){
      }).then(rows=>{
       dayRes.textContent='';
       if(!rows.length){showSource();return;}
-      dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+raw.serviceDate+' :'));
+      dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+(raw?.serviceDate||parisDayParts(l.departure)?.day)+' :'));
       const ul=el(doc,'ul',null);
       for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)));
       dayRes.appendChild(ul);
-      dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw.network||'')+'). Circulation réelle non vérifiée.'));
+      dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
      }).catch(showSource)
       .finally(()=>{dayBtn.disabled=false;});
     });

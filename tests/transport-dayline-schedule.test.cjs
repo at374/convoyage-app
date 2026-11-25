@@ -78,3 +78,26 @@ test('Voiron : horaires du bus 31 même sans identifiants GTFS dans la fiche',as
   [globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner]=previous;
  }
 });
+
+test('Sibra : la fiche sans identifiants GTFS retrouve les 20 horaires entre Mairie Épagny et Hôpital',async()=>{
+ const bytes=fs.readFileSync(path.join(__dirname,'..','data','gtfs','sibra-annecy.zip'));
+ const previous=[globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner];
+ try{
+  globalThis.fetch=async url=>{
+   assert.ok(url.endsWith('/sibra-annecy.zip'));
+   return new Response(bytes);
+  };
+  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
+  globalThis.CPSibraPlanner=require('../sibra-planner.js');
+  const hub=require('../transport-mission-hub.js');
+  const source=hub.scheduleSourceForLeg({provider:'SIBRA',line:'25',from:'Mairie Épagny',to:'Hôpital',
+   departure:'2026-11-27T05:56:00+01:00'});
+  const rows=await hub.dayScheduleForLeg(source);
+  const clocks=rows.map(row=>[hub.hmFromSeconds(row.departureSeconds),hub.hmFromSeconds(row.arrivalSeconds)]);
+  assert.equal(clocks.length,20);
+  assert.deepEqual(clocks[0],['05:56','06:07']);
+  assert.deepEqual(clocks.at(-1),['19:53','20:03']);
+ }finally{
+  [globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner]=previous;
+ }
+});
