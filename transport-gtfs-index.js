@@ -132,10 +132,14 @@ function directTrips(files,index,date,originStopId,destinationStopId){
      originStopId===destinationStopId)return [];
  return directCandidates(files,index,date,new Map([[originStopId,true]]),new Map([[destinationStopId,true]]));
 }
+const clockMinutes=new Map();
 function minutes(time){
+ if(clockMinutes.has(time))return clockMinutes.get(time);
  if(!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(time||''))return null;
  const [h,m,sec]=time.split(':').map(Number);
- return h*60+m+sec/60;
+ const value=h*60+m+sec/60;
+ if(clockMinutes.size<20000)clockMinutes.set(time,value);
+ return value;
 }
 const stopLocations=new WeakMap();
 function locationsFor(index){
