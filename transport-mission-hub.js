@@ -405,7 +405,9 @@ async function completeWalks(j,task,router,scooter,regional){
   // l'arrêt suivant — un bus dont les horaires tombaient 1 min après était accepté tel quel. On décale
   // la fenêtre du même battement minimal que pour une correspondance ordinaire (TRANSFER_BUFFER_S).
   const bufferMs=TRANSFER_BUFFER_S*1000;
-  const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs-bufferMs).toISOString(),marginMinutes:0}
+  const missionStart=ms(task.earliestDeparture);
+  const earliestApproach=Number.isFinite(missionStart)?{earliestDeparture:new Date(missionStart).toISOString()}:{};
+  const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs-bufferMs).toISOString(),...earliestApproach,marginMinutes:0}
    :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs+bufferMs).toISOString(),marginMinutes:0}:null;
   if(!subTask)return null;
   // 22/11/2026 (Laurent : correspondance bus à Thonon-les-Bains — la ligne C part de l'arrêt « Les Arts »,
@@ -418,6 +420,7 @@ async function completeWalks(j,task,router,scooter,regional){
    const candidates=(Array.isArray(list)?list:[]).filter(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
    const timely=candidates.filter(it=>{
     const dep=ms(it.legs[0].departure),arr=ms(it.legs.at(-1).arrival);
+    if(Number.isFinite(missionStart)&&dep<missionStart)return false;
     return Number.isFinite(startMs)?dep>=startMs&&dep-startMs<=REGIONAL_ACCESS_MAX_WAIT_S*1000:
      arr<=endMs&&endMs-arr<=REGIONAL_ACCESS_MAX_WAIT_S*1000;
    });
@@ -442,7 +445,7 @@ async function completeWalks(j,task,router,scooter,regional){
   // distinguer « aucun bus avant longtemps » (marche justifiée) de « un bus existe mais la fenêtre de
   // sécurité l'exclut de justesse » (correspondance tendue à signaler, pas un trajet à faire disparaître).
   if(!best){
-   const tightTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),marginMinutes:0}
+   const tightTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),...earliestApproach,marginMinutes:0}
     :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs).toISOString(),marginMinutes:0}:null;
    if(tightTask){
     let tightOk=false;try{tightOk=regional.enabled(tightTask);}catch(_){}
@@ -454,7 +457,7 @@ async function completeWalks(j,task,router,scooter,regional){
    }
   }
   if(!best)return null;
-  if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
+
   let chosen=best.legs.slice();
   const headLeg=chosen[0],tailLeg=chosen[chosen.length-1];
   // 21/11/2026 (Laurent : le bus EVA'D 02 dépose à Thuyset Ouest, à 1,5-2 km du 89 avenue de
@@ -473,6 +476,10 @@ async function completeWalks(j,task,router,scooter,regional){
    if(Number.isFinite(headDep)){let head=null;try{head=await call(a,headLeg.fromPoint);}catch(_){}
     if(head)chosen=[walkLeg(head,a,headLeg.fromPoint,fromName,headLeg.from||toName,headDep-head.durationSeconds*1000),...chosen];}
   }
+  // Le rabattement ne doit pas avancer le départ à pied avant la disponibilité.
+  if(Number.isFinite(missionStart)&&ms(chosen[0].departure)<missionStart)return null;
+  if(Number.isFinite(endMs)&&ms(chosen.at(-1).arrival)>endMs)return null;
+  if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
   missing.push(...(best.missing||[]));
   return renameEnds({...best,legs:chosen},{fromName,toName}).legs;
  };

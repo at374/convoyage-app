@@ -893,3 +893,17 @@ test('le GTFS régional évite un téléchargement hors zone et accepte une gare
  await provider.run(borderTrip);
  assert.equal(calls,1);
 });
+
+test('jonction à 11 h : un bus d’approche trop tôt ne masque pas le train de 11 h 22',async()=>{
+ const from={lat:45.6635,lon:6.3895},station={lat:45.672977,lon:6.383167};
+ const to={lat:45.364034,lon:5.594959};
+ const train={source:'SNCF',legs:[{...bus(at(11,22),at(13,44),station,to,{line:'P41'}),mode:'Train'}]};
+ const earlyBus={enabled:()=>true,run:async window=>{
+  assert.equal(window.earliestDeparture,at(11,0));
+  return [{legs:[bus(at(10,43),at(11,10),from,station,{line:'T'})]}];
+ }};
+ const task={from,to,earliestDeparture:at(11,0),latestArrival:at(15,0)};
+ const result=await H.completeWalks(train,task,fakeRouter({factor:1}),null,earlyBus);
+ assert.deepEqual(result.legs.map(l=>[l.kind,l.line]),[['walk',null],['transit','P41']]);
+ assert.ok(H.ms(result.legs[0].departure)>=H.ms(task.earliestDeparture));
+});
