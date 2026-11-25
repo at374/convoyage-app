@@ -30,7 +30,15 @@ function* csvRows(text){
  if(field||row.length){row.push(field.replace(/\r$/,''));const item=record(row);if(item)yield item;}
 }
 function parseCSV(text){return Array.from(csvRows(text));}
-function activeServices(files,date){
+const serviceCalendars=new WeakMap();
+function servicesForDate(files,date){
+ const calendar=files['calendar.txt']||'',exceptions=files['calendar_dates.txt']||'';
+ let entry=serviceCalendars.get(files);
+ if(!entry||entry.calendar!==calendar||entry.exceptions!==exceptions){
+  entry={calendar,exceptions,days:new Map()};
+  serviceCalendars.set(files,entry);
+ }
+ if(entry.days.has(date))return entry.days.get(date);
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||
    new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)
    throw new Error('Invalid service date');
@@ -38,19 +46,24 @@ function activeServices(files,date){
  const weekday=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][
    new Date(date+'T00:00:00Z').getUTCDay()];
  const active=new Set();
- for(const row of parseCSV(files['calendar.txt']||'')){
+ for(const row of csvRows(calendar)){
   if(row.service_id&&row.start_date<=compact&&compact<=row.end_date&&row[weekday]==='1')
    active.add(row.service_id);
  }
- for(const row of parseCSV(files['calendar_dates.txt']||'')){
+ for(const row of csvRows(exceptions)){
   if(row.date!==compact||!row.service_id)continue;
   if(row.exception_type==='1')active.add(row.service_id);
   else if(row.exception_type==='2')active.delete(row.service_id);
  }
+ entry.days.set(date,active);
+ if(entry.days.size>7)entry.days.delete(entry.days.keys().next().value);
  return active;
 }
+function activeServices(files,date){
+ return new Set(servicesForDate(files,date));
+}
 function scheduledTrips(files,index,date){
- const services=activeServices(files,date);
+ const services=servicesForDate(files,date);
  const results=[];
  for(const [tripId,trip] of index.tripById){
   if(!services.has(trip.service_id))continue;
@@ -87,7 +100,7 @@ function terminusOf(index,times){
 function regularAccess(value){return value===undefined||value===''||value==='0'||value==='2'||value==='3';}
 function demandAccess(value){return value==='2'||value==='3';}
 function directCandidates(files,index,date,origins,destinations){
- const services=activeServices(files,date),journeys=[];
+ const services=servicesForDate(files,date),journeys=[];
  if(!origins.size||!destinations.size)return journeys;
  for(const [tripId,trip] of index.tripById){
   if(!services.has(trip.service_id))continue;
@@ -197,7 +210,7 @@ function boundaryTrips(index,origins,destinations){
 function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity,timeBudgetMs}={}){
  if(!Number.isSafeInteger(maxLegs)||maxLegs<1)throw new Error('Invalid transfer budget');
  if([minDepartureSeconds,maxArrivalSeconds].some(n=>typeof n!=='number'||Number.isNaN(n)))throw new Error('Invalid transfer time bounds');
- const services=activeServices(files,date),firstByStop=new Map(),secondByStop=new Map();
+ const services=servicesForDate(files,date),firstByStop=new Map(),secondByStop=new Map();
  if(!origins.size&&!destinations.size)return {firstByStop,secondByStop,searchTruncated:false};
  let legCount=0,searchTruncated=false;
  const trips=boundaryTrips(index,origins,destinations);

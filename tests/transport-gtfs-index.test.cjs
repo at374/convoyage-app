@@ -112,3 +112,13 @@ assert.equal(Object.getPrototypeOf(specialHeader),Object.prototype);
 assert.equal(Object.hasOwn(specialHeader,'__proto__'),true);
 assert.equal(specialHeader.__proto__,'value');
 assert.equal(specialHeader.name,'last');
+
+{
+ const files={'calendar_dates.txt':'service_id,date,exception_type\nA,20261127,1\nA,20261128,2\nB,20261128,1'};
+ const first=activeServices(files,'2026-11-27');
+ first.add('modified');
+ assert.deepEqual([...activeServices(files,'2026-11-27')],['A']);
+ assert.deepEqual([...activeServices(files,'2026-11-28')],['B']);
+ files['calendar_dates.txt']='service_id,date,exception_type\nC,20261127,1';
+ assert.deepEqual([...activeServices(files,'2026-11-27')],['C']);
+}
