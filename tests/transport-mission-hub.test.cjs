@@ -1043,3 +1043,15 @@ test('en relance un départ après fermeture reste visible avec un avertissement
  assert.equal(journey.feasible,false);
  assert.equal(H.nextDepartureAfterMiss({task,others:[journey]},Date.parse(at(17,15))),journey);
 });
+
+test('les marches distinguent l’adresse de mission du repère d’un arrêt',()=>{
+ const task={from:HOME,to:MISSION,fromName:'Albertville, 73',fromAddress:'12 rue de la Livraison, Albertville',
+  toName:'Voiron, 38',toAddress:'10 rue Louis Armand, Voiron',approximateFrom:true};
+ const approach={kind:'walk',from:'Albertville, 73',to:'École Saint-François',fromPoint:HOME,toPoint:STOP1};
+ assert.equal(H.walkingEndpoint(approach,task,'from').address,task.fromAddress);
+ assert.equal(H.walkingEndpoint(approach,task,'from').approximate,true);
+ assert.equal(H.walkingEndpoint(approach,task,'to').address,'');
+ assert.equal(H.walkingEndpoint(approach,task,'to').name,'École Saint-François');
+ const last={kind:'walk',fromPoint:STOP2,toPoint:MISSION};
+ assert.equal(H.walkingEndpoint(last,task,'to').address,task.toAddress);
+});

@@ -158,7 +158,7 @@
     const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
     const v = String(m[pre + '_city'] || p.city || '').trim(), d = m[pre + '_department'] || '';
     const mail = m.mail_info?.[cote === 'origin' ? 'depart' : 'arrivee']?.adresse;
-    const candidates = [m[cote + '_address'], p.address, p.street, mail]
+    const candidates = [m[cote + '_address'], p.address, p.street, m[pre + '_address'], mail]
       .filter(value => typeof value === 'string')
       .map(value => value.replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').trim())
       .filter(Boolean);

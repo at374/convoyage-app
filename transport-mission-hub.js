@@ -125,6 +125,7 @@ async function reverseGeocodeFR(win,lat,lon){
   }catch(_){return null;}
  })();
  reverseGeocodeCache.set(key,promise);
+ promise.then(value=>{if(!value&&reverseGeocodeCache.get(key)===promise)reverseGeocodeCache.delete(key);});
  return promise;
 }
 function swissMode(category){
@@ -2612,6 +2613,14 @@ function hmFromSeconds(sec){
  if(!Number.isFinite(sec))return '?';
  return String(Math.floor(sec/3600)%24).padStart(2,'0')+':'+String(Math.floor(sec/60)%60).padStart(2,'0');
 }
+function walkingEndpoint(leg,task,side){
+ const point=pt(leg[side+'Point']),target=pt(task?.[side]);
+ const atMission=point&&target&&meters(point,target)<=SAME_POINT_M;
+ const name=atMission&&task[side+'Name']?task[side+'Name']:leg[side];
+ const address=atMission?String(task[side+'Address']||'').trim():'';
+ const approximate=atMission&&(side==='from'?task.approximateFrom:task.approximateTo);
+ return {point,name,address,approximate:!!approximate};
+}
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
@@ -2694,21 +2703,19 @@ function card(doc,j,labels,expanded=false,task=null){
   }
   else if(l.kind==='walk'){
    li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
-   for(const [title,name,point,target,targetName,approximate] of [
-    ['Départ',l.from,pt(l.fromPoint),pt(task?.from),task?.fromName,task?.approximateFrom],
-    ['Arrivée',l.to,pt(l.toPoint),pt(task?.to),task?.toName,task?.approximateTo]
-   ]){
-    const missionPoint=point&&target&&meters(point,target)<=SAME_POINT_M;
-    const label=missionPoint&&targetName?targetName:name;
-    const row=el(doc,'div','cp-hub-walk-address',title+' : '+(label||'adresse indisponible'));
+   for(const [side,title] of [['from','Départ'],['to','Arrivée']]){
+    const {point,name,address,approximate}=walkingEndpoint(l,task,side);
+    const row=el(doc,'div','cp-hub-walk-address',title+' : '+(address||name||'point inconnu'));
     li.appendChild(row);
-    if(!point||(missionPoint&&!approximate&&targetName))continue;
+    if(address&&!approximate)continue;
+    if(approximate&&address)row.appendChild(el(doc,'small',null,'Adresse de la mission · point de marche approximatif'));
+    if(!point){row.appendChild(el(doc,'small',null,'Adresse exacte et GPS indisponibles'));continue;}
     const coordinates=point.lat.toFixed(6)+', '+point.lon.toFixed(6);
-    const detail=el(doc,'small',null,'Point GPS : '+coordinates);
+    const detail=el(doc,'small',null,'Adresse exacte indisponible · GPS '+coordinates);
     row.appendChild(detail);
-    reverseGeocodeFR(doc.defaultView,point.lat,point.lon).then(address=>{
-     if(address&&address.distanceMeters!==null&&address.distanceMeters<=50)
-      detail.textContent=' · Adresse à proximité : '+address.label+' · GPS '+coordinates;
+    reverseGeocodeFR(doc.defaultView,point.lat,point.lon).then(result=>{
+     if(result&&result.distanceMeters!==null&&result.distanceMeters<=50)
+      detail.textContent='Adresse à proximité du point GPS : '+result.label+' · GPS '+coordinates;
     });
    }
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
@@ -2854,7 +2861,7 @@ let ordreInverse=false;try{ordreInverse=(globalThis.CPAccount?.storage || global
 function previousArrivalJourneys(task,view){
  if(task?.label!=='Jonction'||view?.task?.label!==task.label||
     (!task.afterMissedTransport&&!['gps','adresse','rue'].includes(task.toPrecision))||!pt(task.to))return [];
- const unchanged=({to,toPrecision,exactTarget,approximateTo,approximateEndpoint,lazy,walkMaxMeters,earliestDeparture,afterMissedTransport,...rest})=>
+ const unchanged=({to,toPrecision,exactTarget,approximateTo,approximateEndpoint,lazy,walkMaxMeters,earliestDeparture,afterMissedTransport,fromAddress,toAddress,...rest})=>
   Object.entries(rest).filter(([,value])=>value!==undefined).sort(([a],[b])=>a.localeCompare(b));
  if(JSON.stringify(unchanged(task))!==JSON.stringify(unchanged(view.task)))return [];
  const oldStart=parisDayParts(view.task.earliestDeparture),newStart=parisDayParts(task.earliestDeparture);
@@ -3157,7 +3164,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,walkingEndpoint,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
