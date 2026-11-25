@@ -2017,7 +2017,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
       let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null;
-      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(!labelState[l]?.done&&!labelState[l]?.total)afficherRecherche(l);transportHub.start(l);}}catch(_){}};
+      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(!labelState[l]?.done)afficherRecherche(l,transportHub.view(l));transportHub.start(l);}}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2313,8 +2313,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               let byNetwork=flexByLabel.get(label);
               if(!byNetwork){byNetwork=new Map();flexByLabel.set(label,byNetwork);}
               byNetwork.set(network,(Array.isArray(candidates)?candidates:[]).map(c=>({...c,network})));
-              const host=hubHosts[label];
-              if(host?.isConnected)Hub.render(host,{...transportHub.view(label),flexCandidates:flexFor(label)});
             },
             // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).
             lyonCoachAccess:true,
@@ -2326,8 +2324,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             view={...view,flexCandidates:flexFor(label)};
             const entry=transportViewCache.get(missionKey)||{signature,views:{}};
             entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);
-            const hasResults=view.picks.length>0 || view.others.length>0 || view.flexCandidates.length>0;
-            if(!view.done&&!hasResults){
+            if(!view.done){
               delete pendingViews[label];
               afficherRecherche(label,view);
               updateDayTabs();
