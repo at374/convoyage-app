@@ -1910,7 +1910,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       refreshTransport.textContent = '🔄 Actualiser maintenant';
       refreshTransport.setAttribute('aria-label', 'Actualiser maintenant les transports de cette mission');
       refreshTransport.style.marginTop = '8px';
-      refreshTransport.onclick = () => {
+      const reopenTransport = () => {
         if (!panel.isConnected) return;
         // Explicit user refresh must bypass browser HTTP caches for day JSON.
         // The timestamp is scoped to this panel only; mission sync is untouched.
@@ -1921,6 +1921,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         bt.removeAttribute('aria-controls');
         bt.click();
       };
+      refreshTransport.onclick = reopenTransport;
       panel.appendChild(refreshTransport);
       if (bt.dataset.transportRefreshAt) {
         const refreshed = document.createElement('p');
@@ -1951,7 +1952,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
         const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
         section.appendChild(legacy);legacySources[key]=legacy;
-      }      /* V278 : trajet hors zone couverte (AURA + Suisse) : message clair */
+      }
+      const missedAt=Number(bt.dataset.transportMissedAt)||0;
+      if(next&&deliveryDate&&next.pickup_start){
+        const missed=document.createElement('button');
+        missed.type='button';missed.className='second';
+        missed.textContent='Train raté · chercher le suivant';
+        missed.onclick=()=>{bt.dataset.transportMissedAt=String(Date.now());reopenTransport();};
+        legacySources.Jonction.insertAdjacentElement('beforebegin',missed);
+      }
+      /* V278 : trajet hors zone couverte (AURA + Suisse) : message clair */
       let coveredZones={},zoneNotes={};
       { const COUV=new Set(['01','03','07','15','26','38','42','43','63','69','73','74']);
         // Sud (réseaux urbains GTFS ajoutés le 18/11/2026) : département → villes dont le réseau de bus est couvert (horaires + prix).
@@ -2064,7 +2074,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           tabs.appendChild(button);buttons.push(button);
         }
         hero.insertAdjacentElement('afterend',tabs);
-        {const today=parisServiceDay(new Date().toISOString());selectDay(availableTransportDays.find(d=>d>=today)||transportDays.Aller||availableTransportDays[0]);}
+        {const today=parisServiceDay(new Date().toISOString());selectDay((missedAt&&transportDays.Jonction)||availableTransportDays.find(d=>d>=today)||transportDays.Aller||availableTransportDays[0]);}
         // Un onglet de jour n'apparaît que si au moins un transport compatible avec le créneau existe (ou si la recherche est en cours).
         updateDayTabs=()=>{
           const empty=day=>{const ls=Object.entries(transportDays).filter(([,d])=>d===day).map(([l])=>l);
@@ -2072,7 +2082,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             return ls.length>0&&ls.every(l=>l.startsWith('Jonction')&&labelState[l]&&labelState[l].done&&!labelState[l].total);};
           let active=null;for(const b of buttons){if(b.classList.contains('active'))active=b.dataset.day;}
           for(const b of buttons)b.hidden=empty(b.dataset.day)&&b.dataset.day!==active;
-          if(active&&empty(active)){const alt=buttons.find(b=>!b.hidden&&b.dataset.day!==active);if(alt)selectDay(alt.dataset.day);}
+          if(active&&empty(active)&&!(missedAt&&active===transportDays.Jonction)){const alt=buttons.find(b=>!b.hidden&&b.dataset.day!==active);if(alt)selectDay(alt.dataset.day);}
           tabs.hidden=buttons.filter(b=>!b.hidden).length<2;
         };
       }else if(!next){
@@ -2214,7 +2224,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // les trajets cherchés sont ceux du jour de la mission (départ dès 04:00 ce jour-là, au cas où l'on dormirait sur place).
         const nextDay=next?parisServiceDay(next.pickup_start):null,delivDay=deliveryDate?parisServiceDay(deliveryDate):null;
         const jonctionLatest=next&&okT(next.pickup_end)&&Date.parse(next.pickup_end)>Date.parse(next.pickup_start)?new Date(Date.parse(next.pickup_end)).toISOString():(next?next.pickup_start:null);
-        const jonctionEarliest=plancher(nextDay&&delivDay&&nextDay>delivDay?parisIso(nextDay,4,0):deliveryDate);
+        const jonctionStart=plancher(nextDay&&delivDay&&nextDay>delivDay?parisIso(nextDay,4,0):deliveryDate);
+        const jonctionEarliest=missedAt&&jonctionStart?new Date(Math.max(missedAt,Date.parse(jonctionStart))).toISOString():jonctionStart;
         const tasks=[];
         // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
         for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
@@ -2263,7 +2274,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           }
         }else if(pickupDate)tasks.push({...allerBase,label:'Aller',latestArrival:pickupEndIso||pickupDate,siteCloseMinutes:closeFor(pickupEndIso||pickupDate),...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{})});
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),toPrecision:nextOrigin2?.precision,fromName:to||'Livraison',toName:nextOrigin||'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
-          earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,siteCloseMinutes:closeFor(jonctionLatest),...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateFrom:!exact(dest),approximateTo:!exact(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
+          earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,...(missedAt?{afterMissedTransport:true}:{}),siteCloseMinutes:closeFor(jonctionLatest),...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateFrom:!exact(dest),approximateTo:!exact(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
         if(deliveryDate&&multiRetour.length){
           for(const d of multiRetour){
             const first=d===dDay0,last=d===dDay1;

@@ -775,7 +775,7 @@ function assess(j,task,fareFor){
  if(legs.some(l=>l.cancelled))reasons.push('course annulée signalée');
  const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
- if(Number.isFinite(earliest)&&Number.isFinite(dep)&&dep<earliest-60000)reasons.push('départ avant la fin de la mission précédente');
+ if(Number.isFinite(earliest)&&Number.isFinite(dep)&&dep<earliest-(task.afterMissedTransport?0:60000))reasons.push(task.afterMissedTransport?'départ avant la relance':'départ avant la fin de la mission précédente');
  if(slack!==null&&slack<margin)reasons.push(slack<0?'arrivée après l’heure de mission':'marge insuffisante ('+slack+' min, '+margin+' min requises)');
  // Ne pas proposer un train arrivant des heures trop tôt comme solution à une prise en charge.
  // La fenêtre peut être élargie explicitement par un futur scénario horaire multi-jours.
@@ -2180,10 +2180,11 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  function view(label){const s=state[label];
   const percent=s.total?Math.min(100,Math.round((s.total-s.pending)/s.total*100)):(s.pending===0?100:0);
   const remainingMs=s.pending&&Array.isArray(s.deadlines)&&s.deadlines.length?Math.max(0,Math.max(...s.deadlines)-Date.now()):0;
-  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||r.startsWith('marche trop longue'))));
-  const ranked=rank(s.items.filter(j=>!tooEarly.includes(j)),s.task);
+  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('départ avant la relance')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||!s.task.afterMissedTransport&&r.startsWith('marche trop longue'))));
+  const ranked=rank(s.items.filter(j=>!tooEarly.includes(j)),s.task,!!s.task.afterMissedTransport);
   const alternativeCandidates=s.pending===0&&!ranked.total?tooEarly.filter(j=>
    !j.reasons.includes('départ avant la fin de la mission précédente')&&
+   !j.reasons.includes('départ avant la relance')&&
    !j.reasons.includes('trajet hors plage de jour ou date de mission')&&
    (j.slackMinutes===null||j.slackMinutes>=j.marginMinutes)):[];
   const alternateRank=rank(alternativeCandidates,s.task,true);
@@ -2234,6 +2235,8 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
   // 3) Les autres (8 au plus, les plus utiles d'abord) reçoivent leurs marches et s'affichent dès qu'ils sont prêts.
   const toWalk=[];
+  const immediateRejection=s.task.afterMissedTransport?/départ avant|horaires incohérents|annulée/:
+   /arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/;
   for(const j of clean){
    const key=signature(j),known=key&&s.bySignature.get(key);
    if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];
@@ -2247,7 +2250,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
      for(let i=0;i<known.legs.length;i++)if(!known.legs[i].gtfsRaw&&j.legs[i]&&j.legs[i].gtfsRaw)known.legs[i].gtfsRaw=j.legs[i].gtfsRaw;
     continue;}
    const quick=assess(j,s.task,fareFor);
-   if(quick.reasons.some(r=>/arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/.test(r))){
+   if(quick.reasons.some(r=>immediateRejection.test(r))){
     if(key)s.bySignature.set(key,quick);s.items.push(quick);continue;
    }
    toWalk.push({j,key,quick});
@@ -2329,21 +2332,22 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // voir le commentaire détaillé sur dbgKey plus haut dans ce fichier.
   try{if(r.__cpGtfsDebug)for(const k of [...r.__cpGtfsDebug.keys()])if(k.startsWith(label+'|'))r.__cpGtfsDebug.delete(k);}catch(_){}
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);return;}
-  // Ne lancer aucun fournisseur ni marche si la fenêtre temporelle est impossible.
-  if(!queryWindow(task)){
+  // La relance recherche les futurs départs, même quand la marge de la mission est déjà dépassée.
+  const searchTask=task.afterMissedTransport?{...task,latestArrival:undefined,windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined}:task;
+  if(!queryWindow(searchTask)){
    state[label].errors.horaires='créneau impossible : livraison trop tardive pour arriver avec la marge requise, ou horaires absents';
    emit(label);return;
   }
   // Fenêtre d'arrivée large (ex. 08:00–19:00) : une seule recherche « arriver avant 19:00 » ne renvoie que les trajets de l'après-midi.
   // Une seconde recherche « arriver avant l'ouverture » (08:00) ramène les trajets du matin ; les deux se complètent dans la même liste.
-  const variants=[task];
-  if(task.windowKind==='arrival'&&Number.isFinite(task.windowStartMs)&&Number.isFinite(ms(task.latestArrival))&&ms(task.latestArrival)-task.windowStartMs>3*3600000){
+  const variants=[searchTask];
+  if(searchTask.windowKind==='arrival'&&Number.isFinite(task.windowStartMs)&&Number.isFinite(ms(task.latestArrival))&&ms(task.latestArrival)-task.windowStartMs>3*3600000){
    const open=parisDayParts(new Date(task.windowStartMs).toISOString());
    if(open&&open.minute>=375)variants.push({...task,latestArrival:new Date(task.windowStartMs).toISOString(),windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined,_avantOuverture:true});
   }
   // Une recherche ne renvoie que les 5 à 10 trajets les plus proches de son heure : pour une fenêtre large, on ajoute des recherches
   // en milieu de journée (départs à 12:45 et 14:30, ou arrivées avant 12:30 et 15:00) afin que le début d'après-midi ne soit pas absent.
-  if((task.windowKind==='departure'||task.windowKind==='arrival')&&Number.isFinite(task.windowStartMs)&&Number.isFinite(task.windowEndMs)){
+  if((searchTask.windowKind==='departure'||searchTask.windowKind==='arrival')&&Number.isFinite(task.windowStartMs)&&Number.isFinite(task.windowEndMs)){
    const startP=parisDayParts(new Date(task.windowStartMs).toISOString());
    if(startP)for(const minute of task.windowKind==='departure'?[765,870]:[750,900]){
     const at=task.windowStartMs+(minute-startP.minute)*60000;
@@ -2370,9 +2374,9 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // la cause d'un total de plusieurs minutes même après le correctif du budget par appel (90 s → 150 s).
   const heavyOncePerLabel=key=>key==='local_correspondances'||key.startsWith('national_');
   for(const variant of variants)for(const [key,p] of Object.entries(providers)){
-   if(variant!==task&&heavyOncePerLabel(key))continue;
+   if(variant!==searchTask&&heavyOncePerLabel(key))continue;
    let ok=false;try{ok=p.enabled(variant)&&!!queryWindow(variant);}catch(_){}
-   if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
+   if(!ok){if(variant===searchTask)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
    state[label].pending++;state[label].total=(state[label].total||0)+1;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
    const providerTimeout=typeof p.timeoutMs==='function'?p.timeoutMs(variant):p.timeoutMs;
@@ -2847,14 +2851,14 @@ function tadFor(task){
 let ordreInverse=false;try{ordreInverse=(globalThis.CPAccount?.storage || globalThis.localStorage)?.getItem('cp_hub_ordre')==='desc';}catch(_){}
 function previousArrivalJourneys(task,view){
  if(task?.label!=='Jonction'||view?.task?.label!==task.label||
-    !['gps','adresse','rue'].includes(task.toPrecision)||!pt(task.to))return [];
- const unchanged=({to,toPrecision,exactTarget,approximateTo,approximateEndpoint,lazy,walkMaxMeters,earliestDeparture,...rest})=>
+    (!task.afterMissedTransport&&!['gps','adresse','rue'].includes(task.toPrecision))||!pt(task.to))return [];
+ const unchanged=({to,toPrecision,exactTarget,approximateTo,approximateEndpoint,lazy,walkMaxMeters,earliestDeparture,afterMissedTransport,...rest})=>
   Object.entries(rest).filter(([,value])=>value!==undefined).sort(([a],[b])=>a.localeCompare(b));
  if(JSON.stringify(unchanged(task))!==JSON.stringify(unchanged(view.task)))return [];
  const oldStart=parisDayParts(view.task.earliestDeparture),newStart=parisDayParts(task.earliestDeparture);
  if(!oldStart||!newStart||oldStart.day!==newStart.day)return [];
  const prior=pt(view.task.to);
- if(prior&&prior.lat===task.to.lat&&prior.lon===task.to.lon&&view.task.toPrecision===task.toPrecision)return [];
+ if(!task.afterMissedTransport&&prior&&prior.lat===task.to.lat&&prior.lon===task.to.lon&&view.task.toPrecision===task.toPrecision)return [];
  return [...(view.picks||[]).map(p=>p.journey),...(view.others||[]),...(view.alternatives||[])]
   .map(j=>j.legs.filter(l=>!isFoot(l)).map(({mode,line,from,to,departure,arrival})=>({mode,line,from,to,departure,arrival})))
   .filter(legs=>legs.length);
@@ -2867,6 +2871,14 @@ function previousOnly(previous,view){
   if(seen.has(id))return false;
   seen.add(id);return true;
  });
+}
+function nextDepartureAfterMiss(view,now=Date.now()){
+ if(!view.task?.afterMissedTransport)return null;
+ const earliest=Math.max(now,ms(view.task.earliestDeparture));
+ return [...(view.picks||[]).map(p=>p.journey),...(view.others||[])]
+  .filter(j=>!j.computing&&ms(j.departure)>=earliest&&Number.isFinite(ms(j.arrival))&&
+   !(j.reasons||[]).some(r=>/horaires incohérents|annulée|hors plage de jour/.test(r)))
+  .sort((a,b)=>ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival))[0]||null;
 }
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
@@ -2889,8 +2901,8 @@ function render(host,v){
   const prior=el(doc,'section','cp-hub-previous-arrival');
   prior.appendChild(el(doc,'h3',null,'Transports trouvés précédemment'));
   prior.appendChild(el(doc,'p','cp-hub-note',v.done?
-   'Horaires de la recherche précédente. Marche finale vers le nouveau point GPS non confirmée.':
-   'Horaires de la recherche précédente. Recalcul en cours vers le nouveau point GPS.'));
+   (v.task.afterMissedTransport?'Horaires de la recherche précédente, à titre de repère.':'Horaires de la recherche précédente. Marche finale vers le nouveau point GPS non confirmée.'):
+   (v.task.afterMissedTransport?'Recherche du prochain départ en cours.':'Horaires de la recherche précédente. Recalcul en cours vers le nouveau point GPS.')));
   const list=el(doc,'ul');
   for(const legs of v.previousArrival){
    const text=legs.map(l=>[l.mode,l.line,clock(l.departure)+' '+l.from+' → '+clock(l.arrival)+' '+l.to].filter(Boolean).join(' ')).join(' · ');
@@ -2929,6 +2941,17 @@ function render(host,v){
  const timeline=[...(v.picks||[]).map(p=>({journey:p.journey,labels:null})),...(v.others||[]).map(j=>({journey:j,labels:null}))]
   .sort((x,y)=>(ms(x.journey.departure)||0)-(ms(y.journey.departure)||0)||(ms(x.journey.arrival)||0)-(ms(y.journey.arrival)||0));
  if(ordreInverse)timeline.reverse();
+ const next=nextDepartureAfterMiss(v);
+ if(next){
+  const index=timeline.findIndex(item=>item.journey===next);
+  timeline.splice(index,1);
+  const late=Number.isFinite(next.slackMinutes)&&next.slackMinutes<0;
+  const label=late?'Prochain départ · arrivée '+durationText(-next.slackMinutes)+' après l’heure de mission':
+   (next.feasible||next.scheduled?'Prochain départ compatible':'Prochain départ · trajet à vérifier');
+  timeline.unshift({journey:next,labels:[label]});
+ }else if(v.done&&v.task?.afterMissedTransport){
+  host.appendChild(el(doc,'p','cp-hub-note','Aucun départ ultérieur trouvé parmi les propositions reçues.'));
+ }
  if(timeline.length>1){
   // 20/11/2026 : bouton pour inverser l'ordre (départ le plus tôt en premier ↔ départ le plus tard en premier), choix gardé sur ce téléphone.
   const btn=el(doc,'button','cp-hub-ordre',ordreInverse?'↕ Ordre décroissant (toucher pour passer en croissant)':'↕ Ordre croissant (toucher pour passer en décroissant)');
@@ -3132,7 +3155,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,previousArrivalJourneys,previousOnly,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

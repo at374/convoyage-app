@@ -1003,3 +1003,33 @@ test('jonction : changement de GPS final conserve le train de 11 h 22 sans la ma
  assert.equal(H.previousOnly(saved,{others:[{legs:[train]}]}).length,0);
  assert.equal(H.previousOnly(saved,{others:[]}).length,1);
 });
+
+test('train raté : le premier départ futur est visible même s’il arrive après la mission',()=>{
+ const task={label:'Jonction',afterMissedTransport:true,from:HOME,to:MISSION,
+  earliestDeparture:at(11,23),latestArrival:at(15,0)};
+ const journey=(h,m,end)=>H.assess({source:'TER',legs:[bus(at(h,m),end,HOME,MISSION)]},task);
+ const missed=journey(11,22,at(13,20)),late=journey(11,45,at(15,5));
+ const first=journey(12,0,at(14,0)),second=journey(12,30,at(14,25));
+ assert.ok(missed.reasons.includes('départ avant la relance'));
+ assert.equal(H.nextDepartureAfterMiss({task,others:[second,late,first,missed]},Date.parse(at(11,23))),late);
+ assert.equal(H.nextDepartureAfterMiss({task,others:[first,second]},Date.parse(at(12,15))),second);
+ assert.equal(H.nextDepartureAfterMiss({task,others:[missed]},Date.parse(at(11,23))),null);
+});
+
+test('relance après la limite : le moteur cherche en départ et la fiche conserve le retard',async()=>{
+ const task={label:'Jonction',afterMissedTransport:true,from:HOME,to:MISSION,
+  earliestDeparture:at(15,5),latestArrival:at(15,0)};
+ let query,finish;
+ const done=new Promise(resolve=>{finish=resolve;});
+ const session=H.createSession({tasks:[task],providers:{test:{name:'Test',enabled:()=>true,run:async t=>{
+  query=H.queryWindow(t);
+  return [{source:'Test',legs:[bus(at(15,15),at(16,0),HOME,MISSION)]}];
+ }}},onUpdate:(_,v)=>{if(v.done)finish(v);}});
+ try{
+  const v=await done;
+  assert.equal(query.arriveBy,false);
+  const next=H.nextDepartureAfterMiss(v,Date.parse(at(15,5)));
+  assert.equal(next.slackMinutes,-60);
+  assert.equal(next.feasible,false);
+ }finally{session.dispose();}
+});
