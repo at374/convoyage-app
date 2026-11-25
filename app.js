@@ -965,7 +965,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const q = norm(etat.recherche);
     let l = etat.missions.filter(estDisponible);
-    const total = l.length;
+    const source = deliveryCarSource();
+    // Le dénominateur doit compter le même ensemble vérifié que le badge « Toutes ».
+    const total = l.filter(m => !FI.deliveryCarNonRevue(m, source)).length;
     if (etat.filtre === 'devis' || etat.filtre === 'acceptees') l = listeDevis(etat.filtre); else if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
@@ -980,7 +982,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     else if (etat.tri === 'proche' && pointRecherche()) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
     else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V146 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
-    const source = deliveryCarSource();
     const anciennes = l.filter(m => FI.deliveryCarNonRevue(m, source));
     l = l.filter(m => !FI.deliveryCarNonRevue(m, source));
     listeAffichee = l.concat(anciennes);
