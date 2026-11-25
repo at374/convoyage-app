@@ -105,12 +105,18 @@
         const a = JSON.parse(N.autorisations()); let b = document.getElementById('bandeauAut');
         if (a.batterie && a.notifs && a.accessibilite !== false) { if (b) b.remove(); return; }
         if (!b) { b = document.createElement('div'); b.id = 'bandeauAut'; b.className = 'bandeauAut'; document.body.prepend(b); }
-        b.innerHTML = '⚠ Pour les pop-ups de nouvelles missions et la lecture écran éteint : ' + (a.notifs ? '' : '<button id="autN">Autoriser les notifications</button> ') + (a.batterie ? '' : '<button id="autB">Batterie : sans restriction</button> ') + (a.accessibilite === false ? '<br>⚠ La lecture Otoqi / Pop Valet est coupée par Android : <button id="autA">Réactiver la lecture</button>' : '');
+        b.innerHTML = (a.notifs && a.batterie ? '' : '⚠ Pour les pop-ups de nouvelles missions et la lecture écran éteint : ') + (a.notifs ? '' : '<button id="autN">Autoriser les notifications</button> ') + (a.batterie ? '' : '<button id="autB">Batterie : sans restriction</button> ') + (a.accessibilite === false ? '<br>⚠ Autorisation de lecture Otoqi / Pop Valet inactive : <button id="autA">Ouvrir les réglages Android</button>' : '');
         const n = document.getElementById('autN'); if (n) n.onclick = () => N.autoriserNotifications();
         const bb = document.getElementById('autB'); if (bb) bb.onclick = () => N.autoriserBatterie();
-        const ba = document.getElementById('autA'); if (ba) ba.onclick = () => N.ouvrirAccessibilite();
+        const ba = document.getElementById('autA');
+        if (ba) ba.onclick = () => {
+          if (JSON.parse(N.autorisations()).accessibilite !== false) { maj(); return; }
+          N.ouvrirAccessibilite();
+        };
       } catch (_) {}
     };
+    window.addEventListener('focus', maj);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) maj(); });
     setTimeout(maj, 2500); setInterval(maj, 20000);
   })();
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
