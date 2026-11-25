@@ -156,9 +156,15 @@ function locationsFor(index){
  stopLocations.set(index,locations);
  return locations;
 }
+const nearbyStopsCache=new WeakMap();
 function nearbyStops(index,lat,lon,radiusMeters=700){
  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||
    Math.abs(lon)>180||!Number.isFinite(radiusMeters)||radiusMeters<=0)return [];
+ let cache=nearbyStopsCache.get(index);
+ if(!cache){cache=new Map();nearbyStopsCache.set(index,cache);}
+ const key=JSON.stringify([lat,lon,radiusMeters]);
+ const saved=cache.get(key);
+ if(saved)return saved.map(stop=>({...stop}));
  const rad=Math.PI/180,earth=6371000,results=[];
  const span=radiusMeters/earth/rad+1e-9;
  const south=lat-span,north=lat+span,locations=locationsFor(index);
@@ -179,7 +185,12 @@ function nearbyStops(index,lat,lon,radiusMeters=700){
     distanceMeters:Math.round(distanceMeters),accessVerified:false,order
   });
  }
- return results.sort((a,b)=>a.distanceMeters-b.distanceMeters||a.order-b.order).map(({order,...stop})=>stop);
+ const stops=results.sort((a,b)=>a.distanceMeters-b.distanceMeters||a.order-b.order).map(({order,...stop})=>stop);
+ if(stops.length<=128){
+  cache.set(key,stops);
+  if(cache.size>256)cache.delete(cache.keys().next().value);
+ }
+ return stops.map(stop=>({...stop}));
 }
 function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700){
  if(!origin||!destination)return [];
