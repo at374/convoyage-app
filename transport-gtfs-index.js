@@ -232,9 +232,10 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
   const times=index.timesByTrip.get(tripId)||[];
   const targets=times.flatMap((time,position)=>destinations.has(time.stop_id)?[position]:[]);
   for(let i=0;i<times.length;i++){
-   const start=times[i],departureMinutes=minutes(start.departure_time);
+   const start=times[i],fromOrigin=origins.has(start.stop_id);
+   if(i+1>=times.length||!fromOrigin&&!(targets.at(-1)>i))continue;
+   const departureMinutes=minutes(start.departure_time);
    if(departureMinutes===null||Math.round(departureMinutes*60)<minDepartureSeconds||!regularAccess(start.pickup_type))continue;
-   const fromOrigin=origins.has(start.stop_id);
    const endCount=fromOrigin?times.length:targets.length;
    for(let k=fromOrigin?i+1:0;k<endCount;k++){
     const j=fromOrigin?k:targets[k];
@@ -276,6 +277,13 @@ function transferCandidates(files,index,date,origins,destinations,{
  if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0||
     !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
  for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
+ // A transfer within one feed needs both ends. Federation still uses
+ // boundaryLegs directly to assemble trips across different feeds.
+ if(!origins.size||!destinations.size){
+  if([minDepartureSeconds,maxArrivalSeconds].some(n=>typeof n!=='number'||Number.isNaN(n)))throw new Error('Invalid transfer time bounds');
+  servicesForDate(files,date);
+  return {journeys:[],searchTruncated:false};
+ }
  const {firstByStop,secondByStop,searchTruncated:legTruncated}=boundaryLegs(files,index,date,origins,destinations,{maxLegs,minDepartureSeconds,maxArrivalSeconds});
  const rulesForStop=transferRulesFor(index,files['transfers.txt']||'');
  let searchTruncated=legTruncated,examined=0;

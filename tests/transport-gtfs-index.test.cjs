@@ -134,3 +134,16 @@ assert.equal(specialHeader.name,'last');
  delete files['transfers.txt'];
  assert.equal(count(),1);
 }
+
+{
+ const {nearbyTransferTrips,boundaryLegs}=require('../transport-gtfs-index.js');
+ const oneSide=buildIndex({...connectionFiles,'stops.txt':
+  'stop_id,stop_name,stop_lat,stop_lon\nA,Annecy,45.9,6.12\nB,Chambery,45.57,5.92\nC,Grenoble,45.19,5.72\n'});
+ const day='2026-10-29';
+ for(const [from,to] of [[{lat:45.9,lon:6.12},{lat:48.85,lon:2.35}],
+                        [{lat:48.85,lon:2.35},{lat:45.19,lon:5.72}]]){
+  assert.deepEqual(nearbyTransferTrips(calendar,oneSide,day,from,to),{journeys:[],searchTruncated:false});
+ }
+ const boundary=boundaryLegs(calendar,oneSide,day,new Map([['A',true]]),new Map());
+ assert.equal(boundary.firstByStop.get('B')[0].tripId,'T1');
+}
