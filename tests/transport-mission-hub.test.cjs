@@ -1091,3 +1091,11 @@ test('un trajet arrêt à arrêt distingue les deux marches manquantes',()=>{
  assert.deepEqual(H.missingWalkLabels({legs:[{kind:'walk',fromPoint:HOME,toPoint:STOP1},ride]},task),['Marche finale non calculée']);
  assert.deepEqual(H.missingWalkLabels({legs:[ride]},{from:STOP1,to:STOP2}),[]);
 });
+
+test('le résumé distingue le quota piéton d’une erreur du moteur',()=>{
+ const labels=['Marche finale non calculée'];
+ assert.equal(H.walkStatusLabel({computing:true},labels),'Marches en cours de calcul');
+ assert.match(H.walkStatusLabel({missing:['marches non calculées (quota de la fiche)']},labels),/quota de calcul atteint/);
+ assert.match(H.walkStatusLabel({missing:['marche non calculée (erreur du moteur piéton)']},labels),/erreur du moteur piéton/);
+ assert.equal(H.walkStatusLabel({},labels),labels[0]);
+});
