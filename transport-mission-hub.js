@@ -1048,6 +1048,13 @@ function nearTransportBounds(point,bounds,radiusMeters){
  })<=radiusMeters;
 }
 function makeProviders(r,opts={}){
+  const dateParts=when=>{
+   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(when));
+   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+   return {date:p.year+'-'+p.month+'-'+p.day,clock:p.hour+':'+p.minute+':00'};
+  };
+
  // Vitesse : les fichiers d'horaires (data/gtfs/*.zip) sont gardés sur le téléphone (Cache Storage) pendant 12 h ; au lieu de les retélécharger à chaque recherche.
  const rawFetch=opts.fetcher||((...a)=>r.fetch(...a));
  const fetcher=opts.fetcher?rawFetch:async(url,init)=>{
@@ -1403,12 +1410,6 @@ function makeProviders(r,opts={}){
   const cache=r.__cpHubFeedCache||(r.__cpHubFeedCache=new Map());
   if(!cache.__w){const o=cache.set.bind(cache);cache.set=(k,v)=>{o(k,v);while(cache.size>10)cache.delete(cache.keys().next().value);return cache;};cache.__w=true;}
   const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
-  const dateParts=when=>{
-   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(when));
-   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
-   return {date:p.year+'-'+p.month+'-'+p.day,clock:p.hour+':'+p.minute+':00'};
-  };
   const toISO=(date,clock)=>{
    if(!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(clock||''))return null;
    const [h,m,s]=clock.split(':').map(Number);
@@ -1781,7 +1782,10 @@ function makeProviders(r,opts={}){
      // completeWalks must still calculate exact walking distances and times.
      const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
       from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
-     const searchParams={...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})};
+     const earliest=ms(task.earliestDeparture);
+     const start=Number.isFinite(earliest)?dateParts(earliest):null;
+     const searchParams={...base,date,...(window.arriveBy?{latestArrival:clock,
+      ...(start?.date===date?{earliestDeparture:start.clock}:{})}:{earliestDeparture:clock})};
      let result=await nationalSearch(searchParams);
      // A second, bounded stop search is useful when the closest coach terminal
      // is outside 3 km (e.g. Lyon Perrache/Gerland vs Part-Dieu).
@@ -1809,7 +1813,7 @@ function makeProviders(r,opts={}){
      }
      // After midnight, a service with GTFS time 24:30 belongs to yesterday's service date.
      // Query the previous service day as well, without inventing a new train or bus.
-     if(Number(p.hour)<6){
+     if(Number(p.hour)<6&&(!window.arriveBy||start?.date!==date)){
       const previous=new Date(Date.parse(date+'T00:00:00Z')-86400000).toISOString().slice(0,10);
       const afterMidnight=(Number(p.hour)+24)+':'+p.minute+':00';
       const overnight=await nationalSearch({
@@ -1976,14 +1980,15 @@ function makeProviders(r,opts={}){
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
    // Trois recherches décalées (+0, +20, +60 min) puis un seul trajet par train de départ (le plus rapide) :
    // évite 8 variantes du même premier train, souvent manqué à cause de la marche jusqu'à la gare.
-   const base=ms(w.when),offsets=w.arriveBy?[0,-20,-60]:[0,20,60];
+   const base=ms(w.when),earliest=ms(task.earliestDeparture);
+   const offsets=w.arriveBy?(Number.isFinite(earliest)?[0]:[0,-20,-60]):[0,20,60];
    // 20/11/2026 : 10 -> 20 (demande de Laurent : ne plus couper les résultats avant le classement).
    // 23/11/2026 (Laurent : une correspondance à 5 min, réellement proposée par la SNCF dans son propre horaire,
    // n'apparaissait jamais) : sncf-fallback.js rejette toute correspondance sous sa marge par défaut de 10 min
    // (search() : wait<margin*60000). 5 min est le minimum accepté par cette fonction (margin<5 lève une erreur) ;
    // en-dessous, aucune garantie de faisabilité réelle (quai différent, etc.), donc on ne descend pas plus bas.
    const answers=await Promise.all(offsets.map(m=>r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
-    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,limit:20,transferMinutes:5,signal,fetcher}).catch(()=>null)));
+    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,earliestDeparture:Number.isFinite(earliest)?new Date(earliest).toISOString():undefined,limit:20,transferMinutes:5,signal,fetcher}).catch(()=>null)));
    const best=new Map();
    for(const a of answers.filter(Boolean))for(const it of a.itineraries||[]){
     // 23/11/2026 : la clé ne retenait que le premier train + son départ, donc deux combinaisons partageant ce

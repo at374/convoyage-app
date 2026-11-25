@@ -82,6 +82,8 @@
   }
   function search(days,options){
     const threshold=Date.parse(options.when);if(!Number.isFinite(threshold)||!/[zZ]|[+-]\d{2}:\d{2}$/.test(options.when))throw Error('Date avec fuseau requise');
+    const earliest=options.earliestDeparture===undefined?null:Date.parse(options.earliestDeparture);
+    if(earliest!==null&&(!Number.isFinite(earliest)||!/[zZ]|[+-]\d{2}:\d{2}$/.test(options.earliestDeparture)))throw Error('Départ minimum SNCF invalide');
     const latest=options.latestArrival===undefined?null:Date.parse(options.latestArrival);
     if(latest!==null&&(!Number.isFinite(latest)||!/[zZ]|[+-]\d{2}:\d{2}$/.test(options.latestArrival)))throw Error('Arrivée limite SNCF invalide');
     const margin=options.transferMinutes??10;if(!Number.isInteger(margin)||margin<5||margin>120)throw Error('Marge ferroviaire invalide');
@@ -97,7 +99,7 @@
         for(let i=0;i<events.length-1;i++){const a=events[i];if(a[3]!==0)continue;
           for(let j=i+1;j<events.length;j++){const b=events[j];if(b[4]!==0)continue;
             const dep=base+a[2]*1000,arr=base+b[1]*1000;
-            if(a[0]===b[0]||arr<dep||arr-dep>43200000||(latest!==null&&arr>latest))continue;
+            if(a[0]===b[0]||arr<dep||arr-dep>43200000||(earliest!==null&&dep<earliest)||(latest!==null&&arr>latest))continue;
             const fromHere=origins.has(a[0]),toHere=destinations.has(b[0]);
             if(fromHere&&toHere&&(!options.arriveBy?dep>=threshold:arr<=threshold))direct.push({legs:[makeLeg(data,t,a,b,base)],departure:dep,arrival:arr});
             if(fromHere&&!destinations.has(a[0])&&(!options.arriveBy?dep>=threshold:dep>=threshold-43200000)&&arr<=threshold+43200000){first.push(makeLeg(data,t,a,b,base));}
