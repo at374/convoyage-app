@@ -1133,7 +1133,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=tad-main-20261124a');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=transport-budget-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1161,20 +1161,20 @@ function makeProviders(r,opts={}){
   });
   return {run,dispose};
  };
- const localWorker=makeWorker(),complexWorker=makeWorker();
- Object.defineProperty(P,'dispose',{value:()=>{localWorker.dispose();complexWorker.dispose();}});
- const workerCall=(payload,timeoutMs)=>(payload.op?complexWorker:localWorker).run(payload,timeoutMs);
+ const localWorker=makeWorker(),connectionWorker=makeWorker(),nationalWorker=makeWorker();
+ Object.defineProperty(P,'dispose',{value:()=>{localWorker.dispose();connectionWorker.dispose();nationalWorker.dispose();}});
+ const workerCall=(payload,timeoutMs)=>(payload.op==='national'?nationalWorker:payload.op==='correspondances'?connectionWorker:localWorker).run(payload,timeoutMs);
  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
  // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
  // de réseaux) est le calcul le plus lourd de toute la recherche transport et tournait sur le fil principal.
  // Déplacée dans le même worker que les trajets directs (local_<id>) : voir transport-hub-local-worker.js.
- const workerCorrespondances=payload=>workerCall({op:'correspondances',...payload},150000).then(d=>d.rows);
+ const workerCorrespondances=(payload,budget)=>workerCall({op:'correspondances',...payload},budget).then(d=>d.rows);
  // 21/11/2026 (Laurent : « ça bloque toujours ») : SNCF (TER/TGV)/FlixBus/BlaBlaCar Bus (national_<id>
  // plus bas) appelaient CPNationalGTFSJourneys.loadAndSearch directement sur le fil principal — jusqu'à
  // 4 recherches par mission sur le plus gros flux GTFS de tous (réseau SNCF national). Déplacée dans le
  // même worker (transport-hub-local-worker.js importe aussi transport-national-gtfs-journeys.js).
- const workerNationalSearch=(operator,resource,searchOptions)=>workerCall({op:'national',operator,resource,searchOptions},150000).then(d=>d.result);
+ const workerNationalSearch=(operator,resource,searchOptions,budget)=>workerCall({op:'national',operator,resource,searchOptions},budget).then(d=>d.result);
  // Regional GTFS archives already hosted by the project. These are scheduled
  // candidates only; the pedestrian router and confirmation checks still apply.
  // 23/11/2026 : localNetworks/base/deployedBase hissés au niveau de makeProviders (au lieu d'être internes au
@@ -1594,6 +1594,11 @@ function makeProviders(r,opts={}){
     // Réserver une place au rail pour relier les réseaux urbains aux deux extrémités.
     return candidates.has(sncfFeed)?[...local.slice(0,7),sncfFeed]:local.slice(0,8);
    };
+   const connectionBudget=task=>{
+    const sizes=pickFeeds(task).map(n=>opts.feedSizes?.get(n[2])||(n===sncfFeed?1024*1024:4*1024*1024));
+    const mb=sizes.reduce((sum,size)=>sum+size,0)/(1024*1024);
+    return Math.min(150000,35000+Math.ceil(mb)*6000+sizes.length*5000);
+   };
    P.local_correspondances={name:'Correspondances entre réseaux (GTFS)',
     enabled:task=>!!queryWindow(task)&&pickFeeds(task).length>0,
     disabledReason:'trajet hors zone des réseaux locaux ou horaires manquants',
@@ -1606,7 +1611,7 @@ function makeProviders(r,opts={}){
     // mesuré), le seul téléchargement de 8 flux GTFS au premier chargement dépasse largement 35 s, avant
     // même le calcul des correspondances. Comme pour les moteurs nationaux : chaque flux est mis en cache
     // 12 h (feedFor/cacheFetch), donc la patience n'est à demander qu'une fois par demi-journée et par zone.
-    timeoutMs:150000,
+    timeoutMs:connectionBudget,
     run:async(task,signal)=>{
      const w=queryWindow(task),when=ms(w.when);
      if(!Number.isFinite(when))return [];
@@ -1663,7 +1668,7 @@ function makeProviders(r,opts={}){
       // principal (même résultat) en secours.
       let rows=null;
       if(canWorker()){
-       try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2]),bbox:n[3]})),date,from,to,window:scanW,realWindow:window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
+       try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2]),bbox:n[3]})),date,from,to,window:scanW,realWindow:window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes},connectionBudget(task));}
        catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}
       }
       if(rows===null){
@@ -1757,6 +1762,9 @@ function makeProviders(r,opts={}){
    const resource=resources[operator];
    if(!resource||!/^https:\/\//i.test(resource.url||''))continue;
    const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS'}[operator];
+   const file=new URL(resource.url).pathname.split('/').pop();
+   const bytes=opts.feedSizes?.get(file)||resource.bytes||({sncf:1024*1024,flixbus:256*1024,blablacarBus:128*1024})[operator];
+   const budget=bytes<=512*1024?35000:bytes<=2*1024*1024?55000:bytes<=8*1024*1024?85000:120000;
    // Calcul hors du fil de l'écran (Web Worker) ; fetcher/signal ne sont pas clonables vers le worker
    // (le worker utilise son propre cache hors ligne, et n'a jamais pris en charge l'annulation, comme
    // pour les trajets directs locaux ci-dessus) ; en cas d'échec du worker, ancien calcul sur le fil
@@ -1764,7 +1772,7 @@ function makeProviders(r,opts={}){
    const nationalSearch=async params=>{
     const {operator:op,resource:res,fetcher:_f,signal:_s,...rest}=params;
     if(canWorker()){
-     try{return await workerNationalSearch(op,res,rest);}
+     try{return await workerNationalSearch(op,res,rest,budget);}
      catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;}
     }
     return r.CPNationalGTFSJourneys.loadAndSearch(params);
@@ -1780,7 +1788,7 @@ function makeProviders(r,opts={}){
     // mais sur le réseau de Laurent (0,06 à 1,7 Ko/s vu sur ses captures), même 138 Ko dépasse largement
     // 35 s au premier chargement. Une fois téléchargé, le flux est mis en cache 12 h (cp-gtfs-zips, cf.
     // cacheFetch plus haut et dans le worker) : la patience n'est à demander qu'une fois par demi-journée.
-    timeoutMs:150000,
+    timeoutMs:budget,
     run:async(task,signal)=>{
      if(!coversTrip(task)||signal?.aborted)return [];
      const window=queryWindow(task),when=ms(window.when);
@@ -2350,7 +2358,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
    state[label].pending++;state[label].total=(state[label].total||0)+1;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
-   const providerTimeout=p.timeoutMs;
+   const providerTimeout=typeof p.timeoutMs==='function'?p.timeoutMs(variant):p.timeoutMs;
    const limitMs=Number.isFinite(providerTimeout)&&providerTimeout>0?providerTimeout:timeoutMs;
    const deadline=Date.now()+limitMs;(state[label].deadlines=state[label].deadlines||[]).push(deadline);
    const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)')),limitMs);

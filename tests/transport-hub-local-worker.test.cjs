@@ -10,11 +10,11 @@ test('le worker charge les mêmes bibliothèques et est mis en cache hors ligne'
  // 21/11/2026 : le worker calcule aussi les correspondances (nearbyTransferTrips + crossNetworkTrips)
  // et la recherche nationale (SNCF/FlixBus/BlaBlaCar Bus), il lui faut donc transport-gtfs-time.js,
  // transport-gtfs-federation.js et transport-national-gtfs-journeys.js en plus des trajets directs.
- assert.match(w,/importScripts\('transport-catalogue\.js','transport-gtfs-index\.js','transport-gtfs-time\.js','transport-gtfs-federation\.js','transport-gtfs-loader\.js','transport-gtfs-fares\.js','transport-national-gtfs-journeys\.js'\)/);
+ assert.match(w,/importScripts\('transport-catalogue\.js','transport-gtfs-index\.js','transport-gtfs-time\.js','transport-gtfs-federation\.js','transport-gtfs-loader\.js','transport-gtfs-fares\.js','transport-national-gtfs-journeys\.js','transport-gtfs-flex-courses\.js'\)/);
  assert.match(w,/nearbyDirectTrips/);
  assert.match(w,/nearbyTransferTrips/);
  assert.match(w,/CPGTFSFederation\.crossNetworkTrips/);
- assert.match(w,/CPNationalGTFSJourneys\.loadAndSearch/);
+ assert.match(w,/CPNationalGTFSJourneys\.search\(/);
  assert.match(sw,/'transport-hub-local-worker\.js(\?v=[^']+)?'/);
  assert.ok(sw.includes('transport-gtfs-time.js'));
  assert.ok(sw.includes('transport-gtfs-federation.js'));
@@ -44,4 +44,30 @@ test('les paires de réseaux non adjacentes sont filtrées avant crossNetworkTri
  assert.match(hub,/if\(!r\.CPGTFSFederation\.bboxesNear\(nets\[i\]\[3\],nets\[j\]\[3\]\)\)continue;/);
  // Filtre appliqué dans le worker, avant crossNetworkTrips, avec repli sûr (true) si bbox absente.
  assert.match(w,/if\(!CPGTFSFederation\.bboxesNear\(loaded\[i\]\.__bbox,loaded\[j\]\.__bbox\)\)/);
+});
+
+test('les recherches nationales simultanées puis répétées réutilisent le même index pour une date',async()=>{
+ const vm=require('node:vm');
+ const messages=[];
+ const index={counts:{}};
+ let loads=0;
+ const self={
+  postMessage:message=>messages.push(message),
+  CPNationalGTFSJourneys:{search:options=>{
+   assert.equal(options.index,index);
+   return [options.radiusMeters];
+  }}
+ };
+ vm.runInNewContext(w,{self,importScripts(){},CPGTFSLoader:{loadResource:async()=>{
+  loads++;
+  return {source:{},files:{},index};
+ }}});
+ const query=(id,date,radiusMeters)=>self.onmessage({data:{id,op:'national',operator:'sncf',
+  resource:{url:'https://example.test/sncf.zip'},searchOptions:{date,radiusMeters}}});
+ await Promise.all([query(1,'2026-11-25',3000),query(2,'2026-11-25',5000)]);
+ await query(3,'2026-11-25',5000);
+ assert.equal(loads,1);
+ assert.deepEqual(messages.map(message=>message.result.journeys[0]),[3000,5000,5000]);
+ await query(4,'2026-11-26',3000);
+ assert.equal(loads,2);
 });

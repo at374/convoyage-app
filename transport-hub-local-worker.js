@@ -3,16 +3,34 @@
    sur le fil principal : mêmes fonctions (transport-gtfs-loader / -index / -fares). */
 'use strict';
 importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js','transport-gtfs-flex-courses.js');
-const feeds=new Map();   // «id|date» -> promesse du flux (6 au maximum)
+const feeds=new Map();
+const downloads=new Map();
 const cacheFetch=async(url,init)=>{
  if(!self.caches||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(String(url)))return fetch(url,init);
- try{
-  const c=await caches.open('cp-gtfs-zips'),hit=await c.match(url);
-  if(hit){const at=Number(hit.headers.get('x-cp-saved'));if(Number.isFinite(at)&&Date.now()-at<12*3600*1000)return hit;}
-  const resp=await fetch(url,init);
-  if(resp&&resp.ok){try{const b=await resp.clone().arrayBuffer();await c.put(url,new Response(b,{status:200,headers:{'content-type':'application/zip','x-cp-saved':String(Date.now())}}));}catch(_){}}
-  return resp;
- }catch(_){return fetch(url,init);}
+ let cache;
+ try{cache=await caches.open('cp-gtfs-zips');}catch(_){return fetch(url,init);}
+ const key=String(url);
+ let pending=downloads.get(key);
+ if(!pending){
+  pending=(async()=>{
+   const hit=await cache.match(url).catch(()=>null);
+   if(hit){
+    const at=Number(hit.headers.get('x-cp-saved'));
+    if(Number.isFinite(at)&&Date.now()-at<12*3600*1000)return hit;
+   }
+   const response=await fetch(url,init);
+   if(response.ok){
+    const copy=response.clone();
+    const headers=new Headers(copy.headers);
+    headers.set('x-cp-saved',String(Date.now()));
+    await cache.put(url,new Response(copy.body,{status:copy.status,headers})).catch(()=>{});
+   }
+   return response;
+  })();
+  downloads.set(key,pending);
+ }
+ try{return (await pending).clone();}
+ finally{if(downloads.get(key)===pending)downloads.delete(key);}
 };
 function attachFares(feed,rows){
  const F=self.CPGTFSFares;
@@ -22,15 +40,25 @@ function attachFares(feed,rows){
  const one=l=>{try{return F.legFare(feed.preparedFares,feed.index,l);}catch(_){return null;}};
  return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:{...row,gtfsFare:row.gtfsFare||one(row)});
 }
-const feedFor=async(key,urls,date)=>{
- let p=feeds.get(key);
- if(!p){
-  p=CPGTFSLoader.loadResource({format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)},{fetcher:cacheFetch,indexServiceDates:[date],retainSourceTables:false});
-  feeds.set(key,p);p.catch(()=>feeds.delete(key));
-  while(feeds.size>6)feeds.delete(feeds.keys().next().value);
+const feedFor=async(urls,date)=>{
+ const key=urls[0]+'|'+date;
+ let entry=feeds.get(key);
+ if(entry){
+  feeds.delete(key);feeds.set(key,entry);
+ }else{
+  entry={done:false};
+  entry.promise=CPGTFSLoader.loadResource({format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)},
+   {fetcher:cacheFetch,indexServiceDates:[date],retainSourceTables:false}).then(feed=>{
+    entry.done=true;
+    const ready=[...feeds].filter(([,value])=>value.done);
+    while(ready.length>6)feeds.delete(ready.shift()[0]);
+    return feed;
+   }).catch(error=>{feeds.delete(key);throw error;});
+  feeds.set(key,entry);
  }
- return p;
+ return entry.promise;
 };
+
 // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances (même
 // réseau via nearbyTransferTrips, et entre réseaux via CPGTFSFederation.crossNetworkTrips) tournait sur le
 // fil principal, dans local_correspondances (transport-mission-hub.js) — potentiellement jusqu'à 28 paires
@@ -58,7 +86,7 @@ const runCorrespondances=async data=>{
  const marginWindow=realWindow||window;
  const loaded=(await Promise.all(nets.map(async n=>{
   try{
-   const feed=await feedFor(n.id+'|'+date,n.urls,date);
+   const feed=await feedFor(n.urls,date);
    // 21/11/2026 : datasetId doit être propagé dans source (CPGTFSFederation.crossNetworkTrips exige des
    // identifiants distincts par réseau), et networkUrls/serviceDate sont attachés à chaque trajet/correspondance
    // ci-dessous pour que le bouton « Tous les horaires » fonctionne aussi sur les résultats de correspondance (Y22).
@@ -100,7 +128,10 @@ const runCorrespondances=async data=>{
 // d'échec du worker, ancien calcul sur le fil principal (même résultat).
 const runNational=async data=>{
  const {operator,resource,searchOptions}=data;
- return self.CPNationalGTFSJourneys.loadAndSearch({operator,resource,fetcher:cacheFetch,...searchOptions});
+ const feed=await feedFor([resource.url,...(resource.fallbackUrls||[])],searchOptions.date);
+ return {source:feed.source,counts:feed.index.counts,journeys:self.CPNationalGTFSJourneys.search({
+  ...searchOptions,operator,files:feed.files,index:feed.index
+ })};
 };
 self.onmessage=async({data})=>{
  const {id,op}=data||{};
@@ -114,9 +145,9 @@ self.onmessage=async({data})=>{
   catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
   return;
  }
- const {key,urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex}=data||{};
+ const {urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex}=data||{};
  try{
-  const feed=await feedFor(key,urls,date);
+  const feed=await feedFor(urls,date);
   // Pré-sélection (même règle que le fil principal) : un seul passage par véhicule (le plus proche à pied), avant d'envoyer le résultat à l'écran.
   const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
   const all=CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,from,to,radius||3000),best=new Map();
