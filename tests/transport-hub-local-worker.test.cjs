@@ -18,7 +18,8 @@ test('le worker charge les mêmes bibliothèques et est mis en cache hors ligne'
  assert.match(sw,/'transport-hub-local-worker\.js(\?v=[^']+)?'/);
  assert.ok(sw.includes('transport-gtfs-time.js'));
  assert.ok(sw.includes('transport-gtfs-federation.js'));
- assert.ok(sw.includes('transport-national-gtfs-journeys.js?v=terminus-national-20261125'));
+ const nationalScript=w.match(/'(transport-national-gtfs-journeys\.js(?:\?v=[^']+)?)'/)?.[1];
+ assert.ok(nationalScript&&sw.includes("'"+nationalScript+"'"));
 });
 test('local_correspondances calcule aussi hors du fil de l’écran, avec repli',()=>{
  assert.match(hub,/workerCorrespondances/);

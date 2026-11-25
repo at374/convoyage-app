@@ -113,3 +113,26 @@ test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet
  }finally{globalThis.fetch=previousFetch;}
 });
 }
+
+test('les fenêtres SNCF réutilisent les directs du même jour et filtrent chacune leurs horaires',async()=>{
+ const loader=require('../transport-gtfs-loader.js');
+ const indexer=require('../transport-gtfs-index.js');
+ const resource={url:'https://example.org/national-sncf-aura.zip',format:'GTFS'};
+ const date='2026-11-27';
+ const {files,index}=await loader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
+ const base={operator:'sncf',files,date,from:{lat:45.7606,lon:4.8593},to:{lat:45.1914,lon:5.7143},
+  radiusMeters:3000,maxResults:20,includeTransfers:false};
+ const windows=[{latestArrival:'10:00:00'},{earliestDeparture:'13:00:00'},{latestArrival:'16:00:00'}];
+ const expected=windows.map(window=>journeys.search({...base,...window,index:{...index}}));
+ const original=indexer.nearbyDirectTrips;
+ let scans=0;
+ try{
+  indexer.nearbyDirectTrips=(...args)=>{scans++;return original(...args);};
+  const actual=windows.map(window=>journeys.search({...base,...window,index}));
+  assert.deepEqual(actual,expected);
+  assert.ok(actual.every(rows=>rows.length>0));
+  assert.equal(scans,1);
+  journeys.search({...base,index,radiusMeters:4000});
+  assert.equal(scans,2);
+ }finally{indexer.nearbyDirectTrips=original;}
+});

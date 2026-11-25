@@ -4,6 +4,24 @@
 const indexer=typeof module==='object'&&module.exports?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
 const loader=typeof module==='object'&&module.exports?require('./transport-gtfs-loader.js'):root.CPGTFSLoader;
 const OPERATORS=new Set(['sncf','blablacarBus','flixbus']);
+// Les fenêtres d’une même mission partagent les trajets directs de la journée.
+const directByIndex=new WeakMap();
+function directForDay(files,index,date,from,to,radiusMeters){
+ let cache=directByIndex.get(index);
+ if(!cache){cache=new Map();directByIndex.set(index,cache);}
+ const key=JSON.stringify([date,from.lat,from.lon,to.lat,to.lon,radiusMeters]);
+ if(cache.has(key)){
+  const direct=cache.get(key);
+  cache.delete(key);cache.set(key,direct);
+  return direct;
+ }
+ const direct=indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters);
+ if(direct.length<=3000){
+  cache.set(key,direct);
+  if(cache.size>6)cache.delete(cache.keys().next().value);
+ }
+ return direct;
+}
 function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=30,earliestDeparture=null,latestArrival=null,includeTransfers=false}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
  if(!files||!index)throw new Error('Prebuilt GTFS files and index required');
@@ -26,7 +44,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  if(Number.isNaN(min))throw new Error('Invalid departure threshold');
  const max=latestArrival===null?Infinity:seconds(latestArrival);
  if(Number.isNaN(max))throw new Error('Invalid arrival threshold');
- const direct=indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters);
+ const direct=directForDay(files,index,date,from,to,radiusMeters);
  // Apply the mission time window inside the transfer search, not only afterwards.
  // This avoids scanning irrelevant departures across a full national timetable.
  const transfer=includeTransfers?indexer.nearbyTransferTrips(files,index,date,from,to,radiusMeters,
@@ -69,7 +87,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
   .sort((a,b)=>seconds(a.departure)-seconds(b.departure)||seconds(a.arrival)-seconds(b.arrival))
   .slice(0,maxResults).map(x=>({
    operator,tripId:x.tripId,routeId:x.routeId,line:x.line,headsign:x.headsign||'',terminus:x.terminus||null,date:x.date,departure:x.departure,arrival:x.arrival,
-   fromStopId:x.from,toStopId:x.to,originStop:x.originStop,destinationStop:x.destinationStop,
+   fromStopId:x.from,toStopId:x.to,originStop:{...x.originStop},destinationStop:{...x.destinationStop},
    accessDistanceMeters:x.accessDistanceMeters,egressDistanceMeters:x.egressDistanceMeters,
    serviceScheduled:true,serviceConfirmed:false,priceEUR:null,priceStatus:'unavailable',
    seatAvailability:'unknown',walkingRouteConfirmed:false,source:'official-gtfs',
