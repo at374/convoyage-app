@@ -68,7 +68,10 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
    const {side,toTransfer,...value}=leg;
    map.get(leg.toTransfer).push({...value,networkId:ids[i],network:feed.source.network||ids[i]});
   }
-  for(const list of second.values())list.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+  for(const [id,list] of second){
+   second.set(id,list.map(leg=>({leg,departure:Date.parse(leg.departure)}))
+    .sort((a,b)=>a.departure-b.departure));
+  }
   return {feed,origins,destinations,first,second};
  });
  const stopInfo=(index,id)=>{
@@ -85,14 +88,17 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
    if(++lookups>maxStopLookups||(lookups%50===0&&Date.now()-startedAt>timeBudgetMs)){searchTruncated=true;break directions;}
    const nearby=g.nearbyStops(b.feed.index,stop.lat,stop.lon,transferRadiusMeters);
    for(const peer of nearby){
-    const second=b.second.get(peer.stopId)||[];
+    const second=b.second.get(peer.stopId);
+    if(!second?.length)continue;
+    const minimumWalkMinutes=Math.ceil(peer.distanceMeters/60); // Lower-bound estimate, not a verified walking route.
+    const minimumTransferMinutes=Math.max(minTransferMinutes,minimumWalkMinutes);
     for(const x of first){
-     const minimumWalkMinutes=Math.ceil(peer.distanceMeters/60); // Lower-bound estimate, not a verified walking route.
-     const earliest=Date.parse(x.arrival)+Math.max(minTransferMinutes,minimumWalkMinutes)*60000;
+     const arrival=Date.parse(x.arrival);
+     const earliest=arrival+minimumTransferMinutes*60000;
      let low=0,high=second.length;
-     while(low<high){const mid=(low+high)>>>1;if(Date.parse(second[mid].departure)<earliest)low=mid+1;else high=mid;}
+     while(low<high){const mid=(low+high)>>>1;if(second[mid].departure<earliest)low=mid+1;else high=mid;}
      for(let i=low;i<second.length;i++){
-      const y=second[i],interval=Date.parse(y.departure)-Date.parse(x.arrival);
+      const {leg:y,departure}=second[i],interval=departure-arrival;
       if(interval>maxWaitMinutes*60000)break;
       if(++pairs>maxPairs||journeys.length>=maxJourneys||(pairs%500===0&&Date.now()-startedAt>timeBudgetMs)){searchTruncated=true;break directions;}
       journeys.push({tripId:JSON.stringify([[x.networkId,x.tripId],[y.networkId,y.tripId]]),
@@ -103,7 +109,7 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
        accessDistanceMeters:a.origins.get(x.from).distanceMeters,egressDistanceMeters:b.destinations.get(y.to).distanceMeters,
        transferStopId:JSON.stringify([stopId,peer.stopId]),transferStop:stop,transferDestinationStop:peer,
        transferDistanceMeters:peer.distanceMeters,transferMinutes:interval/60000,
-       minimumTransferMinutes:Math.max(minTransferMinutes,minimumWalkMinutes),walkingDurationSeconds:null,
+       minimumTransferMinutes,walkingDurationSeconds:null,
        interNetwork:true,transferKind:'nearby-stops',timetableOnly:true,transferVerified:false,
        accessVerified:false,exactOrigin:false,exactDestination:false,serviceConfirmed:false,faresVerified:false,priceEUR:null});
      }
