@@ -1386,7 +1386,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=directs-gtfs-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=repli-gtfs-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1796,7 +1796,7 @@ function makeProviders(r,opts={}){
    // pour les trajets directs locaux ci-dessus) ; en cas d'échec du worker, ancien calcul sur le fil
    // principal (même résultat).
    const nationalSearch=async params=>{
-    const {operator:op,resource:res,fetcher:_f,signal:_s,...rest}=params;
+    const {operator:op,resource:res,fetcher:_f,signal:_s,feedByDate:_feeds,...rest}=params;
     if(canWorker()){
      try{return await workerNationalSearch(op,res,rest,budget);}
      catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;}
@@ -1826,7 +1826,7 @@ function makeProviders(r,opts={}){
      // Match the 3 km walking-search envelope used in the AURA coverage audit.
      // These are straight-line candidate stops, not verified pedestrian routes:
      // completeWalks must still calculate exact walking distances and times.
-     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
+     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,feedByDate:new Map(),
       from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
      const earliest=ms(task.earliestDeparture);
      const start=Number.isFinite(earliest)?dateParts(earliest):null;

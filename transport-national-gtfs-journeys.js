@@ -95,7 +95,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
    ...(transfer?.searchTruncated?{searchTruncated:true}:{})
   }));
 }
-async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},...searchOptions}={}){
+async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},feedByDate,...searchOptions}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
  if(!resource||!/^https:\/\//i.test(resource.url||''))throw new Error('HTTPS GTFS resource required');
  if(!/^\d{4}-\d{2}-\d{2}$/.test(searchOptions.date||'')||
@@ -108,8 +108,16 @@ async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},..
  const {maxArchiveBytes=20*1024*1024,...rest}=loadOptions;
  if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>20*1024*1024)
   throw new Error('National GTFS archive exceeds safe mobile cap; prepare a server-side slice');
- const feed=await loader.loadResource(resource,{...rest,maxArchiveBytes,fetcher,signal,
-  indexServiceDates:[searchOptions.date],retainSourceTables:false});
+ const date=searchOptions.date;
+ let pending=feedByDate?.get(date);
+ if(!pending){
+  pending=loader.loadResource(resource,{...rest,maxArchiveBytes,fetcher,signal,
+   indexServiceDates:[date],retainSourceTables:false});
+  feedByDate?.set(date,pending);
+  if(feedByDate)pending.catch(()=>feedByDate.delete(date));
+ }
+ const feed=await pending;
+ if(signal?.aborted)throw new DOMException('GTFS loading cancelled','AbortError');
  return {source:feed.source,counts:feed.index.counts,journeys:search({
   operator,files:feed.files,index:feed.index,...searchOptions
  })};

@@ -136,3 +136,17 @@ test('les fenêtres SNCF réutilisent les directs du même jour et filtrent chac
   assert.equal(scans,2);
  }finally{indexer.nearbyDirectTrips=original;}
 });
+
+test('le repli national à 5 km réutilise l’archive indexée à 3 km',async()=>{
+ let downloads=0;
+ const options={operator:'sncf',resource:{url:'https://example.org/national-sncf-aura.zip',format:'GTFS'},
+  fetcher:async()=>{downloads++;return fetcher();},feedByDate:new Map(),date:'2026-11-27',
+  from:{lat:45.7606,lon:4.8593},to:{lat:45.1914,lon:5.7143}};
+ for(const radiusMeters of [3000,5000]){
+  const result=await journeys.loadAndSearch({...options,radiusMeters});
+  assert.ok(result.journeys.length);
+ }
+ assert.equal(downloads,1);
+ await journeys.loadAndSearch({...options,date:'2026-11-28'});
+ assert.equal(downloads,2);
+});
