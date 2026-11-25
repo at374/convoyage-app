@@ -93,7 +93,7 @@
     const margin=options.transferMinutes??10;if(!Number.isInteger(margin)||margin<5||margin>120)throw Error('Marge ferroviaire invalide');
     const limit=options.limit??5;if(!Number.isInteger(limit)||limit<1||limit>20)throw Error('Limite SNCF invalide');
     const first=[],second=new Map(),direct=[];let originFound=false,destinationFound=false;
-    const makeLeg=(data,t,a,b,base)=>({source:'SNCF GTFS',serviceDate:data.date,tripId:t[0],line:t[1],trainNumber:t[2]||null,from:data.stations[a[0]][1],to:data.stations[b[0]][1],fromStationId:data.stations[a[0]][0],toStationId:data.stations[b[0]][0],fromPoint:{lat:data.stations[a[0]][2],lon:data.stations[a[0]][3]},toPoint:{lat:data.stations[b[0]][2],lon:data.stations[b[0]][3]},departure:base+a[2]*1000,arrival:base+b[1]*1000});
+    const makeLeg=(data,t,a,b,base)=>({source:'SNCF GTFS',serviceDate:data.date,tripId:t[0],line:t[1],trainNumber:t[2]||null,terminus:data.stations[t[3].at(-1)[0]][1],from:data.stations[a[0]][1],to:data.stations[b[0]][1],fromStationId:data.stations[a[0]][0],toStationId:data.stations[b[0]][0],fromPoint:{lat:data.stations[a[0]][2],lon:data.stations[a[0]][3]},toPoint:{lat:data.stations[b[0]][2],lon:data.stations[b[0]][3]},departure:base+a[2]*1000,arrival:base+b[1]*1000});
     for(const data of days){
       const origins=new Set(stationsFor(options.from,data.stations).map(s=>s.index));
       const destinations=new Set(stationsFor(options.to,data.stations).map(s=>s.index));
@@ -137,6 +137,24 @@
     checkSignal(options.signal);
     return {...search(days.filter(Boolean),options),sourceVersion:manifest.sourceVersion,sourceSha256:manifest.sourceSha256,licenseUrl:manifest.licenseUrl};
   }
-  const api={plan,search,stationsFor,validateDay,serviceBase};root.CPSncfFallback=api;
+  async function terminusForLeg(leg,fetcher=root.fetch) {
+    const number=String(leg.headsign||'').trim();
+    const departure=Date.parse(leg.departure),arrival=Date.parse(leg.arrival);
+    if(!/^\d+$/.test(number)||!Number.isFinite(departure)||!Number.isFinite(arrival))return null;
+    const day=localDate(departure);
+    const manifest=await json(BASE+'manifest.json',fetcher);
+    const data=await loadDay(day,manifest,fetcher);
+    const base=serviceBase(day);
+    const name=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    const endings=new Set();
+    for(const [id,line,trainNumber,stops] of data.trips){
+      if((trainNumber?String(trainNumber):/^OCESN(\d+)[A-Z]/.exec(id)?.[1])!==number||line!==leg.line)continue;
+      const start=stops.findIndex(stop=>Math.abs(base+stop[2]*1000-departure)<60000&&name(data.stations[stop[0]][1])===name(leg.from));
+      if(start<0||!stops.slice(start+1).some(stop=>Math.abs(base+stop[1]*1000-arrival)<60000&&name(data.stations[stop[0]][1])===name(leg.to)))continue;
+      endings.add(data.stations[stops.at(-1)[0]][1]);
+    }
+    return endings.size===1?[...endings][0]:null;
+  }
+  const api={terminusForLeg,plan,search,stationsFor,validateDay,serviceBase};root.CPSncfFallback=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

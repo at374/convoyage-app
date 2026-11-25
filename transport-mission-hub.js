@@ -236,7 +236,7 @@ function fromSNCF(answer){
  return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
   const legs=it.legs||[],alerts=legs.slice(1).map((l,i)=>tightTransferAlert({...l,arrival:legs[i].arrival})).filter(Boolean);
   return {...journey('SNCF (GTFS officiel)',legs.map(l=>leg({
-   mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',
+   mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',terminus:l.terminus,
    from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null,alerts}),missing:['horaire GTFS non confirmé en temps réel']};
  });
 }
@@ -2627,7 +2627,8 @@ function walkingEndpoint(leg,task,side){
 }
 function directionForLeg(leg,task){
  const terminal=String(leg.terminus||'').trim();
- const direction=String((leg.mode==='Bus'&&terminal)||leg.headsign||'').trim();
+ const candidate=terminal||String(leg.headsign||'').trim();
+ const direction=/^(?:direction\s*[:–-]?\s*)?\d+$/i.test(candidate)?'':candidate;
  if(leg.kind==='walk'||leg.mode!=='Bus')return direction;
  const normalized=s=>String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/[^a-z0-9]+/g,' ').trim();
@@ -2721,7 +2722,13 @@ function card(doc,j,labels,expanded=false,task=null){
  for(const [legIndex,l] of j.legs.entries()){
   const direction=directionForLeg(l,task);
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
-  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:l.mode==='Bus'?'→ terminus non renseigné':''].filter(Boolean).join(' '))));
+  const legTitle=el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:l.mode==='Bus'||l.mode==='Train'?'→ terminus non renseigné':''].filter(Boolean).join(' ')));
+  li.appendChild(legTitle);
+  if(!direction&&l.mode==='Train'&&/SNCF/i.test(l.provider||'')&&/^\d+$/.test(String(l.headsign||'').trim())){
+   root.CPSncfFallback?.terminusForLeg?.(l).then(value=>{
+    if(value)legTitle.textContent=legTitle.textContent.replace('terminus non renseigné','direction '+value);
+   }).catch(()=>{});
+  }
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+durationText(l.delayMinutes):'')));
   if(l.kind==='scooter'){
    li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(l.speedKmh||j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
