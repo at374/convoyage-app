@@ -15,6 +15,12 @@
       for (const k of ['energy', 'category']) { const t = LIBELLES[k][String(v[k] || '').trim().toLowerCase()]; if (t) v[k] = t; } }
     return missions || [];
   }
+  function deliveryCarNonRevue(mission, source) {
+    if (mission?.platform !== 'DeliveryCar' || mission.kind !== 'disponible' ||
+        !String(source?.message || '').startsWith('Dernier balayage Delivery Car')) return false;
+    const start = Date.parse(source.lu_le || ''), seen = Date.parse(mission.last_seen_at || '');
+    return Number.isFinite(start) && (!Number.isFinite(seen) || seen < start);
+  }
   // Valeurs proposées dans les listes déroulantes, d'après les missions reçues.
   function options(missions) {
     const l = missions || [];
@@ -89,7 +95,7 @@
     for (const g of l) g.lignes.sort((a, b) => (b.date ?? -1) - (a.date ?? -1));
     return l;
   }
-  const api = { options, appliquer, actifs, parMois, parAnnee, moisParis, aFacturer, francais };
+  const api = { deliveryCarNonRevue, options, appliquer, actifs, parMois, parAnnee, moisParis, aFacturer, francais };
   root.CPFiltres = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
