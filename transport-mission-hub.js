@@ -2669,6 +2669,11 @@ function walkStatusLabel(journey,labels){
  if(missing.some(reason=>reason.includes('erreur du moteur piéton')))return labels.join(' · ')+' (erreur du moteur piéton)';
  return labels.join(' · ');
 }
+async function retryMissingWalks(journey,task,router){
+ const missing=(journey.missing||[]).filter(reason=>!/^marches? .*non calculée|^marches en cours de calcul/i.test(reason));
+ const route=await completeWalks({...journey,missing,computing:false},task,router);
+ return {...assess(route,task),price:journey.price};
+}
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
@@ -2862,6 +2867,34 @@ function card(doc,j,labels,expanded=false,task=null){
   ol.appendChild(li);
  }
  body.appendChild(ol);
+ if(walkLabels.length&&!j.computing&&pt(task?.from)&&pt(task?.to)&&root.CPTransportWalking?.createRouter){
+  const button=el(doc,'button','second','Calculer les marches manquantes');
+  button.type='button';
+  const status=el(doc,'p','cp-hub-note');
+  status.setAttribute('role','status');
+  button.onclick=async()=>{
+   button.disabled=true;
+   status.textContent='Calcul des marches en cours…';
+   let router;
+   try{
+    router=cachedRouter(root.CPTransportWalking.createRouter({maxRequests:Math.max(2,j.legs.length+1),intervalMs:1100}),
+     {storage:root.CPAccount?.storage});
+    const updated=await retryMissingWalks(j,task,router);
+    if(!c.isConnected)return;
+    if(missingWalkLabels(updated,task).length>=walkLabels.length){
+     status.textContent='Le moteur piéton n’a pas fourni de nouveau chemin vérifiable.';
+     return;
+    }
+    const replacement=card(doc,updated,labels,true,task);
+    const key=c.getAttribute('data-journey-key');
+    if(key)replacement.setAttribute('data-journey-key',key);
+    c.replaceWith(replacement);
+   }catch(_){status.textContent='Le calcul piéton a échoué. Tu peux réessayer.';}
+   finally{router?.dispose();button.disabled=false;}
+  };
+  body.append(button,status);
+ }
+
 
  // Accès à une vraie carte pour chaque marche : le schéma SVG n'est pas une carte de rues.
  const svg=j.scooterOnly?null:mapSvg(doc,j);if(svg)body.appendChild(svg);
@@ -3227,7 +3260,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,missingWalkLabels,walkStatusLabel,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,missingWalkLabels,walkStatusLabel,retryMissingWalks,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

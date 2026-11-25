@@ -1099,3 +1099,13 @@ test('le résumé distingue le quota piéton d’une erreur du moteur',()=>{
  assert.match(H.walkStatusLabel({missing:['marche non calculée (erreur du moteur piéton)']},labels),/erreur du moteur piéton/);
  assert.equal(H.walkStatusLabel({},labels),labels[0]);
 });
+
+test('une relance piétonne calcule les approches ignorées par quota',async()=>{
+ const task={from:HOME,to:MISSION,latestArrival:at(9,30)};
+ const ride=bus(at(8,0),at(8,25),STOP1,STOP2);
+ const original=H.assess({source:'Test',sources:['Test'],legs:[ride],missing:['marches non calculées (quota de la fiche)']},task);
+ const result=await H.retryMissingWalks(original,task,fakeRouter());
+ assert.deepEqual(result.legs.map(l=>l.kind),['walk','transit','walk']);
+ assert.equal(result.missing.length,0);
+ assert.equal(result.price,original.price);
+});
