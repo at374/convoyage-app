@@ -253,6 +253,22 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
  }
  return {firstByStop,secondByStop,searchTruncated};
 }
+const transferRulesByIndex=new WeakMap();
+function transferRulesFor(index,text){
+ let entry=transferRulesByIndex.get(index);
+ if(!entry||entry.text!==text){
+  entry={text,rules:parseCSV(text),byStop:new Map()};
+  transferRulesByIndex.set(index,entry);
+ }
+ return stopId=>{
+  if(!entry.byStop.has(stopId)){
+   const parent=index.stopById.get(stopId)?.parent_station;
+   const applies=ruleStop=>!ruleStop||ruleStop===stopId||ruleStop===parent;
+   entry.byStop.set(stopId,entry.rules.filter(rule=>applies(rule.from_stop_id)&&applies(rule.to_stop_id)));
+  }
+  return entry.byStop.get(stopId);
+ };
+}
 function transferCandidates(files,index,date,origins,destinations,{
  minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000,
  minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity,timeBudgetMs
@@ -261,7 +277,8 @@ function transferCandidates(files,index,date,origins,destinations,{
     !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
  for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
  const {firstByStop,secondByStop,searchTruncated:legTruncated}=boundaryLegs(files,index,date,origins,destinations,{maxLegs,minDepartureSeconds,maxArrivalSeconds});
- const rules=parseCSV(files['transfers.txt']||'');let searchTruncated=legTruncated,examined=0;
+ const rulesForStop=transferRulesFor(index,files['transfers.txt']||'');
+ let searchTruncated=legTruncated,examined=0;
  // 22/11/2026 (Laurent : « ça bloque toujours », blocage prolongé au défilement pendant la recherche) : les
  // plafonds existants (maxExaminedPairs, etc.) bornent le NOMBRE de combinaisons, mais pas le TEMPS — sur un
  // réseau dense (beaucoup d'arrêts proches, beaucoup de passages), une seule recherche pouvait rester bien en
@@ -269,12 +286,9 @@ function transferCandidates(files,index,date,origins,destinations,{
  // budget de temps réel (par défaut 1,2 s) : au-delà, on arrête proprement (searchTruncated=true) comme pour
  // les autres plafonds, plutôt que de laisser l'écran figé jusqu'à la fin du calcul.
  const startedAt=Date.now(),budgetMs=Number.isFinite(timeBudgetMs)&&timeBudgetMs>0?timeBudgetMs:1200;
- const scope=(ruleStop,id)=>!ruleStop||ruleStop===id||ruleStop===index.stopById.get(id)?.parent_station;
- const rulesByStop=new Map();
- for(const stopId of firstByStop.keys())rulesByStop.set(stopId,rules.filter(r=>scope(r.from_stop_id,stopId)&&scope(r.to_stop_id,stopId)));
  const required=(stopId,a,b)=>{
   let seconds=minTransferMinutes*60;
-  for(const rule of rulesByStop.get(stopId)||[]){
+  for(const rule of rulesForStop(stopId)){
    if((rule.from_trip_id&&rule.from_trip_id!==a.tripId)||(rule.to_trip_id&&rule.to_trip_id!==b.tripId)||
       (rule.from_route_id&&rule.from_route_id!==a.routeId)||(rule.to_route_id&&rule.to_route_id!==b.routeId))continue;
    const type=rule.transfer_type||'0';

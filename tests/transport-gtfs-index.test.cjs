@@ -122,3 +122,15 @@ assert.equal(specialHeader.name,'last');
  files['calendar_dates.txt']='service_id,date,exception_type\nC,20261127,1';
  assert.deepEqual([...activeServices(files,'2026-11-27')],['C']);
 }
+
+{
+ const files={...calendar};
+ const sameIndex=buildIndex(connectionFiles);
+ const count=()=>transferTrips(files,sameIndex,'2026-10-29','A','C',5).length;
+ assert.equal(count(),1);
+ files['transfers.txt']='from_stop_id,to_stop_id,transfer_type\n,,3';
+ assert.equal(count(),0);
+ assert.equal(count(),0);
+ delete files['transfers.txt'];
+ assert.equal(count(),1);
+}
