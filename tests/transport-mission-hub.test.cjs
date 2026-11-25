@@ -337,14 +337,14 @@ test('titre combiné officiel : 272 Parcours + zone 10 compté une fois, tram ge
  assert.deepEqual(H.priceOf({legs:[tram]},G.fareFor).amounts,{CHF:3});
 });
 
-test('quota de marches : au-delà de 16 couples d’arrêts distincts, le trajet est signalé, jamais inventé',async()=>{
+test('quota de marches : seuls les trajets proposés bénéficient du complément automatique',async()=>{
  const router={calls:0,route:async()=>{router.calls++;return {status:'unavailable'};}}; // rien de réalisable → recherche complémentaire incluse
  const js=[];for(let i=0;i<12;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i*2),at(7,i*2+20),{lat:STOP1.lat+i*0.001,lon:STOP1.lon},{lat:STOP2.lat+i*0.001,lon:STOP2.lon},{line:'D'+i})]});
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
  await new Promise(r=>setTimeout(r,100));
  const v=s.view('Aller'),all=[...v.picks.map(p=>p.journey),...v.others];
  assert.equal(all.filter(j=>/quota/.test(j.statusDetail)).length,4,'8 trajets (16 couples) évalués, 4 signalés');
- assert.ok(router.calls<=17,'appels marche : '+router.calls);
+ assert.ok(router.calls>17&&router.calls<=29,'appels marche : '+router.calls);
  s.dispose();
 });
 
@@ -1095,7 +1095,7 @@ test('un trajet arrêt à arrêt distingue les deux marches manquantes',()=>{
 test('le résumé distingue le quota piéton d’une erreur du moteur',()=>{
  const labels=['Marche finale non calculée'];
  assert.equal(H.walkStatusLabel({computing:true},labels),'Marches en cours de calcul');
- assert.match(H.walkStatusLabel({missing:['marches non calculées (quota de la fiche)']},labels),/quota de calcul atteint/);
+ assert.match(H.walkStatusLabel({missing:['marches non calculées (quota de la fiche)']},labels),/itinéraire non vérifié/);
  assert.match(H.walkStatusLabel({missing:['marche non calculée (erreur du moteur piéton)']},labels),/erreur du moteur piéton/);
  assert.equal(H.walkStatusLabel({},labels),labels[0]);
 });
@@ -1110,13 +1110,13 @@ test('une relance piétonne calcule les approches ignorées par quota',async()=>
  assert.equal(result.price,original.price);
 });
 
-test('la sélection de huit trajets privilégie le créneau et réserve une place au départ de secours',()=>{
+test('la sélection de six trajets privilégie le créneau et réserve une place au départ de secours',()=>{
  const task={from:HOME,to:MISSION,latestArrival:at(15,0)};
  const others=Array.from({length:12},(_,i)=>({feasible:true,slackMinutes:15+i*20,marginMinutes:15,
   durationMinutes:25,legs:[bus(at(8,i),at(8,25+i),HOME,MISSION)]})).reverse();
- assert.equal(H.selectJourneyCards({task,others}).length,8);
+ assert.equal(H.selectJourneyCards({task,others}).length,6);
  assert.equal(H.selectJourneyCards({task,others})[0].slackMinutes,15);
- assert.equal(H.selectJourneyCards({task,others},others[0]).length,7);
+ assert.equal(H.selectJourneyCards({task,others},others[0]).length,5);
 });
 
 test('deux marches ou correspondances pour le même premier bus ne prennent qu’une place',()=>{
@@ -1137,4 +1137,24 @@ test('une même course GTFS depuis deux arrêts ne masque pas une autre course',
  const first=candidate('Gare',0,'A',false),second=candidate('Mairie',5,'A',true);
  const other=candidate('Gare',0,'B',true);
  assert.deepEqual(H.selectJourneyCards({task,others:[first,second,other]}),[second,other]);
+});
+
+test('la recherche termine automatiquement les marches du trajet proposé après un premier échec',async()=>{
+ const actual=fakeRouter();
+ let tries=0,finish;
+ const final=new Promise(resolve=>{finish=resolve;});
+ const ride=bus(at(8,0),at(8,25),STOP1,STOP2);
+ const session=H.createSession({
+  tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],
+  providers:{local:{name:'Local',enabled:()=>true,run:async()=>[{source:'Local',legs:[ride]}]}},
+  router:{route:(a,b)=>++tries<=2?Promise.resolve(null):actual.route(a,b)},
+  onUpdate:(_,view)=>{if(view.done)finish(view);}
+ });
+ try{
+  const v=await final;
+  const [proposal]=H.selectJourneyCards(v,null);
+  assert.ok(proposal);
+  assert.deepEqual(H.missingWalkLabels(proposal,v.task),[]);
+  assert.ok(proposal.legs.some(leg=>leg.kind==='walk'));
+ }finally{session.dispose();}
 });

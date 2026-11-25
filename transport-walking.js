@@ -80,7 +80,7 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
  if(base.protocol!=='https:'||base.username||base.password||base.search||base.hash||!base.pathname.endsWith('/route')||typeof fetcher!=='function')throw new Error('Invalid pedestrian router');
  for(const n of [maxRequests,timeoutMs,maxFailures])if(!Number.isSafeInteger(n)||n<1)throw new Error('Invalid pedestrian request budget');
  if(!Number.isSafeInteger(intervalMs)||intervalMs<0)throw new Error('Invalid pedestrian request interval');
- let disposed=false,running=false,requests=0,failures=0,lastStarted=0,controller=null,wake=null;
+ let disposed=false,running=false,requests=0,admitted=0,failures=0,lastStarted=0,controller=null,wake=null;
  const cache=new Map(),queue=[];
  const unavailable=status=>({status,provider:'Valhalla pedestrian / OpenStreetMap'});
  async function request(from,to){
@@ -130,9 +130,12 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
   if(!point(from)||!point(to))return Promise.resolve(unavailable('invalid_coordinates'));
   const key=JSON.stringify([from.lat,from.lon,to.lat,to.lon]);
   if(cache.has(key))return cache.get(key);
-  if(cache.size>=maxRequests)return Promise.resolve(unavailable('budget_exceeded'));
+  if(admitted>=maxRequests)return Promise.resolve(unavailable('budget_exceeded'));
   const pending=new Promise(resolve=>queue.push({from:{lat:from.lat,lon:from.lon},to:{lat:to.lat,lon:to.lon},resolve}));
-  cache.set(key,pending);pump().catch(()=>{});return pending;
+  admitted++;
+  cache.set(key,pending);
+  pending.then(result=>{if(result.status==='unavailable'&&cache.get(key)===pending)cache.delete(key);});
+  pump().catch(()=>{});return pending;
  }
  return {mode:bike?'bicycle':'pedestrian',route,dispose:()=>{if(disposed)return;disposed=true;controller?.abort();wake?.();for(const item of queue.splice(0))item.resolve(unavailable('cancelled'));cache.clear();},
   stats:()=>({requests,failures,queued:queue.length,disposed})};

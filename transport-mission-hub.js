@@ -8,7 +8,7 @@
  */
 (function(root){
 'use strict';
-const VERSION='hub-20261124-tad-main';
+const VERSION='hub-20261125-marches-auto';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
 // Parking des loueurs P21 (Genève, secteur France) : point GPS donné par Laurent. Seule la MARCHE vers/depuis P21 passe par l'intérieur
@@ -2188,10 +2188,48 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // ce qui figeait l'écran au défilement quand plusieurs jours sont cherchés en parallèle.
  const lastEmit={},timers={};
  const emitNow=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
+ const visibleWithMissingWalks=(label,attempted)=>{
+  const v=view(label,true),next=nextDepartureAfterMiss(v);
+  return [...(next?[next]:[]),...selectJourneyCards(v,next),...v.alternatives]
+   .map(j=>state[label].items.includes(j)?j:state[label].bySignature.get(signature(j)))
+   .filter(j=>j&&!attempted.has(j)&&missingWalkLabels(j,v.task).length);
+ };
+ const finishVisibleWalks=(label,s)=>{
+  const attempted=new Set();
+  if(!router||s.walkCompletionStarted||!visibleWithMissingWalks(label,attempted).length)return false;
+  s.walkCompletionStarted=true;
+  const deadline=Date.now()+Math.min(25000,enrichmentMs*2);
+  const primary={route:(a,b)=>Date.now()<deadline&&!disposed?until(router.route(a,b),deadline,null):null};
+  s.pending++;s.total++;(s.deadlines||=[]).push(deadline);
+  emitNow(label);
+  (async()=>{
+   let batch=visibleWithMissingWalks(label,attempted);
+   while(batch.length&&attempted.size<12&&!disposed&&Date.now()<deadline){
+    await Promise.all([...new Set(batch)].slice(0,12-attempted.size).map(async j=>{
+     attempted.add(j);
+     const updated=await retryMissingWalks(j,s.task,primary,fareFor).catch(()=>null);
+     if(disposed||!updated||missingWalkLabels(updated,s.task).length>=missingWalkLabels(j,s.task).length)return;
+     const i=s.items.indexOf(j);
+     if(i<0)return;
+     s.items[i]=updated;attempted.add(updated);
+     for(const [key,current] of s.bySignature)if(current===j)s.bySignature.set(key,updated);
+    }));
+    // Re-evaluate the final selection, including any alternative revealed by the new walking times.
+    batch=visibleWithMissingWalks(label,attempted);
+    emitNow(label);
+   }
+  })().catch(()=>{}).finally(()=>{
+   if(disposed)return;
+   s.pending--;s.deadlines=s.deadlines.filter(value=>value!==deadline);
+   emit(label);
+  });
+  return true;
+ };
  const emit=label=>{
   if(disposed)return;
   const now=Date.now(),wait=350-(now-(lastEmit[label]||0));
   const finished=state[label]&&state[label].pending===0;
+  if(finished&&finishVisibleWalks(label,state[label]))return;
   if(finished){if(timers[label]){clearTimeout(timers[label]);timers[label]=null;}lastEmit[label]=now;emitNow(label);return;}
   if(wait<=0&&!timers[label]){lastEmit[label]=now;emitNow(label);return;}
   if(timers[label])return;
@@ -2200,19 +2238,19 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // Un trajet qui part avant la fin de la mission précédente (souvent à cause de la marche d'accès) est impossible,
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).
- function view(label){const s=state[label];
+ function view(label,includeFinalAlternatives=false){const s=state[label];
   const percent=s.total?Math.min(100,Math.round((s.total-s.pending)/s.total*100)):(s.pending===0?100:0);
   const remainingMs=s.pending&&Array.isArray(s.deadlines)&&s.deadlines.length?Math.max(0,Math.max(...s.deadlines)-Date.now()):0;
   const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('départ avant la relance')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||!s.task.afterMissedTransport&&r.startsWith('marche trop longue'))));
   const ranked=rank(s.items.filter(j=>!tooEarly.includes(j)),s.task,!!s.task.afterMissedTransport);
-  const alternativeCandidates=s.pending===0&&!ranked.total?tooEarly.filter(j=>
+  const alternativeCandidates=(includeFinalAlternatives||s.pending===0)&&!ranked.total?tooEarly.filter(j=>
    !j.reasons.includes('départ avant la fin de la mission précédente')&&
    !j.reasons.includes('départ avant la relance')&&
    !j.reasons.includes('trajet hors plage de jour ou date de mission')&&
    (j.slackMinutes===null||j.slackMinutes>=j.marginMinutes)):[];
   const alternateRank=rank(alternativeCandidates,s.task,true);
   const alternatives=[...alternateRank.picks.map(p=>p.journey),...alternateRank.others]
-   .sort((a,b)=>a.slackMinutes-b.slackMinutes||a.walkMeters-b.walkMeters).slice(0,5);
+   .sort((a,b)=>a.slackMinutes-b.slackMinutes||a.walkMeters-b.walkMeters).slice(0,3);
   // 22/11/2026 (Laurent : « toujours pas de Y51 après 13h01 », quasi tous les trajets écartés comme « avant la fin
   // de la mission précédente » malgré une fenêtre earliestDeparture cohérente affichée) : le seul compteur ne
   // permettait pas de savoir SUR QUEL calcul ce rejet se basait réellement (horaire du véhicule lui-même, ou
@@ -2718,14 +2756,14 @@ function missingWalkLabels(journey,task){
 function walkStatusLabel(journey,labels){
  if(journey.computing)return 'Marches en cours de calcul';
  const missing=journey.missing||[];
- if(missing.some(reason=>reason.includes('quota de la fiche')))return labels.join(' · ')+' (quota de calcul atteint)';
+ if(missing.some(reason=>reason.includes('quota de la fiche')))return labels.join(' · ')+' (itinéraire non vérifié)';
  if(missing.some(reason=>reason.includes('erreur du moteur piéton')))return labels.join(' · ')+' (erreur du moteur piéton)';
  return labels.join(' · ');
 }
-async function retryMissingWalks(journey,task,router){
+async function retryMissingWalks(journey,task,router,fareFor){
  const missing=(journey.missing||[]).filter(reason=>!/^marches? .*non calculée|^marches en cours de calcul/i.test(reason));
  const route=await completeWalks({...journey,missing,computing:false},task,router);
- return {...assess(route,task),price:journey.price};
+ return {...assess(route,task,fareFor),price:journey.price};
 }
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
@@ -2920,34 +2958,6 @@ function card(doc,j,labels,expanded=false,task=null){
   ol.appendChild(li);
  }
  body.appendChild(ol);
- if(walkLabels.length&&!j.computing&&pt(task?.from)&&pt(task?.to)&&root.CPTransportWalking?.createRouter){
-  const button=el(doc,'button','second','Calculer les marches manquantes');
-  button.type='button';
-  const status=el(doc,'p','cp-hub-note');
-  status.setAttribute('role','status');
-  button.onclick=async()=>{
-   button.disabled=true;
-   status.textContent='Calcul des marches en cours…';
-   let router;
-   try{
-    router=cachedRouter(root.CPTransportWalking.createRouter({maxRequests:Math.max(2,j.legs.length+1),intervalMs:1100}),
-     {storage:root.CPAccount?.storage});
-    const updated=await retryMissingWalks(j,task,router);
-    if(!c.isConnected)return;
-    if(missingWalkLabels(updated,task).length>=walkLabels.length){
-     status.textContent='Le moteur piéton n’a pas fourni de nouveau chemin vérifiable.';
-     return;
-    }
-    const replacement=card(doc,updated,labels,true,task);
-    const key=c.getAttribute('data-journey-key');
-    if(key)replacement.setAttribute('data-journey-key',key);
-    c.replaceWith(replacement);
-   }catch(_){status.textContent='Le calcul piéton a échoué. Tu peux réessayer.';}
-   finally{router?.dispose();button.disabled=false;}
-  };
-  body.append(button,status);
- }
-
 
  // Accès à une vraie carte pour chaque marche : le schéma SVG n'est pas une carte de rues.
  const svg=j.scooterOnly?null:mapSvg(doc,j);if(svg)body.appendChild(svg);
@@ -3038,7 +3048,7 @@ function nextDepartureAfterMiss(view,now=Date.now()){
    !(j.reasons||[]).some(r=>/horaires incohérents|annulée|hors plage de jour/.test(r)))
   .sort((a,b)=>ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival))[0]||null;
 }
-function selectJourneyCards(view,next,limit=8){
+function selectJourneyCards(view,next,limit=6){
  const others=[...(view.picks||[]).map(p=>p.journey),...(view.others||[])].filter(j=>j!==next);
  const quality=j=>j.feasible?0:j.scheduled?1:j.computing?3:2;
  const gap=j=>Number.isFinite(j.slackMinutes)?Math.abs(j.slackMinutes-(j.marginMinutes||0)):0;
@@ -3082,7 +3092,14 @@ function render(host,v){
  const opened=new Set(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
    .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
- const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(v.previousArrival?.length?'Aucun nouveau trajet complet trouvé':v.alternatives?.length?'Aucun trajet ne respecte tous les critères':Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
+ const next=nextDepartureAfterMiss(v);
+ const timeline=selectJourneyCards(v,next).map(journey=>({journey,labels:null}))
+  .sort((x,y)=>ms(x.journey.departure)-ms(y.journey.departure)||ms(x.journey.arrival)-ms(y.journey.arrival));
+ const count=timeline.length+Number(!!next)+(v.alternatives?.length||0);
+ const countText=count+' trajet'+(count>1?'s':'')+(v.done?' affiché'+(count>1?'s':''):' provisoire'+(count>1?'s':''));
+ const head=el(doc,'p','cp-hub-progress',count?countText:v.done?
+  (v.previousArrival?.length?'Aucun nouveau trajet complet trouvé':Object.keys(v.errors||{}).length?
+   'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé'):'Recherche en cours');
  host.appendChild(head);
  if(v.previousArrival?.length){
   const prior=el(doc,'section','cp-hub-previous-arrival');
@@ -3125,9 +3142,7 @@ function render(host,v){
   for(const journey of v.alternatives)addCard(group,journey,null);
   host.appendChild(group);
  }
- const next=nextDepartureAfterMiss(v);
- const timeline=selectJourneyCards(v,next).map(journey=>({journey,labels:null}))
-  .sort((x,y)=>ms(x.journey.departure)-ms(y.journey.departure)||ms(x.journey.arrival)-ms(y.journey.arrival));
+
  if(ordreInverse)timeline.reverse();
  if(next){
   const late=Number.isFinite(next.slackMinutes)&&next.slackMinutes<0;
