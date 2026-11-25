@@ -1386,7 +1386,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=arrets-gtfs-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=courses-gtfs-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{

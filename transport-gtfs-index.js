@@ -167,15 +167,33 @@ function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700)
    accessDistanceMeters:from.distanceMeters,egressDistanceMeters:to.distanceMeters};
  });
 }
+const tripsServingStops=new WeakMap();
+function boundaryTrips(index,origins,destinations){
+ let lookup=tripsServingStops.get(index);
+ if(!lookup){
+  const trips=[...index.tripById],byStop=new Map();
+  for(let position=0;position<trips.length;position++){
+   const [tripId]=trips[position];
+   for(const {stop_id} of index.timesByTrip.get(tripId)||[]){
+    let positions=byStop.get(stop_id);
+    if(!positions){positions=[];byStop.set(stop_id,positions);}
+    if(positions.at(-1)!==position)positions.push(position);
+   }
+  }
+  lookup={trips,byStop};tripsServingStops.set(index,lookup);
+ }
+ const positions=new Set();
+ for(const stopId of new Set([...origins.keys(),...destinations.keys()]))
+  for(const position of lookup.byStop.get(stopId)||[])positions.add(position);
+ return [...positions].sort((a,b)=>a-b).map(position=>lookup.trips[position]);
+}
 function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity,timeBudgetMs}={}){
  if(!Number.isSafeInteger(maxLegs)||maxLegs<1)throw new Error('Invalid transfer budget');
  if([minDepartureSeconds,maxArrivalSeconds].some(n=>typeof n!=='number'||Number.isNaN(n)))throw new Error('Invalid transfer time bounds');
  const services=activeServices(files,date),firstByStop=new Map(),secondByStop=new Map();
  if(!origins.size&&!destinations.size)return {firstByStop,secondByStop,searchTruncated:false};
  let legCount=0,searchTruncated=false;
- // 22/11/2026 (Laurent : « ça bloque toujours ») : cette boucle parcourt TOUS les trajets du flux GTFS (même
- // filtrés rapidement) — sur un gros flux régional, le nombre de trajets à parcourir reste élevé même avec
- // une fenêtre horaire étroite. Même garde-fou de temps que transferCandidates/crossNetworkTrips.
+ const trips=boundaryTrips(index,origins,destinations);
  const startedAt=Date.now(),budgetMs=Number.isFinite(timeBudgetMs)&&timeBudgetMs>0?timeBudgetMs:1200;let tripsSeen=0;
  const add=(map,leg)=>{
   if(legCount>=maxLegs){searchTruncated=true;return false;}
@@ -183,7 +201,7 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
   map.get(leg.toTransfer).push(leg);legCount++;return true;
  };
  // Keep only legs starting near the origin or ending near the destination.
- trips: for(const [tripId,trip] of index.tripById){
+ trips: for(const [tripId,trip] of trips){
   if(++tripsSeen%2000===0&&Date.now()-startedAt>budgetMs){searchTruncated=true;break trips;}
   if(!services.has(trip.service_id))continue;
   const route=index.routeById.get(trip.route_id);if(!route)continue;
@@ -193,7 +211,9 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
    const start=times[i],departureMinutes=minutes(start.departure_time);
    if(departureMinutes===null||Math.round(departureMinutes*60)<minDepartureSeconds||!regularAccess(start.pickup_type))continue;
    const fromOrigin=origins.has(start.stop_id);
-   for(const j of (fromOrigin?times.keys():targets)){
+   const endCount=fromOrigin?times.length:targets.length;
+   for(let k=fromOrigin?i+1:0;k<endCount;k++){
+    const j=fromOrigin?k:targets[k];
     if(j<=i)continue;
     const end=times[j];
     const arrivalMinutes=minutes(end.arrival_time);
