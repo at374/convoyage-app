@@ -2621,6 +2621,22 @@ function walkingEndpoint(leg,task,side){
  const approximate=atMission&&(side==='from'?task.approximateFrom:task.approximateTo);
  return {point,name,address,approximate:!!approximate};
 }
+function directionForLeg(leg){
+ const direction=String(leg.headsign||'').trim();
+ if(leg.kind!=='transit'||String(leg.line)!=='31')return direction;
+ const known=/^Voiron[, ]+Leprince Ringuet$/i;
+ if(known.test(direction))return 'Leprince Ringuet';
+ if(direction&&!/^Voiron$/i.test(direction))return direction;
+ // Dans le GTFS voironnais, les courses de la gare vers ces arrêts
+ // circulent toutes vers Leprince Ringuet. Le trajet inverse a plusieurs terminus.
+ const name=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  .replace(/^voiron[ ,–-]+/,'').replace(/[’'-]/g,' ').trim().replace(/\s+/g,' ');
+ const inVoiron=p=>p&&p.lat>=45.34&&p.lat<=45.40&&p.lon>=5.55&&p.lon<=5.62;
+ if(inVoiron(pt(leg.fromPoint))&&inVoiron(pt(leg.toPoint))&&
+  /^(?:sncf|gare(?: sncf| routiere(?: nord)?)?)$/.test(name(leg.from))&&
+  /^(?:louis neel|blanchisseries?|leprince ringuet)$/.test(name(leg.to)))return 'Leprince Ringuet';
+ return direction;
+}
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
@@ -2684,8 +2700,9 @@ function card(doc,j,labels,expanded=false,task=null){
   }
   const ol=el(doc,'ol','cp-hub-legs');
  for(const [legIndex,l] of j.legs.entries()){
+  const direction=directionForLeg(l);
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
-  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',l.headsign&&l.headsign!==l.line?'→ direction '+l.headsign:''].filter(Boolean).join(' '))));
+  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+durationText(l.delayMinutes):'')));
   if(l.kind==='scooter'){
    li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(l.speedKmh||j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
@@ -3164,7 +3181,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,walkingEndpoint,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
