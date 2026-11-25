@@ -154,7 +154,19 @@
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
-  const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = String(m[cote + '_address'] || p.address || p.street || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim(); const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
+  const adresseDe = (m, cote) => {
+    const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
+    const v = String(m[pre + '_city'] || p.city || '').trim(), d = m[pre + '_department'] || '';
+    const mail = m.mail_info?.[cote === 'origin' ? 'depart' : 'arrivee']?.adresse;
+    const candidates = [m[cote + '_address'], p.address, p.street, mail]
+      .filter(value => typeof value === 'string')
+      .map(value => value.replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').trim())
+      .filter(Boolean);
+    const city = norm(v);
+    const a = candidates.find(value => !city || norm(value).replace(/\b(?:\d{5}|\d{2})\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() !== city) || '';
+    const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
+    return { a, v, cp, d };
+  };
   const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
@@ -321,7 +333,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, estSecteurFranceGeneve, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
+  const api = { POINTS, adresseDe, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, estSecteurFranceGeneve, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

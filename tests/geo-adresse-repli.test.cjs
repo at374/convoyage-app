@@ -30,3 +30,15 @@ test('un résultat centre-ville ne masque pas le numéro de rue trouvé ensuite'
  assert.deepEqual(r.point,{lat:45.38,lng:5.58,precision:'adresse'});
  assert.equal(a.urls.length,2);
 });
+
+test('Voiron : la rue du courriel remplace le centre fourni par la plateforme',async()=>{
+ const ville=G.trouverVille('Voiron','38');
+ const mission={from_city:'Voiron',from_department:'38',origin_address:'Voiron (38)',
+  origin:{lat:ville.lat,lng:ville.lng},mail_info:{depart:{adresse:'Rue Louis Armand, 38500 Voiron'}}};
+ const a=fetcher([{contient:'Rue Louis Armand',type:'street',lat:45.381682,lng:5.579257}]);
+ assert.equal(G.coordonnees(mission,'origin').precision,'ville');
+ const r=await G.chercherPoint(mission,'origin',a.f);
+ G.POINTS[r.cle]=r.point;
+ try{assert.deepEqual(G.coordonnees(mission,'origin'),{lat:45.381682,lng:5.579257,precision:'rue'});}
+ finally{delete G.POINTS[r.cle];}
+});

@@ -516,7 +516,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const p = m[cote] || {}, ville = cote === 'origin' ? m.from_city : m.to_city, dep = m[(cote === 'origin' ? 'from' : 'to') + '_department'];
     const rue = adrNet(p.address || p.street);
     const a = adrNet(m[cote + '_address']) || (rue && (rue + (ville && !new RegExp(ville.replace(/[.*+?^${}()|[\]\\]/i, '\\$&'), 'i').test(rue) ? ', ' + ville : '') + (dep && !rue.includes(dep) ? ' (' + dep + ')' : ''))) ||
-     (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
+     (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse);
+    const adresseRue = G.adresseDe(m,cote).a;
+    if (adresseRue && (!a || !G.norm(a).includes(G.norm(adresseRue)))) return adresseRue;
+    if (a) return a;
     if (m.adresses_locales) return ville ? ville + (dep ? ' (' + dep + ')' : '') + ' — ' + LOCAL : LOCAL;
     // V88 : ville connue → affichée ; l'adresse exacte d'une mission acceptée arrive quand « Mes trajets » Hiflow est ouvert sur l'ordinateur.
     if (ville) return ville + (dep ? ' (' + dep + ')' : '') + (m.kind === 'acceptee' && m.platform === 'Hiflow' ? ' — adresse exacte : ouvre « Mes trajets » Hiflow sur l’ordinateur' : '');
@@ -2151,7 +2154,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           const manque=[[m,'origin'],[m,'destination'],[next,'origin']].filter(([mm,cote])=>{
             if(!mm)return false;const c=G.coordonnees(mm,cote);
             // Adresse de rue connue mais seul le centre de la commune est disponible (ex. « 25 route de la Salle, Annecy ») : chercher le vrai point.
-            const rue=String(mm[cote+'_address']||(mm[cote]&&(mm[cote].address||mm[cote].street))||'').trim();
+            const rue=G.adresseDe(mm,cote).a;
             const cle=G.cleAdresse(mm,cote),cache=G.POINTS[cle];
             const centre=c&&c.precision==='gps'&&G.centreCommune&&G.centreCommune(mm,cote,Number(c.lat),Number(c.lng));
             return !c||c.precision==='departement'||(rue.length>3&&!!cle&&(!cache||cache.precision==='ville')&&(c.precision==='ville'||centre))||(!cache&&!!cle&&/^\d+\s*(bis|ter)?\s+\S/i.test(rue)&&c.precision==='gps');});
@@ -2160,7 +2163,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');
             note.textContent='📍 Recherche des coordonnées GPS des adresses…';panel.appendChild(note);
             Promise.all(manque.map(async([mm,cote])=>{
-              try{const r=await G.chercherPoint(mm,cote,u=>fetch(u));if(r&&r.trouve&&r.cle)G.POINTS[r.cle]=r.point;}catch(_){}
+              try{const r=await G.chercherPoint(mm,cote,u=>fetch(u));if(r&&r.trouve&&r.cle){
+                const current=G.POINTS[r.cle];
+                if(!current||current.precision==='ville'||r.point.precision==='adresse'){
+                  G.POINTS[r.cle]=r.point;gpsMem.pts[r.cle]=r.point;
+                  ecrireLocal('cp_gps',gpsMem);
+                }
+              }}catch(_){}
             })).then(()=>{note.remove();if(panel.isConnected)startTransportHub();});
             return;
           }
