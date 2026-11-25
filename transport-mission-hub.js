@@ -416,7 +416,12 @@ async function completeWalks(j,task,router,scooter,regional){
   // (accès + sortie) vers les deux points réels, à égalité le plus tôt arrivé.
   const pickClosest=list=>{
    const candidates=(Array.isArray(list)?list:[]).filter(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
-   if(!candidates.length)return null;
+   const timely=candidates.filter(it=>{
+    const dep=ms(it.legs[0].departure),arr=ms(it.legs.at(-1).arrival);
+    return Number.isFinite(startMs)?dep>=startMs&&dep-startMs<=REGIONAL_ACCESS_MAX_WAIT_S*1000:
+     arr<=endMs&&endMs-arr<=REGIONAL_ACCESS_MAX_WAIT_S*1000;
+   });
+   if(!timely.length)return null;
    const walkTotal=it=>{
     const head=it.legs[0],tail=it.legs[it.legs.length-1];
     const access=head&&head.fromPoint?meters(a,head.fromPoint):Infinity;
@@ -424,7 +429,7 @@ async function completeWalks(j,task,router,scooter,regional){
     return access+egress;
    };
    const arrivalOf=it=>ms(it.legs[it.legs.length-1]?.arrival);
-   return candidates.sort((x,y)=>walkTotal(x)-walkTotal(y)||arrivalOf(x)-arrivalOf(y))[0];
+   return timely.sort((x,y)=>walkTotal(x)-walkTotal(y)||arrivalOf(x)-arrivalOf(y))[0];
   };
   let ok=false;try{ok=regional.enabled(subTask);}catch(_){}
   if(!ok)return null;
@@ -448,21 +453,6 @@ async function completeWalks(j,task,router,scooter,regional){
     }
    }
   }
-  // 22/11/2026 (Laurent : Y51 l'après-midi — 12:18, 13:58, 14:48… — toujours écartés « avant la fin de la
-  // mission précédente » malgré un earliestDeparture cohérent) : pickClosest() ne borne que le WALK total
-  // (accès+sortie), jamais l'ATTENTE à l'arrêt. Si la seule ligne locale desservant cet arrêt ne passe
-  // qu'une fois par jour très tôt (ex. 06:59), elle était retenue pour CHAQUE départ Y51 de la journée
-  // (12:18 comme 18:48), avec plusieurs heures d'attente avant d'embarquer — et legs[0].departure (la
-  // marche/le bus avant ce même 06:59) tombait alors bien avant midi, faisant passer des Y51 parfaitement
-  // réalisables pour « avant la fin de la mission précédente ». On plafonne maintenant l'attente à l'arrêt
-  // de correspondance : au-delà, on revient à la marche directe (signalée « trop longue » si besoin, un
-  // motif déjà géré et visible) plutôt que de chaîner un bus local sans rapport avec un trou de plusieurs
-  // heures avant le vrai transport recherché.
-  if(best){
-   const waitS=Number.isFinite(endMs)?(endMs-ms(best.legs[best.legs.length-1].arrival))/1000:
-    Number.isFinite(startMs)?(ms(best.legs[0].departure)-startMs)/1000:0;
-   if(!(waitS<=REGIONAL_ACCESS_MAX_WAIT_S))best=null;
-  }
   if(!best)return null;
   if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
   let chosen=best.legs.slice();
@@ -483,6 +473,7 @@ async function completeWalks(j,task,router,scooter,regional){
    if(Number.isFinite(headDep)){let head=null;try{head=await call(a,headLeg.fromPoint);}catch(_){}
     if(head)chosen=[walkLeg(head,a,headLeg.fromPoint,fromName,headLeg.from||toName,headDep-head.durationSeconds*1000),...chosen];}
   }
+  missing.push(...(best.missing||[]));
   return renameEnds({...best,legs:chosen},{fromName,toName}).legs;
  };
  const footLeg=async(a,b,fromName,toName,{startMs,endMs})=>{
@@ -1585,7 +1576,9 @@ function makeProviders(r,opts={}){
      ...departure.filter(network=>reachesOtherEnd(network,arrival)),
      ...arrival.filter(network=>reachesOtherEnd(network,departure))
     ]);
-    return [...candidates].sort((x,y)=>area(x[3])-area(y[3])).slice(0,8);
+    const local=[...candidates].filter(network=>network!==sncfFeed).sort((x,y)=>area(x[3])-area(y[3]));
+    // Réserver une place au rail pour relier les réseaux urbains aux deux extrémités.
+    return candidates.has(sncfFeed)?[...local.slice(0,7),sncfFeed]:local.slice(0,8);
    };
    P.local_correspondances={name:'Correspondances entre réseaux (GTFS)',
     enabled:task=>!!queryWindow(task)&&pickFeeds(task).length>0,
@@ -2612,9 +2605,23 @@ function card(doc,j,labels,expanded=false,task=null){
   }
   else if(l.kind==='walk'){
    li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
-   // 22/11/2026 (Laurent : « enlever tout le texte à partir de Départ jusqu'à la carte ») : le bloc
-   // Départ/Arrivée (géocodage inverse de chaque extrémité de marche) est supprimé — on passe directement
-   // à la carte ci-dessous, qui montre déjà le trajet exact.
+   for(const [title,name,point,target,targetName,approximate] of [
+    ['Départ',l.from,pt(l.fromPoint),pt(task?.from),task?.fromName,task?.approximateFrom],
+    ['Arrivée',l.to,pt(l.toPoint),pt(task?.to),task?.toName,task?.approximateTo]
+   ]){
+    const missionPoint=point&&target&&meters(point,target)<=SAME_POINT_M;
+    const label=missionPoint&&targetName?targetName:name;
+    const row=el(doc,'div','cp-hub-walk-address',title+' : '+(label||'adresse indisponible'));
+    li.appendChild(row);
+    if(!point||(missionPoint&&!approximate&&targetName))continue;
+    const coordinates=point.lat.toFixed(6)+', '+point.lon.toFixed(6);
+    const detail=el(doc,'small',null,'Point GPS : '+coordinates);
+    row.appendChild(detail);
+    reverseGeocodeFR(doc.defaultView,point.lat,point.lon).then(address=>{
+     if(address&&address.distanceMeters!==null&&address.distanceMeters<=50)
+      detail.textContent=' · Adresse à proximité : '+address.label+' · GPS '+coordinates;
+    });
+   }
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
     const n=el(doc,'div','cp-hub-p21',null);
     n.setAttribute('style','border:1px solid #f5b400;border-radius:10px;padding:8px 10px;margin:8px 0;background:rgba(245,180,0,.12)');
