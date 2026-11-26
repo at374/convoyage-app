@@ -35,14 +35,17 @@
   }
   function placeMission(m, d, cote) {
     const nested = cote === 'origin'
-      ? [d && d.origin, d && d.pickup, m && m.origin, m && m.pickup, m && m.pickup_location]
-      : [d && d.destination, d && d.delivery, d && d.dropoff, m && m.destination, m && m.delivery, m && m.dropoff, m && m.dropoff_location];
-    const p = nested.find(x => x && typeof x === 'object') || null;
-    if (!p) return null;
-    const normalized = { ...p };
+      ? [d && d.origin, d && d.pickup, d && d.pickup_location, m && m.origin, m && m.pickup, m && m.pickup_location]
+      : [d && d.destination, d && d.delivery, d && d.dropoff, d && d.dropoff_location, m && m.destination, m && m.delivery, m && m.dropoff, m && m.dropoff_location];
+    // Fusionner les objets partiels : priorité à d.origin/d.destination, sans perdre
+    // l'adresse, le code postal ou le GPS présent dans pickup/delivery/dropoff.
+    const normalized = {};
+    for (const p of nested.slice().reverse()) if (p && typeof p === 'object') Object.assign(normalized, p);
+    if (!Object.keys(normalized).length) return null;
+    if (!normalized.street && typeof normalized.address === 'string') normalized.street = normalized.address;
     const postalKeys = cote === 'origin'
-      ? ['pickup_postal_code', 'from_postal_code']
-      : ['delivery_postal_code', 'dropoff_postal_code', 'to_postal_code'];
+      ? ['pickup_postal_code', 'from_postal_code', 'origin_postal_code']
+      : ['delivery_postal_code', 'dropoff_postal_code', 'to_postal_code', 'destination_postal_code'];
     if (!normalized.postal_code) normalized.postal_code = normalized.zip || postalKeys.map(k => (d && d[k]) || (m && m[k])).find(Boolean) || null;
     return place(normalized);
   }
