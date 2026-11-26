@@ -894,3 +894,32 @@ test('les 92 flux IDFM du manifeste sont raccordés aux fournisseurs des fiches 
    id+' ne doit pas être activé hors de son emprise');
  }
 });
+
+test('49 flux normands, Centre-Val de Loire et Grand Est du manifeste sont raccordés',async()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','gtfs','manifest.json'),'utf8'));
+ const prefixes=['forbus-','temob-','optymo-','atoumod-','jvmalin-'];
+ const expected=Object.entries(manifest.networks).filter(([id,v])=>
+  prefixes.some(prefix=>id.startsWith(prefix))&&id!=='atoumod-nomad-train'&&v?.file&&
+  Array.isArray(v.bounds)&&v.bounds.length===4&&v.bounds.every(Number.isFinite)&&
+  v.bounds[0]>0&&v.bounds[1]!==0&&v.bounds[2]>0&&v.bounds[3]!==0&&
+  v.bounds[0]<v.bounds[2]&&v.bounds[1]<v.bounds[3]);
+ assert.equal(expected.length,49,'49 flux régionaux attendus avec emprises GPS valides');
+ const loaded=[];
+ const root={
+  CPGTFSLoader:{loadResource:async resource=>{loaded.push(resource.url);return {files:{},index:{}};}},
+  CPGTFSIndex:{nearbyDirectTrips:()=>[]}
+ };
+ const providers=H.makeProviders(root);
+ for(const [id,entry] of expected){
+  const provider=providers['local_'+id];
+  assert.ok(provider,id+' doit être enregistré dans makeProviders');
+  const [a,b,c,d]=entry.bounds,point={lat:(a+c)/2,lon:(b+d)/2};
+  const task={from:point,to:point,latestArrival:at(10,0,'2026-11-27')};
+  assert.equal(provider.enabled(task),true,id+' doit accepter un trajet dans sa zone');
+  await provider.run(task);
+  assert.ok(loaded.at(-1).endsWith('/'+entry.file),id+' doit charger le ZIP du manifeste');
+  assert.equal(provider.enabled({...task,from:{lat:0,lon:0},to:{lat:0,lon:0}}),false,
+   id+' doit refuser un trajet hors zone');
+ }
+});
