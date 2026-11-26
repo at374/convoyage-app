@@ -886,3 +886,13 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Le module existant `transport-gtfs-federation.js` est maintenant chargé par `index.html` après l'index et le loader GTFS et avant le hub mission. Un test vérifie cet ordre de dépendances.
 - Important : cela rend le moteur de fédération disponible dans le navigateur, mais ne signifie pas encore que les recherches de mission appellent `crossNetworkTrips`. Le raccordement opérationnel des paires de réseaux, la marche réelle entre arrêts et les essais porte-à-porte restent à faire.
 - Commits : nettoyage hub `bd7a66cc544247a19f7c5a2d3a95a045ce77a765` ; nettoyage tests `f8410a79bac96f989f8a03001cf73b4ba01be1c8` ; chargement fédération `42233cc602d51d9ab0ceb300e678476ccc63922d` ; test ordre scripts `a392a6746d4904526897f11542498336ecf29219`.
+
+
+## Suppression complète de TripGo et CI fédération — 26/11/2026
+
+- Suppression du fichier `transport-tripgo.js`, de son test dédié, de sa fixture réelle et de sa documentation.
+- Le diagnostic serveur ne charge plus l'adaptateur et ne requiert plus le secret `CP_TRIPGO_KEY`. Le workflow diagnostic vérifie maintenant explicitement l'absence du fournisseur TripGo.
+- L'ancien workflow de tests TripGo a été renommé `.github/workflows/test-transport-blablacar.yml` et ne teste plus que BlaBlaCar Bus / relais temps réel. Le filtre de chemins a été corrigé après le renommage.
+- Le document d'architecture signale les anciennes mentions comme historiques et indique les sources de remplacement.
+- Commits de suppression : `13754129997961505cc664e0c50556525be959a7` (adaptateur), `1d7f64fa91225f04755145584080a57c173bada5` (tests), `56d248407d9a70ae95108324938b0db70831dded` (fixture), `a030ed7c595da8c317399b47d593695c7c211b1a` (documentation). Workflow BlaBlaCar renommé : `0e851118856ec03a863a19fdb59d62489167a145`; correctif filtre : `cc3ff8b7ed447e441a6eebd14b918372cd5a53c0`.
+- Le module `transport-gtfs-federation.js` est chargé dans le navigateur et son test unitaire est ajouté au workflow diagnostic. Il reste cependant à appeler cette fédération depuis `makeProviders` pour que les correspondances inter-réseaux apparaissent dans les recherches réelles. Cette intégration n'est pas déclarée terminée.
