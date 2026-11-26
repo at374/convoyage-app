@@ -368,7 +368,7 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const path = require('node:path');
   const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.ok(app.includes('CPSibraFeed.coordinateOneTransferDayJourneys'));
-  assert.ok(app.includes('Correspondance à '));
+  assert.ok(app.includes('proposition(s) théoriques, horaires et circulation à vérifier :'));
   assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
 }
 
