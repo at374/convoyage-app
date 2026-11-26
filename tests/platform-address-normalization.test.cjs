@@ -46,3 +46,29 @@ test('PopValet : les adresses canoniques restent prioritaires sur les variantes'
   assert.equal(rows[0].origin_address,'2 rue du Lac');
   assert.equal(rows[0].destination_address,'3 rue de la Paix');
 });
+
+test('Otoqi : un origin partiel ne masque ni adresse ni GPS du pickup',()=>{
+  const rows=missionRows(H,'Otoqi',{
+    external_id:'otoqi-partial-origin',from:'Annecy',to:'Voiron',
+    origin:{city:'Annecy'},
+    pickup:{address:'12 rue Royale',city:'Annecy',postal_code:'74000',lat:45.91,lng:6.12}
+  });
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].origin.street,'12 rue Royale');
+  assert.equal(rows[0].origin.postal_code,'74000');
+  assert.equal(rows[0].origin.lat,45.91);
+  assert.equal(rows[0].origin.lng,6.12);
+});
+
+test('DriiveMe : une destination partielle conserve le GPS du dropoff',()=>{
+  const rows=missionRows(D,'DriiveMe',{
+    external_id:'dm-partial-destination',from:'Annecy',to:'Voiron',
+    destination:{city:'Voiron'},
+    dropoff:{street:'Rue Louis Armand',city:'Voiron',postal_code:'38500',lat:45.39,lng:5.57}
+  });
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].destination.street,'Rue Louis Armand');
+  assert.equal(rows[0].destination.postal_code,'38500');
+  assert.equal(rows[0].destination.lat,45.39);
+  assert.equal(rows[0].destination.lng,5.57);
+});
