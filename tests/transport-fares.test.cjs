@@ -91,7 +91,7 @@ test('verified fare subtotal adds cents without binary floating point drift',()=
  assert.equal(result.totalEUR,0.6);
 });
 
-test('TripGo walking and stationary legs need no ticket but unknown bus fare remains unknown',()=>{
+test('Provider walking and stationary legs need no ticket but unknown bus fare remains unknown',()=>{
  const legs=[{mode:'wa_wal',provider:'Marche'},{mode:'stationary_transfer'},{mode:'pt_pub_bus',provider:'Bus'},{mode:'wa_wal'}];
  const result=fare(legs);
  assert.equal(result.totalEUR,null);

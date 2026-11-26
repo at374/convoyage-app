@@ -1,0 +1,29 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-toulouse-bordeaux.zip",
+  "sha256": "c39a04336a98ddc360f2135ac05ac4e23f1e5dbf4236076b5a3e1fafe39e7f93",
+  "bytes": 15028,
+  "bounds": [
+    43.45,
+    -0.85,
+    45.02,
+    1.7
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "Static GTFS slice for toulouse-bordeaux; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 102,
+    "trips": 102,
+    "stops": 43,
+    "fares": false,
+    "bounds": [
+      43.45,
+      -0.85,
+      45.02,
+      1.7
+    ],
+    "lastServiceDate": "2027-01-04"
+  }
+}

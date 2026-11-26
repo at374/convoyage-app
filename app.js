@@ -19,6 +19,8 @@
   const transportViewCache = new Map();
   const transportSearches = new Map();
   const transportSaveTimers = new Map();
+  // Pré-calcul automatique des transports retour/jonction avant la livraison estimée.
+  const transportPrefetchTimers = new Map();
   const transportSelectedDays = new Map();
   const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v1:' + api.session.user_id : '';
   function saveTransportViews(key, missionKey, entry) {
@@ -871,6 +873,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
     if (cles.length > 40) delete tous[cles[0]];
     tous[t.key] = { arrivee: new Date(ts).toISOString(), detecte: new Date().toISOString() }; ecrireLocal('cp_arrivees', tous);
+    // Ne pas arrêter le minuteur ici : son prochain tick voit arriveeGps() et lance
+    // immédiatement le pré-calcul Retour/Jonction depuis l'heure réelle d'arrivée.
     suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); if(transportCacheKey())saveTransportViews(transportCacheKey()+':plans',t.key,null); transportViewCache.delete(transportCacheKey()+'|'+t.key); saveTransportViews(transportCacheKey(),t.key,null); etat.planResultat = null;
     toast('📍 Arrivée détectée à ' + heureP(ts) + ' : retour calculé à partir de ' + heureP(ts + MARGE_ARRIVEE_MIN * 60000) + ' (marge 15 min)');
     try { if (etat.onglet === 'agenda') vueAgenda(); } catch (_) {}
@@ -880,14 +884,47 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = null;
     const missions = missionsASuivre();
-    const actif = !suiviRefus && !document.hidden && !!navigator.geolocation && missions.length > 0;
+    const natif = window.CPNatif && typeof window.CPNatif.demarrerSuiviGps === 'function';
+    const actif = !suiviRefus && !document.hidden && (natif || !!navigator.geolocation) && missions.length > 0;
     // Toujours reprogrammer le prochain contrôle : une mission peut être synchronisée après le démarrage de l'application.
-    if (!suiviRefus && !document.hidden && navigator.geolocation) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
+    if (!suiviRefus && !document.hidden && (natif || navigator.geolocation)) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
     for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
+    // Android : le service natif continue écran éteint ; les points sont mis en file locale puis traités au retour dans l'application.
+    if (natif) {
+      try {
+        if (missions.length && !suiviRefus) {
+          const cible = missions.slice().sort((a, b) => Date.parse(a.t.pickup || '') - Date.parse(b.t.pickup || ''))[0];
+          const origine = G.coordonnees(cible.m, 'origin');
+          const dest = G.coordonnees(cible.m, 'destination');
+          if (dest && Number.isFinite(Number(dest.lat)) && Number.isFinite(Number(dest.lng))) {
+            const rayon = dest.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
+            const plat = origine && Number.isFinite(Number(origine.lat)) ? Number(origine.lat) : NaN;
+            const plng = origine && Number.isFinite(Number(origine.lng)) ? Number(origine.lng) : NaN;
+            window.CPNatif.demarrerSuiviGps(plat, plng, Number(dest.lat), Number(dest.lng), cible.t.key, rayon);
+          }
+        } else window.CPNatif.arreterSuiviGps();
+        const raw = window.CPNatif.prendrePointsSuiviGps();
+        const points = JSON.parse(raw || '[]');
+        if (Array.isArray(points)) for (const p of points) {
+          const lat = Number(p.lat), lng = Number(p.lng), accuracy = Number(p.accuracy), timestamp = Number(p.timestamp);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(timestamp)) continue;
+          suiviTraiter({ timestamp, coords: { latitude: lat, longitude: lng, accuracy: Number.isFinite(accuracy) ? accuracy : 9999, speed: null } });
+        }
+        const arrivRaw = window.CPNatif.prendreArriveesSuiviGps();
+        const arriv = JSON.parse(arrivRaw || '[]');
+        if (Array.isArray(arriv)) for (const ev of arriv) {
+          const cible = missions.find(x => x.t.key === ev.missionKey);
+          const ts = Number(ev.timestamp);
+          if (cible && Number.isFinite(ts) && !arriveeGps(cible.t.key)) suiviArrivee(cible.m, cible.t, ts);
+        }
+      } catch (_) { }
+      if (!actif) suiviDedans.clear();
+      return;
+    }
     if (!actif) { suiviDedans.clear(); return; }
-    // Une seule acquisition GPS basse consommation, puis extinction du capteur jusqu'au prochain cycle.
+    // Web : une seule acquisition basse consommation, puis extinction du capteur jusqu'au prochain cycle.
     if (!suiviLectureEnCours) {
       suiviLectureEnCours = true;
       navigator.geolocation.getCurrentPosition(pos => {
@@ -1534,6 +1571,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
       if (existing) {
+        if (existing.dataset.cpPrefetched === 'true') {
+          existing.style.display = '';
+          delete existing.dataset.cpPrefetched;
+          existing.scrollIntoView({behavior:'smooth',block:'start'});
+          return;
+        }
         if (!existing.hidden) {
           existing.scrollIntoView({behavior:'smooth',block:'start'});
           return;
@@ -2114,7 +2157,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         majDiag();
       }
       const localCards={};
-      // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
+      // Hub transports : Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       const hubHosts={};
       // La progression reste indépendante du rendu des cartes.
       const rechercheBadges={};
@@ -2322,13 +2365,19 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           if(index>=0)tasks.splice(index,1);
         }
         if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
-        const signature=JSON.stringify([Hub.VERSION,tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const commonSignature=JSON.stringify([Hub.VERSION,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const taskSignatures=Object.fromEntries(tasks.map(({lazy,...task})=>[task.label,JSON.stringify([task,commonSignature])]));
+        const signature=JSON.stringify([commonSignature,tasks.map(({lazy,...r})=>r)]);
         if((onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
-        // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
-        // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
-        // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
+        // Le cache est indépendant par partie : un changement d'horaire ou d'adresse
+        // invalide uniquement Aller, Jonction ou Retour dont la tâche a changé.
         if(!onlyJonction)panel.cpRefreshStarted=true;
-        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?stored.views||{}:{};
+        const cachedViews=!onlyJonction&&!refresh&&stored?.views?Object.fromEntries(
+          Object.entries(stored.views).filter(([label])=>
+            stored.partSignatures?.[label]===taskSignatures[label]||
+            (!stored.partSignatures&&stored.signature===signature)
+          )
+        ):{};
         const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
@@ -2447,7 +2496,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               // Conserver les autres jours jusqu'à ce que leurs nouveaux résultats soient prêts.
               const retained=stored?.signature===signature?stored.views:{};
               const views={...retained,...search.views};
-              const entry={signature,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
+              const entry={signature,partSignatures:taskSignatures,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
               transportViewCache.set(memoryKey,entry);
               clearTimeout(transportSaveTimers.get(memoryKey));
               const persist=()=>{
@@ -2467,8 +2516,18 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(onlyJonction)junctionHub=session;
         else{search.session=transportHub=session;startDayLabels(activeDay);}
       };
+      // Le marqueur data-cp-prefetched est aussi lu directement par les workers isolés.
+      const prefetchKeepsHubAlive=()=>panel.dataset.cpPrefetched==='true';
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
-        if(!panel.isConnected||panel.hidden||$('feuille').hidden){
+        if(!panel.isConnected){
+          attachedSearch?.detach(panel);junctionHub?.dispose();
+          clearInterval(progressTimer);clearTimeout(panel.__cpDefer);
+          transportHub=null;junctionHub=null;hubObserver.disconnect();
+          return;
+        }
+        // Un panneau masqué pour le pré-calcul reste propriétaire de sa session :
+        // la fiche peut être fermée et l'utilisateur peut naviguer ailleurs.
+        if((panel.hidden||$('feuille').hidden)&&!prefetchKeepsHubAlive()){
           attachedSearch?.detach(panel);junctionHub?.dispose();
           clearInterval(progressTimer);clearTimeout(panel.__cpDefer);
           transportHub=null;junctionHub=null;hubObserver.disconnect();
@@ -2506,7 +2565,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
         let gtfsTaskSignature = null;
         const runGTFS = () => {
-        if (!panel.isConnected || panel.hidden || $('feuille').hidden) return;
+        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && panel.dataset?.cpPrefetched !== 'true')) return;
         const point = gps => transportAddressPoint(gps) ?
           {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
         const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
@@ -2535,7 +2594,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         runGTFS();
       }
       if (next) pointsMission(next, () => {
-        if (!panel.isConnected || panel.hidden || $('feuille').hidden || $('btnTransportsMission') !== bt) return;
+        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && panel.dataset?.cpPrefetched !== 'true') || $('btnTransportsMission') !== bt) return;
         bt.cpRefreshGTFS?.();
         bt.cpRefreshRegional?.();
         bt.cpRefreshHub?.();
@@ -2947,129 +3006,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         }
       }
       });
-      // TripGo retiré des moteurs (17/11/2026, demande de Laurent) : champ de clé et recherches masqués.
-      if (false && window.CPTripGo) {
-        const tripgo=window.CPTripGo,config=document.createElement('div');
-        let busRealtime=null;
-        try{busRealtime=window.CPBlaBlaRealtime?.createClient({fetcher:regionalFetch,...(window.CP_BLABLACAR_REALTIME_URL?{endpoint:window.CP_BLABLACAR_REALTIME_URL}:{})});}catch(_){}
-        config.className='doux';config.style.marginTop='10px';
-        const keyInput=document.createElement('input');keyInput.type='password';keyInput.autocomplete='off';
-        keyInput.setAttribute('aria-label','Clé TripGo privée sur cet appareil');keyInput.placeholder='Clé TripGo privée';
-        const keyStatus=document.createElement('p');
-        const keyState=()=>{keyStatus.textContent=tripgo.getKey()?'TripGo actif sur cet appareil. La clé reste privée ; les coordonnées des recherches sont envoyées à TripGo.':'TripGo peut compléter les trajets interurbains. Sa clé privée doit être enregistrée sur cet appareil.';};
-        const saveKey=document.createElement('button');saveKey.className='second';saveKey.type='button';saveKey.textContent='Activer TripGo sur cet appareil';
-        saveKey.onclick=()=>{try{tripgo.setKey(keyInput.value);keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Clé invalide ou stockage de cet appareil indisponible.';}};
-        const clearKey=document.createElement('button');clearKey.className='second';clearKey.type='button';clearKey.textContent='Retirer la clé TripGo de cet appareil';
-        clearKey.onclick=()=>{try{tripgo.setKey('');keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Retrait de la clé impossible sur cet appareil.';}};
-        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);sourcePanel.appendChild(config);
-        const tripSearch=(label,inputs)=>regionalSlot(label,()=>[tripgo.getKey(),inputs()],(target,signal)=>{
-          const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
-          const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
-          status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
-          tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
-            if(!regionalActive()||signal.aborted||!status.isConnected)return;
-            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts)).slice(0,3);
-            status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
-            if(shown.length){
-              const heading=document.createElement('h4');heading.textContent=label+' TripGo · comparer';status.appendChild(heading);
-            }
-            for(const [resultIndex,result] of shown.entries()){
-              const details=document.createElement('details');details.setAttribute('data-tripgo-details','');
-              details.style.cssText='padding:12px;border:1px solid #94a3b8;border-radius:12px;line-height:1.5;min-width:0;margin:10px 0';
-              const summary=document.createElement('summary');summary.style.cursor='pointer';
-              const name=document.createElement('strong');name.style.display='block';
-              name.textContent='Proposition '+(resultIndex+1)+' · '+[...new Set(result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).map(leg=>leg.line||leg.provider||'Transport'))].join(' · ');
-              const times=document.createElement('span');times.style.display='block';
-              times.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString());
-              const duration=document.createElement('span');duration.style.display='block';
-              duration.textContent=Math.ceil((Date.parse(result.arrival)-Date.parse(result.departure))/60000)+' min · marches comprises';
-              summary.append(name,times,duration);details.appendChild(summary);
-
-              const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
-                result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
-                ' · réponse du fournisseur reçue le '+formatParis(answer.receivedAt)+
-                ' · raccordement aux coordonnées : '+Math.ceil(result.evidence.startGapMeters)+' m / '+Math.ceil(result.evidence.endGapMeters)+' m (accès physique à vérifier)'+
-                (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'');
-              const proof=document.createElement('span');
-              const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
-              renderProof(false);proof.style.display='block';summary.appendChild(proof);
-              // Do not treat TripGo's unverified price estimates as official fares.
-              let fareSummary=null;
-              if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
-                fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
-                const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
-                fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
-                fareLine.style.display='block';summary.appendChild(fareLine);
-              }
-              details.appendChild(line);
-              const mapNote=document.createElement('p');mapNote.className='doux';
-              mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
-              const steps=document.createElement('ol');
-              const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
-              for(const [legIndex,leg] of result.legs.entries()){
-                const step=document.createElement('li');window.CPEtapeStyle&&window.CPEtapeStyle(step,leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance':leg.line||leg.provider);step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':leg.line||leg.provider||'Transport (ligne non identifiée)')+' · '+
-                  stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
-                if(leg.mode==='wa_wal'&&Number.isFinite(leg.distanceMeters)&&leg.distanceMeters>=0){
-                  const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
-                  walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
-                  step.appendChild(walkingDistance);
-                }
-                const legFare=fareSummary?.breakdown?.[legIndex];
-                if(legFare){
-                  const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
-                  fareDetail.textContent=' · '+(window.CPTransportFares.describeLeg?.(legFare)||'Tarif inconnu');
-                  step.appendChild(fareDetail);
-                }
-                const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
-                for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){
-                  if(!validMapPoint(point))continue;
-                  const link=document.createElement('a');link.textContent=' · '+label+' sur la carte';link.target='_blank';link.rel='noopener noreferrer';
-                  link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(point.lat+','+point.lon);step.appendChild(link);
-                }
-                if(leg.mode==='wa_wal'&&validMapPoint(leg.fromPoint)&&validMapPoint(leg.toPoint)){
-                  const walk=document.createElement('a');walk.textContent=' · Ouvrir la marche dans Maps';walk.target='_blank';walk.rel='noopener noreferrer';
-                  walk.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(leg.fromPoint.lat+','+leg.fromPoint.lon)+
-                    '&destination='+encodeURIComponent(leg.toPoint.lat+','+leg.toPoint.lon)+'&travelmode=walking';step.appendChild(walk);
-                }
-                steps.appendChild(step);
-              }
-              details.appendChild(steps);status.appendChild(details);
-              if(window.CPBlaBlaRealtime&&Array.isArray(result.legs)&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
-                const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';live.style.display='block';summary.appendChild(live);
-                if(!busRealtime){live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';continue;}
-                busRealtime.check(result,task,{signal}).then(check=>{
-                  if(!regionalActive()||signal.aborted||!live.isConnected)return;
-                  const update=check.updates[0];
-                  const label=check.status==='cancelled'?'annulation signalée par l’opérateur':
-                    check.status==='missed_boarding'?'départ trop tôt pour l’approche disponible':
-                    check.status==='arrival_too_late'?'retard incompatible avec la marge normale de 15 min avant prise en charge (5 min uniquement si GPS exact fiable)':
-                    update?.status==='observed'?'circulation observée par l’opérateur':
-                    update?.status==='predicted'?'prévision reçue de l’opérateur':
-                    update?.status==='stale'?'aucune donnée opérateur valide à cet instant':
-                    update?.status==='not_matched'?'aucune prévision raccordée à cette course et à ce jour':
-                    update?.status==='ambiguous'?'plusieurs versions opérateur incompatibles':'pas de prévision exploitable pour cette course';
-                  renderProof(check.serviceConfirmed===true);
-                  const exclusions={cancelled:'⛔ Annulation signalée — ne pas retenir ce trajet avant actualisation. ',arrival_too_late:'⛔ Prévision incompatible avec la marge normale de 15 min (5 min uniquement si GPS exact fiable) — actualisez avant de retenir ce trajet. ',missed_boarding:'⛔ Embarquement incompatible avec l’approche disponible — actualisez avant de retenir ce trajet. '};
-                  if(exclusions[check.status]){const warning=document.createElement('strong');warning.textContent=exclusions[check.status];summary.prepend(warning);}
-                  live.textContent=' · Prévisions BlaBlaCar Bus : '+label+
-                    (check.doorArrival?' · arrivée estimée après la marche finale : '+formatParis(new Date(Math.ceil(Date.parse(check.doorArrival)/60000)*60000).toISOString()):'')+
-                    (update?.sourceTimestamp?' · source du '+formatParis(update.sourceTimestamp):'')+'. Accès physique et prix restent à vérifier.';
-                  const expires=check.validUntil||update?.validUntil;
-                  if(expires&&Date.parse(expires)>Date.now()){const timer=setTimeout(()=>{
-                    if(regionalActive()&&live.isConnected){renderProof(false);live.textContent=' · Prévisions BlaBlaCar Bus expirées — actualisez les transports.';}
-                  },Math.max(0,Date.parse(expires)-Date.now()));signal.addEventListener('abort',()=>clearTimeout(timer),{once:true});}
-                }).catch(()=>{if(regionalActive()&&!signal.aborted&&live.isConnected)live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';});
-              }
-            }
-            const credit=document.createElement('p');credit.textContent='Source : TripGo / opérateurs indiqués ; marches : © contributeurs OpenStreetMap. La disponibilité annoncée ne constitue pas une réservation.';const attribution=document.createElement('a');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';attribution.textContent=' Attribution OpenStreetMap';credit.appendChild(attribution);status.appendChild(credit);
-          }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});
-        });
-        if(pickupDate)tripSearch('Aller',()=>({from:regionalHome(),to:regionalPoint(G.coordonnees(m,'origin')),
-          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true,latestArrival:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString()}));
-        if(deliveryDate)tripSearch('Retour',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalHome(),when:deliveryDate}));
-        if(next&&deliveryDate&&next.pickup_start)tripSearch('Jonction',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalPoint(G.coordonnees(next,'origin')),
-          when:deliveryDate,latestArrival:new Date(Date.parse(next.pickup_start)-securityMarginMin*60000).toISOString()}));
-      }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = transportDelivery || m.delivery_start || transportPickup;
@@ -3635,6 +3571,46 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const b3 = $('btnAnnRetire'); if (b3) b3.onclick = () => { const o = lireLocal('cp_annul', {}) || {}; delete o[cle]; ecrireLocal('cp_annul', o); for (const x of etat.missions) if (x.kind === 'acceptee' && x.platform + '|' + x.external_id === cle && x._statutOrig !== undefined) { x.status = x._statutOrig; delete x._statutOrig; x.annulee_par_moi = false; } sauve('Annulation retirée'); };
     }
     const transportDetailButton = $('btnTransportsMission');
+    // Le moteur de recherche de la fiche connaît déjà les tâches Retour et Jonction.
+    // On le lance une seule fois à T-15 min de la livraison planifiée, puis on masque
+    // seulement son panneau : les moteurs continuent et enregistrent les vues dans le cache.
+    if (transportDetailButton && m.kind === 'acceptee' && m.status !== 'annulee' && m.status !== 'terminee') {
+      const prefetchKey = String(m.platform) + '|' + String(m.external_id);
+      const oldTimer = transportPrefetchTimers.get(prefetchKey);
+      if (oldTimer) clearInterval(oldTimer);
+      const tickPrefetch = () => {
+        // La fiche peut être refermée : le pré-calcul doit continuer tant que
+        // l'application et le bouton de la mission existent encore dans le DOM.
+        if (!transportDetailButton.isConnected || $('btnTransportsMission') !== transportDetailButton) {
+          clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
+        }
+        if (transportDetailButton.dataset.cpPrefetchStarted === 'true') {
+          clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
+        }
+        const arrivalKnown = arriveeGps(missionTiming(m).key);
+        if (!arrivalKnown) {
+          let finish = null;
+          try { finish = RT.fin(missionForPlanning(m)); } catch (_) {}
+          if (!finish || !Number.isFinite(finish.t)) return;
+          const remaining = finish.t - Date.now();
+          if (remaining > 15 * 60000 || remaining < 0) return;
+        }
+        transportDetailButton.dataset.cpPrefetchStarted = 'true';
+        clearInterval(timer); transportPrefetchTimers.delete(prefetchKey);
+        // Le clic réutilise exactement les moteurs, filtres, signatures et caches de la fiche.
+        try {
+          if (!$('cpTransportMissionDetails')) transportDetailButton.click();
+          const prefetchPanel = $('cpTransportMissionDetails');
+          if (prefetchPanel && prefetchPanel.isConnected) {
+            prefetchPanel.dataset.cpPrefetched = 'true';
+            prefetchPanel.style.display = 'none';
+          }
+        } catch (_) { delete transportDetailButton.dataset.cpPrefetchStarted; }
+      };
+      const timer = setInterval(tickPrefetch, 30000);
+      transportPrefetchTimers.set(prefetchKey, timer);
+      tickPrefetch();
+    }
     pointsMission(m, () => {
       if ($('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) return;
       if ($('gpsO')) $('gpsO').innerHTML = mentionGps(m, 'origin');

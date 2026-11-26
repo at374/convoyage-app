@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {createRelay,PATH}=require('../server/transport-realtime-relay.cjs');
-const rt=require('../transport-blablacar-realtime'),tg=require('../transport-tripgo');
-const fixture=require('./fixtures/blablacar-siri-2026-10-31.json'),trip=require('./fixtures/tripgo-blablacar-2026-10-31.json');
+const rt=require('../transport-blablacar-realtime');
+const fixture=require('./fixtures/blablacar-siri-2026-10-31.json');
 const origin='https://app.example',clock=Date.parse(fixture.testNow),bytes=JSON.stringify(fixture.response);
 const response=()=>new Response(bytes,{headers:{'Content-Type':'application/json'}});
 async function setup(t,options={}){
@@ -28,7 +28,7 @@ test('relay shares upstream downloads and never forwards caller keys, cookies or
   assert.equal(init.credentials,'omit');assert.equal(init.referrerPolicy,'no-referrer');
   return new Promise(resolve=>{finish=()=>resolve(response());});
  }});
- const first=fetch(base+PATH,{headers:{Origin:origin,Authorization:'private',Cookie:'private=1','X-TripGo-Key':'private'}}),second=fetch(base+PATH,{headers:{Origin:origin}});
+ const first=fetch(base+PATH,{headers:{Origin:origin,Authorization:'private',Cookie:'private=1','X-Client-Secret':'private'}}),second=fetch(base+PATH,{headers:{Origin:origin}});
  while(!finish)await new Promise(resolve=>setTimeout(resolve,5));finish();
  const results=await Promise.all([first,second]);assert(results.every(r=>r.status===200));assert.equal(requests,1);
  await fetch(base+PATH);assert.equal(requests,1);
@@ -57,8 +57,12 @@ test('relay rate limit applies to cached responses too',async t=>{
 test('configured client can verify an operator observation through the actual local HTTP relay',async t=>{
  const base=await setup(t,{fetcher:async()=>response()}),endpoint=base+PATH,client=rt.createClient({endpoint,now:()=>clock});
  const task={from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when:'2026-10-31T10:00:00+01:00'};
- const j=tg.parse(trip.response,task).itineraries[0],result=await client.check(j,task);
- assert.equal(result.transportEndpoint,endpoint);assert.equal(result.serviceConfirmed,true);assert.equal(result.transportConfirmed,false);assert.equal(result.doorArrival,'2026-10-31T10:44:34.000Z');
+ const j={legs:[
+  {mode:'wa_wal',departure:'2026-10-31T09:10:00.000Z',arrival:'2026-10-31T09:15:00.000Z'},
+  {mode:'pt_pub_bus',provider:'BlaBlaCar Bus',serviceShortName:'51981',fromStopCode:'NCY',toStopCode:'XGE',departure:'2026-10-31T09:15:00.000Z',arrival:'2026-10-31T10:40:00.000Z'},
+  {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:44:34.000Z'}
+ ]},result=await client.check(j,task);
+ assert.equal(result.transportEndpoint,endpoint);assert.equal(result.serviceConfirmed,true);assert.equal(result.transportConfirmed,false);assert.equal(result.doorArrival,'2026-10-31T10:46:34.000Z');
  for(const invalid of ['http://external.example'+PATH,'https://relay.example/other','https://key@relay.example'+PATH,'https://relay.example'+PATH+'?key=secret'])assert.throws(()=>rt.createClient({endpoint:invalid}),/Relais/);
 });
 

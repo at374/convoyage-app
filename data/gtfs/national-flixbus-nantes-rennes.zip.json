@@ -1,0 +1,29 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-nantes-rennes.zip",
+  "sha256": "f703ade5f038d73d4b6d37daaeee10354e6d761b192cf646bdc870f86d01de8e",
+  "bytes": 22265,
+  "bounds": [
+    47.05,
+    -2.05,
+    48.3,
+    -1.2
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for nantes-rennes; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 14,
+    "trips": 193,
+    "stops": 46,
+    "fares": false,
+    "bounds": [
+      47.05,
+      -2.05,
+      48.3,
+      -1.2
+    ],
+    "lastServiceDate": "2027-05-22"
+  }
+}

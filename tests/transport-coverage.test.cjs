@@ -42,14 +42,14 @@ test('diagnostic : moteurs réels simulés ici → rapport chiffré par axe, ré
  const providers={
   ok:{name:'Mobilités M',enabled:()=>true,run:async task=>[{source:'M',sources:['M'],legs:[{kind:'transit',mode:'Bus',provider:'M Réso - Métropole Grenobloise',line:'C1',
    from:'A',to:'B',fromPoint:task.from,toPoint:task.to,departure:at(8,10),arrival:at(8,40)}]}]},
-  ko:{name:'TripGo',enabled:()=>true,run:async()=>{throw new Error('HTTP 401');}}
+  ko:{name:'Moteur indisponible',enabled:()=>true,run:async()=>{throw new Error('HTTP 401');}}
  };
  const router={route:async(a,b)=>({status:'calculated',distanceMeters:1,durationSeconds:1,geometry:[a,b]})};
  const Grids=require('../transport-fare-grids.js');
  const report=await C.runDiagnostic({hub:H,providers,router,fareFor:Grids.fareFor,storage,axes:C.AXES.filter(a=>a.id==='grenoble-crolles'),when:at(8,0),timeoutMs:2000});
  const a=report.axes[0];
  assert.equal(a.trips,1);assert.equal(a.priced,1,'M réso 2,00 €');assert.equal(a.walked,1);
- assert.equal(a.engines.errors.TripGo,'HTTP 401');
+ assert.equal(a.engines.errors['Moteur indisponible'],'HTTP 401');
  assert.deepEqual(a.networksSeen,['mreso-metro','mreso-gresivaudan'],'Grenoble (Métropole) → Crolles (Grésivaudan), pas le Voironnais');
  assert.equal(C.inventory(storage).rows.find(r=>r.id==='mreso-metro').state,'Validé en réel');
  assert.match(C.reportText(report,C.inventory(storage)),/Grenoble → Crolles : 1 trajet\(s\), 1 avec prix vérifié/);

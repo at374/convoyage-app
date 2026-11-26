@@ -201,24 +201,6 @@ function fromOJP(entries,{origin,destination}={}){
   return journey('OJP Suisse (opentransportdata.swiss)',legs,{});
  }).filter(Boolean);
 }
-function tripgoMode(m){return m==='wa_wal'?'walk':/train|rail/.test(m)?'Train':/tram|lrt/.test(m)?'Tram':/metro|subway/.test(m)?'Métro':/coach/.test(m)?'Car':/bus/.test(m)?'Bus':'Transport';}
-function fromTripGo(answer){
- return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
-  const legs=[];
-  for(const l of it.legs||[]){
-   if(/^stationary_/.test(l.mode))continue;
-   const mode=/flixbus|blablacar|eurolines|ouibus/i.test((l.line||'')+' '+(l.provider||''))?'Car':tripgoMode(l.modeInfo||l.mode);
-   if(mode==='walk')legs.push(leg({kind:'walk',mode:'Marche',from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,
-    departure:l.departure,arrival:l.arrival,distanceMeters:l.distanceMeters,
-    durationSeconds:(ms(l.arrival)-ms(l.departure))/1000,walkSource:'provider'}));
-   else legs.push(leg({mode,line:l.line||l.serviceShortName,provider:l.provider||'TripGo',from:l.from,to:l.to,
-    fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival,realtime:l.realtimeReported,ticketUrl:l.ticketWebsiteURL,
-    // Billet transmis par TripGo pour cette portion (jamais le coût global estimé « moneyCost »).
-    fare:l.ticket?{amount:l.ticket.amount,currency:l.ticket.currency,source:'Prix transmis par TripGo'+(l.ticket.name?' ('+l.ticket.name+')':'')+' pour '+(l.provider||'l’opérateur')}:null}));
-  }
-  return journey('TripGo',legs,{alerts:it.alerts,realtime:it.evidence?.realtimeReported===true});
- });
-}
 function fromRegional(itineraries,source='Mobilités M'){
  const map={WALK:'walk',BUS:'Bus',TRAM:'Tram',SUBWAY:'Métro',RAIL:'Train'};
  return (Array.isArray(itineraries)?itineraries:[]).map(it=>journey(source,(it.legs||[]).map(l=>{
@@ -260,6 +242,152 @@ function bookingNote(nets){
  if(/haute[- ]savoie|y9[234]/i.test(n))return '📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000';
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
+const REMI_REALTIME_URL='https://api.okina.fr/gateway/cvl/gtfsrt/trip-updates?useoriginalId=true';
+const LOCAL_REALTIME_NETWORKS=new Map([
+ ['remi36_indre',['Rémi 36',REMI_REALTIME_URL]],
+ ['remi18_cher',['Rémi 18',REMI_REALTIME_URL]],
+ ['remi41_blois_sologne',['Rémi 41',REMI_REALTIME_URL]],
+ ['azalys_blois',['Azalys Blois','https://www.data.gouv.fr/api/1/datasets/r/61d5a03f-311d-4fb1-9c14-dd0c8856af32']],
+ ['fil_bleu_tours',['Fil Bleu (Tours)','https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates']],
+ ['levib_vierzon',['Le Vib’ Vierzon','le-vib-vierzon']],
+ ['agglobus_bourges',['Agglobus (Bourges)','agglobus-bourges']],
+ ['maelis',['Maelis Montluçon','maelis-montlucon']],
+ ['mobivie',['MobiVie Vichy','mobivie-vichy']],
+ ['t2c',['T2C (Clermont Auvergne Métropole)','t2c-clermont']],
+ ['ondea',['Ondéa Aix-les-Bains (Grand Lac)','ondea-aix-les-bains',true]],
+ ['citea',['Citéa (Valence Romans Mobilités)','citea-valence']],
+ ['rubis',['Rubis Bourg-en-Bresse','rubis-bourg-en-bresse']],
+ ['jybus',['J’y bus Rumilly','jybus-rumilly']],
+ ['tac',['TAC Annemasse','tac-annemasse']],
+ ['divia_dijon',['Divia Mobilités (Dijon)','divia-dijon']],
+ ['cotebus_beaune',["Côt'Bus (Beaune)",'beaune-cote-et-bus',true]],
+ ['grandole_dole',['Grandole Mobilités (Dole)','tgd-dole']],
+ ['moova_vesoul',['Moova (Vesoul)','moova-vesoul']]
+]);
+const LOCAL_REALTIME_LIMIT=1024*1024;
+const localRealtimeCache=new WeakMap();
+function realtimeNetworkId(row){
+ if(row.networkId)return LOCAL_REALTIME_NETWORKS.has(row.networkId)?row.networkId:null;
+ for(const [id,[name]] of LOCAL_REALTIME_NETWORKS)if(row.network===name)return id;
+ return null;
+}
+function* protobufFields(bytes,signedTag){
+ let offset=0;
+ function integer(signed=false){
+  let value=0,low=0;
+  for(let shift=0;shift<70&&offset<bytes.length;shift+=7){
+   const byte=bytes[offset++];
+   if(signed){if(shift<32)low|=(byte&127)<<shift;}
+   else value+=(byte&127)*2**shift;
+   if(byte<128)return signed?low:value;
+  }
+  throw new Error('Champ GTFS-RT invalide');
+ }
+ while(offset<bytes.length){
+  const key=integer(),wire=key%8,tag=Math.floor(key/8);
+  if(!tag)throw new Error('Champ GTFS-RT invalide');
+  if(wire===0){yield [tag,integer(tag===signedTag)];continue;}
+  const length=wire===2?integer():wire===1?8:wire===5?4:-1;
+  if(!Number.isSafeInteger(length)||length<0||offset+length>bytes.length)throw new Error('Flux GTFS-RT tronqué');
+  if(wire===2)yield [tag,bytes.subarray(offset,offset+length)];
+  offset+=length;
+ }
+}
+function readLocalRealtime(bytes,now,requiresObservation){
+ const fields=b=>new Map(protobufFields(b));
+ const decoder=new TextDecoder('utf-8',{fatal:true});
+ const text=b=>b instanceof Uint8Array?decoder.decode(b):'';
+ const trips=new Map();
+ let timestamp=0;
+ for(const [tag,value] of protobufFields(bytes)){
+  if(tag===1){timestamp=Number(fields(value).get(3))*1000;continue;}
+  if(tag!==2)continue;
+  const entity=fields(value),update=entity.get(3);
+  if(entity.get(2)||!(update instanceof Uint8Array))continue;
+  const values=fields(update);
+  // Rémi publie aussi des entrées sans position horodatée pour les mêmes courses.
+  // Utiliser uniquement les observations récentes pour ce flux.
+  if(requiresObservation){
+   const observedAt=Number(values.get(4))*1000;
+   if(!Number.isFinite(observedAt)||observedAt<now-300000||observedAt>now+30000)continue;
+  }
+  const trip=values.get(1);
+  if(!(trip instanceof Uint8Array))continue;
+  const descriptor=fields(trip),id=text(descriptor.get(1));
+  const relationship=descriptor.get(4)||0;
+  if(!id||![0,3].includes(relationship))continue;
+  const stops=new Map();
+  for(const [field,raw] of protobufFields(update)){
+   if(field!==2)continue;
+   const stop=fields(raw),id=text(stop.get(4));
+   if(!id)continue;
+   if(stops.has(id)){stops.set(id,null);continue;}
+   const arrival=stop.has(2)?new Map(protobufFields(stop.get(2),1)):null;
+   const departure=stop.has(3)?fields(stop.get(3)):null;
+   const status=stop.get(5)||0;
+   stops.set(id,status===1?{skipped:true}:status===0?{arrival:Number(arrival?.get(2))*1000,arrivalDelay:arrival?.get(1),departure:Number(departure?.get(2))*1000}:null);
+  }
+  trips.set(id,trips.has(id)?null:{stops,date:text(descriptor.get(3)),cancelled:relationship===3});
+ }
+ return Number.isFinite(timestamp)&&timestamp>=now-120000&&timestamp<=now+30000?trips:null;
+}
+function loadLocalRealtime(runtime,networkId){
+ if(typeof runtime.fetch!=='function')return Promise.resolve(null);
+ const [,slug]=LOCAL_REALTIME_NETWORKS.get(networkId);
+ const url=slug.startsWith('https://')?slug:'https://proxy.transport.data.gouv.fr/resource/'+slug+'-gtfs-rt-trip-update';
+ let feeds=localRealtimeCache.get(runtime);
+ if(!feeds){feeds=new Map();localRealtimeCache.set(runtime,feeds);}
+ const now=Date.now(),cached=feeds.get(url);
+ if(cached&&cached.until>now)return cached.promise;
+ const promise=(async()=>{
+  const response=await runtime.fetch(url,{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(1800)});
+  if(!response.ok||!response.body||Number(response.headers.get('content-length'))>LOCAL_REALTIME_LIMIT)return null;
+  const reader=response.body.getReader(),chunks=[];
+  let size=0;
+  try{
+   for(;;){
+    const {done,value}=await reader.read();
+    if(done)break;
+    size+=value.byteLength;
+    if(size>LOCAL_REALTIME_LIMIT){await reader.cancel();return null;}
+    chunks.push(value);
+   }
+  }finally{reader.releaseLock();}
+  const bytes=new Uint8Array(size);
+  let offset=0;
+  for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  return readLocalRealtime(bytes,Date.now(),url===REMI_REALTIME_URL);
+ })().catch(()=>null);
+ feeds.set(url,{until:now+15000,promise});
+ return promise;
+}
+function applyLocalRealtime(row,trips,now){
+ const trip=trips?.get(row.tripId);
+ if(!trip||row.onDemand||(trip.date&&trip.date!==row.serviceDate?.replaceAll('-','')))return row;
+ const boarding=trip.stops.get(row.from),alighting=trip.stops.get(row.to);
+ if(boarding?.skipped||alighting?.skipped)return null;
+ const departure=boarding?.departure,arrival=alighting?.arrival;
+ const scheduledDeparture=ms(row.departure),scheduledArrival=ms(row.arrival);
+ if(trip.cancelled&&Math.abs(scheduledDeparture-now)<10800000)return null;
+ if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<=departure||departure<now||
+    Math.abs(departure-scheduledDeparture)>1800000||Math.abs(arrival-scheduledArrival)>1800000)return row;
+ return {...row,departure:iso(departure),arrival:iso(arrival),realtime:true,
+  delayMinutes:Math.max(0,Math.round((departure-scheduledDeparture)/60000))};
+}
+
+function applyLocalRealtimeConnection(row,trips,now){
+ if(row.legs?.length!==2)return row;
+ const legs=row.legs.map(l=>applyLocalRealtime(l,trips.get(realtimeNetworkId(l)),now));
+ const [first,second]=legs;
+ if(!first||!second)return null;
+ if(!legs.some(l=>l.realtime))return row;
+ const interval=ms(second.departure)-ms(first.arrival);
+ const minimum=row.minTransferSeconds??(row.minimumTransferMinutes??5)*60;
+ if(interval<minimum*1000)return null;
+ return {...row,legs,departure:first.departure,arrival:second.arrival,
+  transferMinutes:interval/60000,realtime:legs.every(l=>l.realtime)};
+}
+
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
  // stop pairs. Keep the shortest straight-line access + egress candidate per trip
@@ -286,7 +414,7 @@ function fromGTFS(rows,network='Réseau local'){
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
    const end=i===raw.length-1?r.destinationStop:(r.transferStop||null);
    const out=leg({mode:'Bus',line:l.line||r.line,headsign:l.headsign||(r.legs?.length?'':r.headsign),terminus:l.terminus||(r.legs?.length?'':r.terminus),provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
-    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
+    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival,realtime:l.realtime??r.realtime,delayMinutes:l.delayMinutes??r.delayMinutes});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
    out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
    // Tarif publié par l'autorité dans le flux GTFS lui-même (fare_attributes / fare_rules).
@@ -299,14 +427,14 @@ function fromGTFS(rows,network='Réseau local'){
    }
    return out;
   });
-  return {...journey((r.network||network)+' (GTFS)'+(r.onDemand?' · à la demande 📞':''),legs),
+  return {...journey((r.network||network)+' (GTFS)'+(r.onDemand?' · à la demande 📞':''),legs,{realtime:r.realtime}),
    // Les données Flex doivent traverser la normalisation : sans ce champ,
    // assess() perdrait les exigences de réservation et pourrait surévaluer le trajet.
    ...(r.flexBooking&&typeof r.flexBooking==='object'?{flexBooking:{...r.flexBooking}}:
     r.isFlex===true||r.gtfsFlex===true?{flexBooking:{noticeMinutes:null,reservationConfirmed:false,pickupTimeConfirmed:false}}:{}),
    // Static GTFS proves a scheduled service, not its live operation.
    // Never label the itinerary as confirmed until a live source validates it.
-   missing:['horaire GTFS local non confirmé en temps réel',
+   missing:[...(r.realtime?[]:['horaire GTFS local non confirmé en temps réel']),
     ...(r.onDemand?[bookingNote([r.network,network,...(r.legs||[]).filter(l=>l&&l.onDemand).map(l=>l.network)].filter(Boolean).join(' '))]:[]),
     ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  });
@@ -1224,11 +1352,16 @@ const LOCAL_GTFS_NETWORKS=[
  ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.22]],
  // 20/11/2026 : réseaux urbains présents dans data/gtfs mais absents de ce moteur (audit de couverture).
  // CTS Strasbourg, STAR Rennes, TBM Bordeaux et TAO Orléans ont depuis été ajoutés plus bas (horizon réduit).
+ ['levib_vierzon','Le Vib’ Vierzon','levib-vierzon-gtfs-rt.zip',[47.19,2.03,47.25,2.12]],
  ['agglobus_bourges',"Agglobus (Bourges)",'agglobus-bourges.zip',[47.035,2.321,47.134,2.459]],
  ['ametis_amiens',"Ametis (Amiens Métropole)",'ametis-amiens.zip',[49.846,2.235,49.939,2.391]],
  ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
  ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
  ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
+ ['remi36_indre','Rémi 36','remi36-indre-gtfs-rt.zip',[46.79,1.32,47.15,2.42]],
+ ['remi18_cher','Rémi 18','remi18-cher-v2-gtfs-rt.zip',[46.53,1.79,47.58,3.05]],
+ ['remi41_blois_sologne','Rémi 41','remi41-blois-vendome-gtfs-rt.zip',[47.20,1.03,47.87,2.09]],
+ ['azalys_blois','Azalys Blois','azalys-blois-gtfs-rt.zip',[47.55,1.27,47.64,1.39]],
  ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.31,0.591,47.489,0.878]],
  ['filibus_chartres',"Filibus (Chartres)",'filibus-chartres.zip',[48.344,1.337,48.545,1.602]],
  ['ilevia_lille',"ilévia (Lille)",'ilevia-lille.zip',[50.569,2.876,50.74,3.193]],
@@ -1247,10 +1380,10 @@ const LOCAL_GTFS_NETWORKS=[
  ['zou_express_nord','ZOU ! Express (Alpes du Sud)','zou-express-nord.zip',[44.0,5.0,45.2,7.2]],
  ['zou_proximite_nord','ZOU ! Proximité (Hautes-Alpes, Vaucluse nord)','zou-proximite-nord.zip',[44.0,5.0,45.0,7.0]],
  ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.535,4.688,46.527,6.09]],
- ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
+ ['jybus','J’y bus Rumilly','jybus-rumilly-gtfs-rt.zip',[45.80,5.85,45.93,6.05]],
  ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
  // 15/11/2026 : autres réseaux de l'agrégat officiel Oùra (extraits par la tâche serveur, emprises relevées).
- ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg.zip', [46.15,5.05,46.52,5.41]],
+ ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg-gtfs-rt.zip', [46.15,5.05,46.52,5.41]],
  ['evad', "ÉVA'D Évian", 'evad-evian.zip', [46.24,6.45,46.42,6.86]],
  ['chamonix', "Chamonix Bus", 'chamonix-bus.zip', [45.87,6.74,46.06,6.96]],
  ['proximiti', "Proxim iTi Bonneville – La Roche", 'proximiti-bonneville.zip', [45.91,6.17,46.23,6.53]],
@@ -1273,7 +1406,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['toutenbus', "Tout'enbus Aubenas", 'toutenbus-aubenas.zip', [44.54,4.3,44.69,4.47]],
  ['transcab', "Trans'Cab Aurillac", 'transcab-aurillac.zip', [44.8,2.22,45.09,2.68]],
  ['montelibus', "Montélibus Montélimar", 'montelibus-montelimar.zip', [44.44,4.69,44.73,5.02]],
- ['maelis', "Maelis Montluçon", 'maelis-montlucon.zip', [46.15,2.49,46.42,2.74]],
+ ['maelis', "Maelis Montluçon", 'maelis-montlucon-gtfs-rt.zip', [46.15,2.49,46.42,2.74]],
  ['aleo', "Aléo Moulins", 'aleo-moulins.zip', [46.49,3.27,46.65,3.46]],
  ['tcap', "T'CAP Privas", 'tcap-privas.zip', [44.68,4.52,44.84,4.82]],
  ['velay', "Mobilité en Velay (Le Puy)", 'velay-le-puy.zip', [44.97,3.83,45.09,4.01]],
@@ -1281,7 +1414,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['star_roanne', "Star Roanne", 'star-roanne.zip', [45.96,3.78,46.22,4.26]],
  ['lebus', "Le Bus Tain-Tournon", 'lebus-tain-tournon.zip', [44.99,4.52,45.16,5.07]],
  ['smtut', "SMTUT Thiers", 'smtut-thiers.zip', [45.69,3.36,46.03,3.74]],
- ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
+ ['mobivie', "MobiVie Vichy", 'mobivie-vichy-gtfs-rt.zip', [46.06,3.37,46.17,3.49]],
  ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
  // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
  // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel avant câblage. stas/t2c :
@@ -1401,7 +1534,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=transferts-gtfs-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=realtime-window-20261126');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1460,6 +1593,8 @@ function makeProviders(r,opts={}){
   base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
   deployedBase=null;
   try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
+  const branchArchive=file=>file.endsWith('-gtfs-rt.zip')
+   ?'https://raw.githubusercontent.com/at374/convoyage-app/feature/native-gps-bridge/data/gtfs/'+file:null;
   // Les réseaux déjà lus restent en mémoire d'une recherche à l'autre (10 au maximum) : la 2e recherche et les actualisations de 5 min sont instantanées.
   const cache=r.__cpHubFeedCache||(r.__cpHubFeedCache=new Map());
   if(!cache.__w){const o=cache.set.bind(cache);cache.set=(k,v)=>{o(k,v);while(cache.size>10)cache.delete(cache.keys().next().value);return cache;};cache.__w=true;}
@@ -1490,7 +1625,7 @@ function makeProviders(r,opts={}){
     disabledReason:'trajet hors zone du réseau local ou horaires manquants',
     // Préparation à l'avance : seulement le téléchargement (gardé sur le téléphone), sans lecture du fichier, pour ne jamais figer l'écran.
     prefetch:async()=>{
-     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+     const urls=[...new Set([deployedBase?deployedBase+file:null,branchArchive(file),base+file,
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      for(const u of urls){try{const x=await fetcher(u);if(x&&x.ok){await x.arrayBuffer();return true;}}catch(_){}}
      return false;
@@ -1501,7 +1636,7 @@ function makeProviders(r,opts={}){
      // Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site passe en premier (c'est elle
      // que les tâches hebdomadaires de la branche publiée rafraîchissent) ; sinon la branche Transports, puis la
      // branche principale et le site déployé en secours.
-     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+     const urls=[...new Set([deployedBase?deployedBase+file:null,branchArchive(file),base+file,
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
      // 21/11/2026 : bug Y51/Albertville réel — l'adresse de livraison exacte et le domicile sont tous deux
@@ -1513,8 +1648,20 @@ function makeProviders(r,opts={}){
      // 5000 m déjà utilisé par OpenTripPlanner (ligne ~1270), qui lui trouvait bien ce trajet.
      const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
+     const now=Date.now();
+     const live=LOCAL_REALTIME_NETWORKS.has(id)&&!LOCAL_REALTIME_NETWORKS.get(id)[2]&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
+      ?await loadLocalRealtime(r,id):null;
+     if(signal?.aborted)return [];
+     const skippedStops=new Map(),retimedTrips=new Set();
+     for(const [tripId,trip] of live||[]){
+      if(!trip||(trip.date&&trip.date!==date.replaceAll('-','')))continue;
+      const stops=new Set([...trip.stops].filter(([,stop])=>stop?.skipped).map(([stopId])=>stopId));
+      if(stops.size)skippedStops.set(tripId,stops);
+      if(!trip.cancelled&&[...trip.stops.values()].some(stop=>Number.isFinite(w.arriveBy?stop?.arrival:stop?.departure)))
+       retimedTrips.add(tripId);
+     }
      let rows=null,_viaWorker=false,_feedInfo=null,localFeed=null,workerCandidates=null;
-     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
+     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,skippedStops,retimedTrips,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
      if(rows===null){
       _viaWorker=false;
       let promise=cache.get(id+'|'+date);
@@ -1565,17 +1712,25 @@ function makeProviders(r,opts={}){
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
      // from a few vehicles can hide later distinct departures.
-     const best=new Map(),directMeters=meters(pt(task.from),pt(task.to));
+     const best=new Map(),directMeters=meters(pt(task.from),pt(task.to)),cutoff=sec(clock);
      for(const x of rows){
-      if(!(w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
+      const skipped=skippedStops.get(x.tripId);
+      if(skipped?.has(x.from)||skipped?.has(x.to))continue;
+      const delta=w.arriveBy?cutoff-sec(x.arrival):sec(x.departure)-cutoff;
+      if(!(delta>=0||(delta>=-1800&&retimedTrips.has(x.tripId))))continue;
       const key=String(x.tripId||'')+'|'+date;
       const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
       if(!key||!Number.isFinite(access)||!Number.isFinite(egress))continue;
-      const score=access+egress,previous=best.get(key);
-      // Même règle que walkDetour : le filtre accès+sortie contre la marche directe élimine déjà le bruit
-      // (sur un réseau dense comme TCL, des dizaines de variantes d'arrêt pour le même véhicule).
+      const score=access+egress;
       if(directMeters>0&&score>=directMeters)continue;
-      if(!previous||score<previous.score)best.set(key,{x,score});
+      const previous=best.get(key);
+      if(previous&&previous.score<=score)continue;
+      const scheduled={...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
+       departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)};
+      if(!scheduled.departure||!scheduled.arrival)continue;
+      const timed=live?applyLocalRealtime(scheduled,live,now):scheduled;
+      if(!timed||(timed.realtime?(w.arriveBy?ms(timed.arrival)>when:ms(timed.departure)<when):delta<0))continue;
+      best.set(key,{x:timed,score});
      }
      // 20/11/2026 : demande de Laurent — garder TOUS les départs du jour qui répondent à la mission, pas
      // seulement les meilleurs (ex. Y51 Albertville→Annecy : 25 départs officiels, l'ancien plafond de 30
@@ -1589,9 +1744,7 @@ function makeProviders(r,opts={}){
      // 21/11/2026 (demande Laurent) : networkId/networkUrls/serviceDate conservés sur chaque ligne —
      // nécessaires pour le bouton « Tous les horaires » (dayScheduleForLeg) qui refait une requête GTFS
      // complète sur CE réseau précis, pour CETTE ligne et CES arrêts, sans le filtre « après maintenant ».
-     const filtered=[...best.values()].map(({x})=>({...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
-       departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
-      .filter(x=>x.departure&&x.arrival)
+     const filtered=[...best.values()].map(({x})=>x)
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      // 22/11/2026 (Laurent : Y51 a bien des départs l'après-midi dans le flux officiel — 12h15, 12h30, 13h30…
@@ -1609,7 +1762,7 @@ function makeProviders(r,opts={}){
   if(r.CPGTFSFederation?.crossNetworkTrips&&r.CPGTFSTime?.datedTrips&&r.CPGTFSIndex?.nearbyTransferTrips){
    const sncfFeed=['sncf_ter','SNCF (TER, TGV)','national-sncf-aura.zip',[44.0,3.6,46.7,7.4]];
    const area=b=>(b[2]-b[0])*(b[3]-b[1]);
-   const urlsFor=file=>[...new Set([deployedBase?deployedBase+file:null,base+file,
+   const urlsFor=file=>[...new Set([deployedBase?deployedBase+file:null,branchArchive(file),base+file,
      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
    const feedFor=(id,name,file,date)=>{
     const key='x|'+id+'|'+date;let promise=cache.get(key);
@@ -1760,7 +1913,19 @@ function makeProviders(r,opts={}){
      if(signal?.aborted)return [];
      if((!Array.isArray(rows)||rows.length===0)&&scanWindow!==window)rows=await runPass(window);
      if(signal?.aborted)return [];
-     const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
+     const now=Date.now();
+     const live=new Map();
+     if(rows.length&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000){
+      const ids=new Set(rows.flatMap(row=>(row.legs||[]).map(realtimeNetworkId)).filter(id=>id&&!LOCAL_REALTIME_NETWORKS.get(id)[2]));
+      await Promise.all([...ids].map(async id=>{
+       const feed=await loadLocalRealtime(r,id);
+       if(feed)live.set(id,feed);
+      }));
+     }
+     if(signal?.aborted)return [];
+     const out=rows.filter(x=>x&&x.departure&&x.arrival)
+      .map(x=>live.size?applyLocalRealtimeConnection(x,live,now):x).filter(Boolean)
+      .map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
      // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut
      // techniquement « correspondre » à n'importe quel arrêt commun qu'ils desservent tous les deux (des
      // dizaines, le long de toute la ligne), ce qui produit des milliers de doublons du MÊME trajet logique
@@ -1962,13 +2127,6 @@ function makeProviders(r,opts={}){
   },
   timeoutMs:(Number(opts.otpTimeoutMs)||30000)*2+10000
  };
- if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
-  disabledReason:'TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle',
-  run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
-   const deadline=ms(task.latestArrival);
-   const answer=await r.CPTripGo.plan({from:pt(task.from),to:pt(task.to),when:w.when,arriveBy:w.arriveBy,signal,fetcher,
-    ...(!w.arriveBy&&Number.isFinite(deadline)&&deadline>ms(w.when)?{latestArrival:new Date(deadline).toISOString()}:{})});
-   return fromTripGo(answer);}};
  if(r.CPSwissTransport&&typeof r.CPSwissTransport.plan==='function')P.swiss={name:'Suisse',
   enabled:task=>inSwissArea(pt(task.from))||inSwissArea(pt(task.to)),disabledReason:'trajet hors zone suisse et Grand Genève',
   run:async task=>{const w=queryWindow(task);if(!w)return [];const f=pt(task.from),t=pt(task.to);
@@ -2447,7 +2605,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // garantie par les timeouts déjà en place, pas une estimation inventée.
   // 23/11/2026 (Laurent : « 4 ou 5 minutes », bien au-delà du budget de 150 s d'un seul appel) : les variantes
   // d'heure ci-dessus existent pour des moteurs qui ne renvoient que les 5 à 10 trajets les plus proches d'un
-  // instant donné (OTP2, TripGo…) — répéter l'appel avec une heure cible différente permet de couvrir toute la
+  // instant donné (OTP2…) — répéter l'appel avec une heure cible différente permet de couvrir toute la
   // journée. Correspondances entre réseaux et SNCF/FlixBus/BlaBlaCar Bus (GTFS) n'ont pas cette limite : ils
   // parcourent déjà TOUTE la fenêtre donnée en un seul appel (crossNetworkTrips/loadAndSearch, avec leur propre
   // logique de bornage — voir scanWindow dans local_correspondances). Les relancer pour chaque variante
@@ -2714,6 +2872,46 @@ function scheduleLabel(value){
  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
+async function localRealtimeDaySchedule(raw,schedule){
+ const rows=schedule.map(row=>({...row}));
+ const now=Date.now(),timestamp=root.CPGTFSTime?.serviceTimestamp,networkId=realtimeNetworkId(raw);
+ if(!rows.length||!raw.from||!raw.to||typeof timestamp!=='function'||raw.serviceDate!==parisDayParts(now)?.day||!networkId)return rows;
+ const live=await loadLocalRealtime(root,networkId);
+ if(!live)return rows;
+ const inServiceSeconds=value=>{
+  const instant=new Date(value);
+  const parts=parisDayParts(value);
+  return (Date.parse(parts.day)-Date.parse(raw.serviceDate))/86400000*86400+parts.minute*60+instant.getUTCSeconds();
+ };
+ const scheduled=seconds=>timestamp(raw.serviceDate,[
+  Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60
+ ].map(part=>String(part).padStart(2,'0')).join(':'),'Europe/Paris');
+ for(const row of rows){
+  if(!live.has(row.trip_id)||![row.departureSeconds,row.arrivalSeconds].every(Number.isSafeInteger))continue;
+  const departure=scheduled(row.departureSeconds),arrival=scheduled(row.arrivalSeconds);
+  if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<now||Math.abs(departure-now)>=10800000)continue;
+  const update=applyLocalRealtime({tripId:row.trip_id,from:raw.from,to:raw.to,serviceDate:raw.serviceDate,
+   departure:iso(departure),arrival:iso(arrival)},live,now);
+  if(!update)row.status=live.get(row.trip_id)?.cancelled?'Course annulée':'Arrêt non desservi';
+  else if(update.realtime){
+   row.departureSeconds=inServiceSeconds(update.departure);
+   row.arrivalSeconds=inServiceSeconds(update.arrival);
+   row.status='Temps réel';
+  }else if(LOCAL_REALTIME_NETWORKS.get(networkId)[2]){
+   // Ces réseaux peuvent publier une estimation d’arrivée sans fournir le départ.
+   const trip=live.get(row.trip_id);
+   const stop=trip?.stops.get(raw.to);
+   const estimate=Number.isFinite(stop?.arrival)?stop.arrival:stop?.arrivalDelay?arrival+stop.arrivalDelay*1000:NaN;
+   if(trip&&!trip.cancelled&&(!trip.date||trip.date===raw.serviceDate.replaceAll('-',''))&&
+      Number.isFinite(estimate)&&estimate>Math.max(now,departure)&&Math.abs(estimate-arrival)<=1800000){
+    row.arrivalSeconds=inServiceSeconds(estimate);
+    row.status='Départ théorique · arrivée estimée';
+   }
+  }
+ }
+ return rows.sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
+}
+
 const daySchedulesByFeed=new WeakMap();
 async function dayScheduleForLeg(raw){
  if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
@@ -2727,7 +2925,9 @@ async function dayScheduleForLeg(raw){
   :['stops',scheduleLabel(raw.line),scheduleLabel(raw.fromName),scheduleLabel(raw.toName),pt(raw.fromPoint),pt(raw.toPoint)]);
  let cache=daySchedulesByFeed.get(feed);
  if(!cache){cache=new Map();daySchedulesByFeed.set(feed,cache);}
- if(cache.has(key))return cache.get(key).map(row=>({...row}));
+ const hasRealtime=!!realtimeNetworkId(raw);
+ const display=schedule=>hasRealtime?localRealtimeDaySchedule(raw,schedule):schedule.map(row=>({...row}));
+ if(cache.has(key))return display(cache.get(key));
  let rows;
  if(indexed){
   const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
@@ -2739,10 +2939,10 @@ async function dayScheduleForLeg(raw){
   if(!tables||typeof pl?.datedInterurbanRides!=='function')return [];
   rows=dayScheduleFromTables(raw,tables,pl);
  }
- const schedule=uniqueDayScheduleRows(rows);
+ const schedule=uniqueDayScheduleRows(rows,hasRealtime);
  cache.set(key,schedule);
  if(cache.size>64)cache.delete(cache.keys().next().value);
- return schedule.map(row=>({...row}));
+ return display(schedule);
 }
 function dayScheduleFromTables(raw,tables,pl){
  const rides=(route,from,to)=>pl.datedInterurbanRides(tables,raw.serviceDate,String(route),String(from),String(to));
@@ -2776,8 +2976,8 @@ function dayScheduleFromTables(raw,tables,pl){
  }
  return rows;
 }
-function uniqueDayScheduleRows(rows){
- return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
+function uniqueDayScheduleRows(rows,keepTrips=false){
+ return [...new Map(rows.map(r=>[(keepTrips?r.trip_id+':':'')+r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
   .sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
 }
 function hmFromSeconds(sec){
@@ -3025,9 +3225,9 @@ function card(doc,j,labels,expanded=false,task=null){
       if(!rows.length){showSource();return;}
       dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+(raw?.serviceDate||parisDayParts(l.departure)?.day)+' :'));
       const ul=el(doc,'ul',null);
-      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)));
+      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)+(row.status?' · '+row.status:'')));
       dayRes.appendChild(ul);
-      dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
+      dayRes.appendChild(el(doc,'small',null,rows.some(row=>row.status)?'Horaires GTFS et mises à jour de l’opérateur. Les passages sans mention restent théoriques.':'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
      }).catch(showSource)
       .finally(()=>{dayBtn.disabled=false;});
     });
@@ -3065,6 +3265,8 @@ function card(doc,j,labels,expanded=false,task=null){
 }
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
 const TAD=[
+ {name:'MobiVie sur Mesure (Vichy Communauté)',bounds:[46.06,3.37,46.17,3.49],url:'https://www.vichy-communaute.fr/transport-la-demande/',
+  phone:'04 15 98 20 80',note:'Sous réserve d’éligibilité du domicile et d’adhésion préalable. Réservation obligatoire au plus tard la veille avant 12 h. La prise en charge et son horaire sont à confirmer auprès de l’opérateur.'},
  {name:'Flexi (Synchro mobilités, Grand Chambéry)',bounds:[45.45,5.75,45.65,6.15],url:'https://synchro.grandchambery.fr/',note:'Réservation obligatoire par téléphone (04 79 68 73 73), application ou site. Préavis : à vérifier auprès de l’opérateur.',bookingUrl:'https://synchro.grandchambery.fr/',phone:'04 79 68 73 73'},
  {name:'Cars Région Y92 / Y93 / Y94 à la demande (Cluses – Taninges – Morzine / Praz de Lys / Sixt)',bounds:[46.02,6.50,46.22,6.78],url:'https://www.laregionvoustransporte.fr/',phone:'04 8000 7000',note:'⚠️ à réserver 24 h à l’avance (la veille avant 16 h), 48 h ou plus pour un lundi (réserver le vendredi avant 16 h), 📞 numéro à appeler : 04 8000 7000 ; seuls les horaires de la fiche de ligne existent'},
  {name:'Mobéa (Ondéa Grand Lac)',bounds:[45.65,5.75,45.85,6.05],url:'https://www.ondeagrandlac.fr/',note:'Réservation obligatoire. Préavis et disponibilité à confirmer auprès de l’opérateur.',bookingUrl:'https://www.ondeagrandlac.fr/'}
@@ -3417,7 +3619,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,selectJourneyCards,missingWalkLabels,walkStatusLabel,retryMissingWalks,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,selectJourneyCards,missingWalkLabels,walkStatusLabel,retryMissingWalks,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

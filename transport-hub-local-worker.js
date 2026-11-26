@@ -145,15 +145,19 @@ self.onmessage=async({data})=>{
   catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
   return;
  }
- const {urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex}=data||{};
+ const {urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex,skippedStops,retimedTrips}=data||{};
  try{
   const feed=await feedFor(urls,date);
   // Pré-sélection (même règle que le fil principal) : un seul passage par véhicule (le plus proche à pied), avant d'envoyer le résultat à l'écran.
   const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
-  const all=CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,from,to,radius||3000),best=new Map();
+  const all=CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,from,to,radius||3000),best=new Map(),cutoff=sec(clock);
   for(const x of all){
-   if(!(arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
-   const k=String(x.tripId||'')+'|'+date,a=Number(x.accessDistanceMeters),e=Number(x.egressDistanceMeters);
+   const skipped=skippedStops?.get(x.tripId);
+   if(skipped?.has(x.from)||skipped?.has(x.to))continue;
+   const delta=arriveBy?cutoff-sec(x.arrival):sec(x.departure)-cutoff;
+   if(!(delta>=0||(delta>=-1800&&retimedTrips?.has(x.tripId))))continue;
+   // Garder un arrêt de secours issu de la fenêtre élargie jusqu’à la vérification du temps réel.
+   const k=String(x.tripId||'')+'|'+date+(delta<0?'|élargi':''),a=Number(x.accessDistanceMeters),e=Number(x.egressDistanceMeters);
    if(!k||!Number.isFinite(a)||!Number.isFinite(e))continue;
    const score=a+e,prev=best.get(k);
    if(directMeters>0&&score>=directMeters)continue;

@@ -73,7 +73,10 @@ for(const [slug,bounds,from,to] of [
  ['paris-lyon',[45.55,2.15,49.05,5.45],{lat:48.8443,lon:2.373},lyon],
  ['lyon-marseille',[43.10,3.65,46.15,5.85],lyon,marseille],
  ['paris-marseille',[43.10,2.15,49.05,5.85],{lat:48.8443,lon:2.373},marseille],
- ['marseille-toulouse',[43.05,1.25,44.25,5.65],marseille,{lat:43.611,lon:1.454}]
+ ['marseille-toulouse',[43.05,1.25,44.25,5.65],marseille,{lat:43.611,lon:1.454}],
+ ['toulouse-bordeaux',[43.45,-0.85,45.02,1.7],{lat:43.611,lon:1.454},{lat:44.8262,lon:-0.5564}],
+ ['bordeaux-nantes',[44.65,-2.0,47.44,0.55],{lat:44.8262,lon:-0.5564},{lat:47.2176,lon:-1.5418}],
+ ['nantes-rennes',[47.05,-2.05,48.30,-1.20],{lat:47.2176,lon:-1.5418},{lat:48.1035,lon:-1.6726}]
 ]){
 test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet',async()=>{
  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
@@ -100,7 +103,7 @@ test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet
    const aura=providers['national_'+operator],corridor=providers['national_'+operator+suffix];
    assert.equal(aura.enabled(task),false);
    assert.equal(corridor.enabled(task),true);
-   assert.equal(corridor.enabled({...task,to:{lat:47.22,lon:-1.55}}),false);
+   assert.equal(corridor.enabled({...task,to:{lat:50.64,lon:3.07}}),false);
    const trips=await corridor.run(task);
    const [trip]=trips;
    assert.ok(trip);
@@ -116,7 +119,7 @@ test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet
     assert.equal(corridor.enabled(reverse),true);
     assert.ok((await corridor.run(reverse)).length>0,operator+' Marseille → Paris');
    }
-   if(slug==='marseille-toulouse'){
+   if(['marseille-toulouse','toulouse-bordeaux','bordeaux-nantes','nantes-rennes'].includes(slug)){
     const reverse={...task,from:to,to:from};
     assert.equal(corridor.enabled(reverse),true);
     for(const [direction,candidates] of [[task,trips],[reverse,await corridor.run(reverse)]]){

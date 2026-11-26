@@ -81,6 +81,51 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'remi36-indre-gtfs-rt', 'network': 'Rémi 36',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
+     'bounds': [46.79, 1.32, 47.15, 2.42], 'keep_complete_trips': True,
+     'route_ids': {'REMI36:Line:V', 'REMI36:Line:S'}},
+
+    {'id': 'remi18-cher-v2-gtfs-rt', 'network': 'Rémi 18',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
+     'bounds': [46.53, 1.79, 47.58, 3.05], 'keep_complete_trips': True,
+     'route_ids': {'REMI_18:Line:100', 'REMI_18:Line:105', 'REMI_18:Line:110', 'REMI_18:Line:120',
+                   'REMI_18:Line:145', 'REMI_18:Line:150', 'REMI_18:Line:160', 'REMI_18:Line:185',
+                   'REMI_18:Line:190', 'REMI_18:Line:235'}},
+
+    {'id': 'remi41-blois-vendome-gtfs-rt', 'network': 'Rémi 41',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
+     'bounds': [47.20, 1.03, 47.87, 2.09], 'keep_complete_trips': True,
+     'route_ids': {'REMI41:Line:1', 'REMI41:Line:3', 'REMI41:Line:4', 'REMI41:Line:5',
+                   'REMI41:Line:7', 'REMI41:Line:9', 'REMI41:Line:431'}},
+
+    {'id': 'azalys-blois-gtfs-rt', 'network': 'Azalys Blois',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/e6e0228d-9916-4216-bb5f-7d3edf57866c',
+     'bounds': [47.55, 1.27, 47.64, 1.39], 'keep_complete_trips': True,
+     'route_ids': {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'}},
+
+    {'id': 'levib-vierzon-gtfs-rt', 'network': 'Le Vib’ Vierzon',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/87091347-c7fa-4e63-8fb5-005891ece43b',
+     'bounds': [47.19, 2.03, 47.25, 2.12], 'keep_complete_trips': True,
+     'route_ids': {'1', '2', '3', '4', '5'}},
+
+    {'id': 'maelis-montlucon-gtfs-rt', 'network': 'Maelis Montluçon',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/4b0bc62d-0854-4ddb-b703-0882e5ad5981',
+     'bounds': [46.15, 2.49, 46.42, 2.74], 'keep_complete_trips': True,
+     'route_ids': {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'DIM'}},
+
+    {'id': 'mobivie-vichy-gtfs-rt', 'network': 'MobiVie Vichy',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/c087ca61-f4db-44b2-bdc1-ec221c2bf762',
+     'bounds': [46.06, 3.37, 46.17, 3.49], 'keep_complete_trips': True,
+     'route_ids': {'A', 'B', 'C', 'D', 'E', 'G', 'H', 'I'}},
+
+    # Le SAEIV partage les identifiants GTFS-RT. Garder les dix lignes régulières
+    # déjà couvertes, sans ajouter les circuits scolaires de cette archive mixte.
+    {'id': 'rubis-bourg-gtfs-rt', 'network': 'Rubis Bourg-en-Bresse',
+     'url': 'https://transport.data.gouv.fr/resources/84267/download',
+     'bounds': [46.15, 5.05, 46.52, 5.41], 'keep_complete_trips': True,
+     'route_ids': {'1', '2', '3', '4', '5', '6', '7', '10', '11', '12'}},
+
     # Nice : le zip d'origine est en ZIP64 (illisible sur le téléphone) → recompressé via le filtre d'emprise.
     {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'url': 'https://transport.data.gouv.fr/resources/83178/download',
      'bounds': [43.55, 7.0, 43.9, 7.5], 'download_limit': 60 * 1024 * 1024},
@@ -600,6 +645,17 @@ def filter_by_bounds(z, spec):
     if spec.get('horizon_days'):
         # Flux trop lourd : on ne garde que les courses circulant dans les N prochains jours (rafraîchi chaque semaine).
         active_trips = trips_active_within(z, int(spec['horizon_days']))
+    if spec.get('route_ids'):
+        _, source_trips = read_table(z, 'trips.txt')
+        trip_ids = {t['trip_id'] for t in source_trips if t['route_id'] in spec['route_ids']}
+        seen, ambiguous = set(), set()
+        for trip in source_trips:
+            trip_id = trip['trip_id']
+            if trip_id in seen:
+                ambiguous.add(trip_id)
+            seen.add(trip_id)
+        selected = trip_ids - ambiguous
+        active_trips = selected if active_trips is None else active_trips & selected
     by_trip = {}
     for t in times:
         if active_trips is not None and t['trip_id'] not in active_trips:

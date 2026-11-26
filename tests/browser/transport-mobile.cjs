@@ -103,12 +103,12 @@ async function run(){
     settings.domicile_ville='Annecy';settings.domicile_lat=45.9016985;settings.domicile_lng=6.1201612;
     window.CP_GTFS_AGENDA_RESOURCES[0].datasetId='oura-haute-savoie';window.CP_GTFS_AGENDA_RESOURCES[0].url+=new URL(location.href).searchParams.has('fare')?'?regionalfare=1':'?regional=1';
     setLocal('cp_cache',{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()});
-    removeLocal('cp_gps');removeLocal('cp_tripgo_key');
+    removeLocal('cp_gps');
    }
    if(new URL(location.href).searchParams.has('sibrapass')){
     window.CP_GTFS_AGENDA_RESOURCES[0].datasetId='5bd9843e634f413220f7f04a';
     window.CP_GTFS_AGENDA_RESOURCES[0].url+='?sibra=1';
-    removeLocal('cp_gps');removeLocal('cp_tripgo_key');
+    removeLocal('cp_gps');
    }
   },{missions,settings});
   await context.route('**/*',async route=>{
@@ -154,7 +154,6 @@ async function run(){
     return json(route,actual?official.response:synthetic).catch(()=>{});
    }
    if(url.hostname==='open-data.bus.blablacar.com')return route.abort('failed');
-   if(url.hostname==='api.tripgo.com'){errors.push('Unexpected request to retired TripGo');return route.abort();}
    if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
    if(/valhalla/.test(url.hostname))return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable in deterministic browser test'});
    return json(route,{features:[],results:[]});
