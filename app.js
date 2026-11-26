@@ -2481,7 +2481,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
-        const resetLabels=onlyLabel?[onlyLabel]:(onlyJonction?['Jonction']:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride));
+        const resetLabels=onlyJonction?['Jonction']:(onlyLabel?[onlyLabel]:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride));
         for(const label of resetLabels){delete labelState[label];delete pendingViews[label];}
         for(const [label,view] of Object.entries(cachedViews)){
           masquerRecherche(label);
