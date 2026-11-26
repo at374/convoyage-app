@@ -819,6 +819,23 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   // « arrivée dans 15 min » ne dépend donc pas uniquement d'un relevé sur deux.
   const SUIVI_CONVOYAGE_ETA_INTERVALLE_MS = 5 * 60000;
   const suiviConvoyageEtaEnCours = new Set();
+  let suiviConvoyageEtaTimer = null;
+  function suiviConvoyageEtaMaj() {
+    clearTimeout(suiviConvoyageEtaTimer); suiviConvoyageEtaTimer = null;
+    if (suiviRefus || document.hidden) return;
+    const missions = missionsASuivre(), store = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
+    const now = Date.now();
+    for (const {m,t} of missions) {
+      const state = store[t.key], last = state?.lastPosition;
+      if (state?.status !== 'en_route' || !last) continue;
+      const lat = Number(last.lat), lng = Number(last.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+      // Recalcule l'ETA avec la dernière position connue sans réveiller le GPS.
+      suiviConvoyageEstimerArrivee(m,t,{lat,lng},now,state);
+    }
+    ecrireLocal(SUIVI_CONVOYAGE_KEY,store);
+    if (missions.length) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS);
+  }
   function suiviConvoyageEnregistrer(m, t, pos, ts) {
     const accuracy = Number(pos.coords.accuracy);
     if (!Number.isFinite(accuracy) || accuracy > 100) return;
@@ -971,6 +988,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = null;
     const missions = missionsASuivre();
+    if (!suiviRefus && !document.hidden && missions.length) { if (!suiviConvoyageEtaTimer) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS); }
+    else { clearTimeout(suiviConvoyageEtaTimer); suiviConvoyageEtaTimer = null; }
     const natif = window.CPNatif && typeof window.CPNatif.demarrerSuiviGps === 'function';
     const actif = !suiviRefus && !document.hidden && (natif || !!navigator.geolocation) && missions.length > 0;
     // Toujours reprogrammer le prochain contrôle : une mission peut être synchronisée après le démarrage de l'application.
