@@ -462,7 +462,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const fetchT = (u, o) => { const c = new AbortController(), t = setTimeout(() => c.abort(), 20000); return fetch(u, Object.assign({}, o, { signal: c.signal })).finally(() => clearTimeout(t)); };
     const valhalla = async (a, b, peages) => { let fin = null; if (peages) { const ck = [a.lat, a.lng, b.lat, b.lng].map(n => Number(n).toFixed(3)).join('|'); (window.CPValP = window.CPValP || {})[ck] = new Promise(o => { fin = o; }); setTimeout(() => { if (fin) fin(null); }, 30000); } try { const r = await fetchT('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng }], costing: 'auto', costing_options: { auto: { use_tolls: peages ? 1 : 0 } }, directions_options: { units: 'kilometers' } }) }); const j = r.ok ? await r.json() : null, t = j && j.trip; if (fin) fin(j); return t && t.legs && t.legs[0] && t.legs[0].shape ? { coords: decoder(t.legs[0].shape, 6), km: t.summary.length, h: t.summary.time / 3600, peageKm: Array.isArray(t.legs[0].maneuvers) ? t.legs[0].maneuvers.reduce((s, x) => s + (x && x.toll ? Number(x.length) || 0 : 0), 0) : null } : null; } catch (_) { if (fin) fin(null); return null; } };
     const osrm = async (a, b) => { try { const r = await fetchT('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson'); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
-    const itineraire = async (a, b, sansPeage) => sansPeage ? valhalla(a, b, false) : ((await valhalla(a, b, true)) || (await osrm(a, b)));
+    const itineraire = async (a, b, sansPeage) => sansPeage ? (await valhalla(a, b, false).then(r => r && r.peageKm === 0 ? r : null)) : ((await valhalla(a, b, true)) || (await osrm(a, b)));
     const rendre = async () => {
       if (window.CPT) window.CPT('points GPS', tP);
       const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination');
@@ -477,7 +477,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       if (window.CPT) window.CPT('itinéraires', tI);
       if (window.CPPh) window.CPPh('affichage des résultats');
       if (!document.getElementById('popVol')) return;
-      const meme = avec && sans && Math.abs(avec.km - sans.km) < 1;
+      const meme = avec && sans && avec.peageKm === 0 && sans.peageKm === 0 && Math.abs(avec.km - sans.km) < 1;
       const ligne = (ico, nom, r) => r ? `<p>${ico} <b>${nom} : ≈ ${esc(Math.round(r.km))} km</b> · ≈ ${esc(duree(r.h))} en voiture, sans pause</p>` : `<p>${ico} ${nom} : indisponible : le service gratuit de calcul n’a pas répondu depuis ce téléphone</p>`;
       let bas;
       if (meme) bas = ligne('🛣️', 'Trajet (aucun péage sur le parcours le plus rapide)', avec);
