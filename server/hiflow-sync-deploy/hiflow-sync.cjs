@@ -174,26 +174,59 @@ async function choisirRegion(page, region) {
   await sleep(1500);
 }
 
-async function tournerLesPages(page) {
-  for (let i = 0; i < 60; i++) {
-    await sleep(jitter(3500, 1800));
-    if (/\/login/.test(page.url())) throw new Error('déconnecté en cours de lecture');
-    const pag = await page.$('.pagination-tableJourneyList');
-    if (!pag) break;
-    const next = await pag.$('[data-action="next"]');
-    if (!next) break;
-    const disabled = await next.evaluate((n) => n.disabled || n.getAttribute('aria-disabled') === 'true' || /disabled/i.test(n.className || ''));
-    if (disabled) break;
-    await next.click();
+async function lirePageDisponible(page, action) {
+  const requetes = new WeakSet();
+  const suivre = req => {
+    const url = req.url();
+    if (/getJourneysOpenToConveyorBooking/i.test(url) && !/near/i.test(url)) requetes.add(req);
+  };
+  page.on('request', suivre);
+  try {
+    const [resp] = await Promise.all([
+      page.waitForResponse(response => requetes.has(response.request()), { timeout: 15000 }),
+      action()
+    ]);
+    if (!resp.ok()) throw new Error('liste Hiflow refusée (HTTP ' + resp.status() + ')');
+    const json = await resp.json();
+    const trajets = CPNet.trajetsHiflow(json);
+    if (!trajets?.length || trajets.length !== json.response.journeys.length ||
+        trajets.some(m => !m.from || !m.to)) {
+      throw new Error('liste Hiflow vide ou incomplète, retrait ignoré');
+    }
+    return trajets;
+  } finally {
+    page.off('request', suivre);
   }
 }
 
-async function scrapeRegion(page, region, missionsBucket, resaBucket) {
+async function tournerLesPages(page, retenir) {
+  for (let i = 0; i <= 60; i++) {
+    await sleep(jitter(3500, 1800));
+    if (/\/login/.test(page.url())) throw new Error('déconnecté en cours de lecture');
+    const pag = await page.$('.pagination-tableJourneyList');
+    if (!pag) throw new Error('fin de pagination Hiflow non confirmée');
+    const next = await pag.$('[data-action="next"]');
+    if (!next) throw new Error('pagination Hiflow sans bouton suivant');
+    const disabled = await next.evaluate((n) => n.disabled || n.getAttribute('aria-disabled') === 'true' || /disabled/i.test(n.className || ''));
+    if (disabled) return;
+    if (i === 60) throw new Error('pagination Hiflow au-delà de la limite');
+    retenir(await lirePageDisponible(page, () => next.click()));
+  }
+}
+
+async function scrapeRegion(page, region, missionsBucket) {
   await page.goto(LIST_URL, { waitUntil: 'domcontentloaded' });
   const onglet = await page.$('a[href="#journeys"]');
   if (onglet) await onglet.click().catch(() => {});
-  await choisirRegion(page, region);
-  await tournerLesPages(page);
+  const retenir = trajets => {
+    const now = new Date().toISOString();
+    for (const m of trajets) {
+      const id = String(m.external_id), prev = missionsBucket[id] || {};
+      missionsBucket[id] = { ...prev, ...m, platform: 'Hiflow', first_seen_at: prev.first_seen_at || now, last_seen_at: now };
+    }
+  };
+  retenir(await lirePageDisponible(page, () => choisirRegion(page, region)));
+  await tournerLesPages(page, retenir);
 }
 
 async function lireMesTrajets(page, resaBucket) {
@@ -287,7 +320,7 @@ async function syncUnUtilisateur(SUPABASE_URL, SERVICE_KEY, USER_ID) {
     }
     for (const region of REGIONS) {
       try {
-        await scrapeRegion(page, region, missionsBucket, resaBucket);
+        await scrapeRegion(page, region, missionsBucket);
         regionsOk++;
       } catch (e) {
         statut = 'partiel';
