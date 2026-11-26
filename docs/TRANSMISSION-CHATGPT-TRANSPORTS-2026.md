@@ -842,3 +842,13 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Neuf fichiers ne sont pas cités directement dans le tableau `localNetworks` : six flux AURA (Ondéa, Sibra, M Réso Métropole, Grésivaudan, Voironnais et Star't) relèvent des raccordements opérateurs spécifiques déjà présents dans le hub; Nomad Train relève du moteur ferroviaire et n'est pas dupliqué; les deux flux Linéotim Morlaix ont des bornes GPS nulles et restent exclus jusqu'à correction du manifeste.
 - Cet audit est une vérification statique des références et non un test d'exécution des 276 archives. La CI ne remonte aucun statut ni workflow run dans le connecteur sur le commit de test consulté; la validation distante reste donc **non confirmée**.
 - Dernier raccordement de cette tranche : `f97ae7054418873313c99a1eb5480360c8cddac1` ; dernier test ajouté : `4747db5f866f3872723e99abba341d269c787116`.
+
+
+## Correctifs moteur de recherche et AURA — 26/11/2026
+
+- **Filtrage des départs avant le plafond de 30 résultats** : les courses GTFS partant avant `earliestDeparture` (fin de mission précédente + approche) étaient susceptibles de remplir les 30 places et de masquer le seul départ réellement compatible. Le moteur retire maintenant ces courses avant le tri et le plafonnement, tout en conservant le filtre d'arrivée avant la limite de prise en charge moins la marge.
+- Test de régression ajouté : 35 courses incompatibles ne doivent plus masquer le départ valide de 08:05 après une mission précédente terminant à 08:00.
+- **Six flux AURA manquants dans le moteur de mission** ont été raccordés depuis le manifeste national : Sibra Annecy, Ondéa Aix-les-Bains, M Réso Grenoble, M Réso Grésivaudan, M Réso Voironnais et Star't Thonon. Chaque fournisseur reprend son ZIP et son emprise GPS du manifeste.
+- Test ajouté pour vérifier leur présence, leur activation dans la zone et le chargement de chaque ZIP.
+- Commits : correctif de filtrage `a2a5aa1636cc08508267fbce3030c21ddc1cfbd4` ; test de régression `5ba45c75fe5af4da312fec5feba66dfe9ddc6efa` ; raccordement AURA `5bfa2e38afe799fe005d57b1215ebd3d35ceabd2` ; test AURA `af24d710e521750089a05bfe832dcc9b8f57fea4`.
+- La validation de ces changements nécessite toujours l'exécution réelle des tests et des scénarios de trajet complets. Aucun déploiement Android/Web n'est revendiqué.
