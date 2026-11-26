@@ -1140,11 +1140,16 @@ function makeProviders(r,opts={}){
       if(directMeters>0&&score>=directMeters)continue;
       if(!previous||score<previous.score)best.set(key,{x,score});
      }
+     const earliestDepartureMs=ms(task.earliestDeparture);
      const filtered=[...best.values()].map(({x})=>({...x,network:name,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
-     .filter(x=>x.departure&&x.arrival)
-      // « Arriver avant » (Aller) : garder les 30 arrivées les plus proches de l'échéance, pas les 30 premiers
-      // départs de la journée (bus de l'aube inutiles pour une mission à 10 h).
+     .filter(x=>x.departure&&x.arrival&&
+       // Filtrer les départs incompatibles AVANT le plafond de résultats :
+       // sinon 30 courses parties avant la fin de la mission précédente peuvent masquer
+       // le seul départ réellement possible après cette mission.
+       (!Number.isFinite(earliestDepartureMs)||Date.parse(x.departure)>=earliestDepartureMs-60000))
+      // « Arriver avant » (Aller) : garder les 30 arrivées les plus proches de l'échéance,
+      // après avoir retiré les départs trop matinaux par rapport à la mission précédente.
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      return fromGTFS(filtered.concat(flexRows),name);
