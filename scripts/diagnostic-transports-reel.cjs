@@ -11,7 +11,7 @@ const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
 const g=globalThis;g.window=g;
 for(const f of ['transport-adapters.js','transport-fares.js','transport-y51-fares.js','transport-fare-grids.js','swiss-transport-api.js','regional-routing.js',
- 'sncf-fallback.js','transport-tripgo-retired.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
+ 'sncf-fallback.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
  'transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js','transport-mission-hub.js','transport-coverage.js','transport-gtfs-agenda.js'])require(path.join(ROOT,f));
 const H=g.CPTransportHub,C=g.CPTransportCoverage,A=g.CPGTFSAgenda,L=g.CPGTFSLoader,I=g.CPGTFSIndex,T=g.CPGTFSTime;
 // Les fichiers « data/… » de l'application sont lus dans le dépôt ; le reste part sur Internet.
