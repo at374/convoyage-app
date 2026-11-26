@@ -3732,6 +3732,51 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     });
   }
 
+  // Préchargement réel à T-15 de l'arrivée GPS : déclenche la recherche complète
+  // Retour/Jonction même si la fiche mission a été fermée entre-temps.
+  const prefetchLivraisonEnAttente = new Map();
+  let prefetchLivraisonTimer = null;
+  function lancerPrefetchLivraison(key) {
+    if (!key || !$('feuille').hidden) return false;
+    const mission = (etat.missions || []).find(m => {
+      if (m.kind !== 'acceptee' || m.status === 'annulee' || m.status === 'terminee') return false;
+      try { return missionTiming(m).key === key; } catch (_) { return false; }
+    });
+    if (!mission) { prefetchLivraisonEnAttente.delete(key); return false; }
+    try {
+      detail(mission);
+      const button = $('btnTransportsMission');
+      if (!button) return false;
+      button.dataset.cpPrefetchStarted = 'true';
+      button.click();
+      const panel = $('cpTransportMissionDetails');
+      if (panel && panel.isConnected) {
+        panel.dataset.cpPrefetched = 'true';
+        panel.style.display = 'none';
+      }
+      $('feuille').hidden = true;
+      prefetchLivraisonEnAttente.delete(key);
+      return true;
+    } catch (_) {
+      $('feuille').hidden = true;
+      return false;
+    }
+  }
+  function viderPrefetchLivraison() {
+    if (!$('feuille').hidden || !prefetchLivraisonEnAttente.size) return;
+    for (const key of prefetchLivraisonEnAttente.keys()) lancerPrefetchLivraison(key);
+    if (!prefetchLivraisonEnAttente.size && prefetchLivraisonTimer) {
+      clearInterval(prefetchLivraisonTimer); prefetchLivraisonTimer = null;
+    }
+  }
+  document.addEventListener('cp-livraison-approche', ev => {
+    const key = ev.detail?.key;
+    if (!key) return;
+    prefetchLivraisonEnAttente.set(key, Date.now());
+    if ($('feuille').hidden) viderPrefetchLivraison();
+    else if (!prefetchLivraisonTimer) prefetchLivraisonTimer = setInterval(viderPrefetchLivraison, 30000);
+  });
+
   // ---------- V77 : notifications même application fermée (Web Push) ----------
   const estIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const installee = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
