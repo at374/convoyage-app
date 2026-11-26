@@ -261,10 +261,13 @@ test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision 
  const end=app.indexOf("if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange'",start);
  const block=app.slice(start,end);
  assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000'));
- assert.ok(block.includes('SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ZONE_MS = 5 * 60000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_APPROCHE_MS = 2 * 60000'));
  assert.ok(block.includes('SUIVI_GPS_INTERVALLE_DEPART_MS = 2 * 60000'));
  assert.ok(block.includes("state?.status === 'prise_en_charge'"));
- assert.ok(block.includes("const radius = enRoute ? 2000 : 500"));
+ assert.ok(block.includes('meters <= 500'));
+ assert.ok(block.includes('meters <= 2000'));
+ assert.ok(block.includes('inApproachZone'));
 
  assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
  assert.ok(block.includes('enableHighAccuracy: params.near'));
