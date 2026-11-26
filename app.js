@@ -1001,7 +1001,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 15 }); }
         for (const tache of taches) {
           for (const [k, prov] of Object.entries(P)) {
-            if (!/^local_/.test(k)) continue;
+            if (!/^(local_|national_)/.test(k)) continue;
             if (document.hidden) { preparees.delete(cle); return; }
             try { if (prov.prefetch && prov.enabled(tache)) await prov.prefetch(); } catch (_) { }
             await new Promise(r => setTimeout(r, 50));   // laisse l'écran respirer
