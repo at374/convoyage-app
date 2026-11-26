@@ -12,7 +12,7 @@ const VERSION='hub-20261124-tad-results';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
 const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
-const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=300;
+const SAFE_TRANSFER_MIN=5,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=300;
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 function pt(p){
@@ -325,7 +325,7 @@ async function completeWalks(j,task,router){
   const gap=(ms(b.departure)-ms(a.arrival))/1000;
   if(a.toPoint&&b.fromPoint){
    if(meters(a.toPoint,b.fromPoint)<=SAME_POINT_M){
-    if(gap<TRANSFER_BUFFER_S)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' (2 min minimum)');
+    if(gap<TRANSFER_BUFFER_S)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' (5 min minimum)');
     continue;
    }
    const r=await call(a.toPoint,b.fromPoint);
