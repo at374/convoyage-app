@@ -242,6 +242,97 @@ function bookingNote(nets){
  if(/haute[- ]savoie|y9[234]/i.test(n))return '📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000';
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
+const DIVIA_RT_URL='https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-trip-update';
+const DIVIA_RT_LIMIT=1024*1024;
+const diviaFeeds=new WeakMap();
+function* protobufFields(bytes){
+ let offset=0;
+ function integer(){
+  let value=0;
+  for(let shift=0;shift<70&&offset<bytes.length;shift+=7){
+   const byte=bytes[offset++];
+   value+=(byte&127)*2**shift;
+   if(byte<128)return value;
+  }
+  throw new Error('Champ GTFS-RT invalide');
+ }
+ while(offset<bytes.length){
+  const key=integer(),wire=key%8,tag=Math.floor(key/8);
+  if(!tag)throw new Error('Champ GTFS-RT invalide');
+  if(wire===0){yield [tag,integer()];continue;}
+  const length=wire===2?integer():wire===1?8:wire===5?4:-1;
+  if(!Number.isSafeInteger(length)||length<0||offset+length>bytes.length)throw new Error('Flux GTFS-RT tronqué');
+  if(wire===2)yield [tag,bytes.subarray(offset,offset+length)];
+  offset+=length;
+ }
+}
+function readDiviaRealtime(bytes,now){
+ const fields=b=>new Map(protobufFields(b));
+ const decoder=new TextDecoder('utf-8',{fatal:true});
+ const text=b=>b instanceof Uint8Array?decoder.decode(b):'';
+ const trips=new Map();
+ let timestamp=0;
+ for(const [tag,value] of protobufFields(bytes)){
+  if(tag===1){timestamp=Number(fields(value).get(3))*1000;continue;}
+  if(tag!==2)continue;
+  const entity=fields(value),update=entity.get(3);
+  if(entity.get(2)||!(update instanceof Uint8Array))continue;
+  const trip=fields(update).get(1);
+  if(!(trip instanceof Uint8Array))continue;
+  const descriptor=fields(trip),id=text(descriptor.get(1));
+  const relationship=descriptor.get(4)||0;
+  if(!id||![0,3].includes(relationship))continue;
+  const stops=new Map();
+  for(const [field,raw] of protobufFields(update)){
+   if(field!==2)continue;
+   const stop=fields(raw),id=text(stop.get(4));
+   if(!id)continue;
+   if(stops.has(id)){stops.set(id,null);continue;}
+   const time=tag=>stop.has(tag)?Number(fields(stop.get(tag)).get(2))*1000:NaN;
+   stops.set(id,stop.get(5)?null:{arrival:time(2),departure:time(3)});
+  }
+  trips.set(id,trips.has(id)?null:{stops,date:text(descriptor.get(3)),cancelled:relationship===3});
+ }
+ return Number.isFinite(timestamp)&&timestamp>=now-120000&&timestamp<=now+30000?trips:null;
+}
+function loadDiviaRealtime(runtime){
+ if(typeof runtime.fetch!=='function')return Promise.resolve(null);
+ const now=Date.now(),cached=diviaFeeds.get(runtime);
+ if(cached&&cached.until>now)return cached.promise;
+ const promise=(async()=>{
+  const response=await runtime.fetch(DIVIA_RT_URL,{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(1800)});
+  if(!response.ok||!response.body||Number(response.headers.get('content-length'))>DIVIA_RT_LIMIT)return null;
+  const reader=response.body.getReader(),chunks=[];
+  let size=0;
+  try{
+   for(;;){
+    const {done,value}=await reader.read();
+    if(done)break;
+    size+=value.byteLength;
+    if(size>DIVIA_RT_LIMIT){await reader.cancel();return null;}
+    chunks.push(value);
+   }
+  }finally{reader.releaseLock();}
+  const bytes=new Uint8Array(size);
+  let offset=0;
+  for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  return readDiviaRealtime(bytes,Date.now());
+ })().catch(()=>null);
+ diviaFeeds.set(runtime,{until:now+15000,promise});
+ return promise;
+}
+function applyDiviaRealtime(row,trips,now){
+ const trip=trips?.get(row.tripId);
+ if(!trip||row.onDemand||(trip.date&&trip.date!==row.serviceDate.replaceAll('-','')))return row;
+ const departure=trip.stops.get(row.from)?.departure,arrival=trip.stops.get(row.to)?.arrival;
+ const scheduledDeparture=ms(row.departure),scheduledArrival=ms(row.arrival);
+ if(trip.cancelled&&Math.abs(scheduledDeparture-now)<10800000)return null;
+ if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<=departure||departure<now||
+    Math.abs(departure-scheduledDeparture)>1800000||Math.abs(arrival-scheduledArrival)>1800000)return row;
+ return {...row,departure:iso(departure),arrival:iso(arrival),realtime:true,
+  delayMinutes:Math.max(0,Math.round((departure-scheduledDeparture)/60000))};
+}
+
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
  // stop pairs. Keep the shortest straight-line access + egress candidate per trip
@@ -268,7 +359,7 @@ function fromGTFS(rows,network='Réseau local'){
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
    const end=i===raw.length-1?r.destinationStop:(r.transferStop||null);
    const out=leg({mode:'Bus',line:l.line||r.line,headsign:l.headsign||(r.legs?.length?'':r.headsign),terminus:l.terminus||(r.legs?.length?'':r.terminus),provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
-    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
+    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival,realtime:r.realtime,delayMinutes:r.delayMinutes});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
    out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
    // Tarif publié par l'autorité dans le flux GTFS lui-même (fare_attributes / fare_rules).
@@ -281,14 +372,14 @@ function fromGTFS(rows,network='Réseau local'){
    }
    return out;
   });
-  return {...journey((r.network||network)+' (GTFS)'+(r.onDemand?' · à la demande 📞':''),legs),
+  return {...journey((r.network||network)+' (GTFS)'+(r.onDemand?' · à la demande 📞':''),legs,{realtime:r.realtime}),
    // Les données Flex doivent traverser la normalisation : sans ce champ,
    // assess() perdrait les exigences de réservation et pourrait surévaluer le trajet.
    ...(r.flexBooking&&typeof r.flexBooking==='object'?{flexBooking:{...r.flexBooking}}:
     r.isFlex===true||r.gtfsFlex===true?{flexBooking:{noticeMinutes:null,reservationConfirmed:false,pickupTimeConfirmed:false}}:{}),
    // Static GTFS proves a scheduled service, not its live operation.
    // Never label the itinerary as confirmed until a live source validates it.
-   missing:['horaire GTFS local non confirmé en temps réel',
+   missing:[...(r.realtime?[]:['horaire GTFS local non confirmé en temps réel']),
     ...(r.onDemand?[bookingNote([r.network,network,...(r.legs||[]).filter(l=>l&&l.onDemand).map(l=>l.network)].filter(Boolean).join(' '))]:[]),
     ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  });
@@ -1571,9 +1662,15 @@ function makeProviders(r,opts={}){
      // 21/11/2026 (demande Laurent) : networkId/networkUrls/serviceDate conservés sur chaque ligne —
      // nécessaires pour le bouton « Tous les horaires » (dayScheduleForLeg) qui refait une requête GTFS
      // complète sur CE réseau précis, pour CETTE ligne et CES arrêts, sans le filtre « après maintenant ».
+     const now=Date.now();
+     const live=id==='divia_dijon'&&best.size&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
+      ?await loadDiviaRealtime(r):null;
+     if(signal?.aborted)return [];
      const filtered=[...best.values()].map(({x})=>({...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
       .filter(x=>x.departure&&x.arrival)
+      .map(x=>live?applyDiviaRealtime(x,live,now):x)
+      .filter(x=>x&&(!x.realtime||(w.arriveBy?ms(x.arrival)<=when:ms(x.departure)>=when)))
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      // 22/11/2026 (Laurent : Y51 a bien des départs l'après-midi dans le flux officiel — 12h15, 12h30, 13h30…
