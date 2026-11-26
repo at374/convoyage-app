@@ -292,3 +292,13 @@ test('jamais « Arrive jusqu’à 18:45 » : la fin de fenêtre est plafonnée �
  assert.ok(labels.includes('Arrive jusqu’à 17:15'));
  assert.ok(!labels.includes('18:45'));
 });
+
+test('suivi GPS Android : utilise le service natif et vide la file locale au retour dans l’application',()=>{
+ const src=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.match(src,/window\.CPNatif\.demarrerSuiviGps\(\)/);
+ assert.match(src,/window\.CPNatif\.arreterSuiviGps\(\)/);
+ assert.match(src,/window\.CPNatif\.prendrePointsSuiviGps\(\)/);
+ assert.match(src,/timestamp, coords: \{ latitude: lat, longitude: lng, accuracy:/);
+ // Sur Android, le suivi natif remplace l'acquisition WebView pour éviter deux demandes de localisation simultanées.
+ assert.match(src,/if \(natif\) \{[\s\S]*?return;[\s\S]*?navigator\.geolocation\.getCurrentPosition/);
+});
