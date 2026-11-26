@@ -89,3 +89,10 @@ test('schémas plateformes : pickup, delivery, dropoff et codes postaux sont nor
   assert.ok(G.cleAdresse(m,cote),'la clé doit être créée pour le géocodage');
  }
 });
+
+test('un résultat housenumber sans numéro vérifiable est rejeté',async()=>{
+ const m={to_city:'Annecy',to_department:'74',destination_address:'94 avenue d Aix-les-Bains'};
+ const a=fetcher([{contient:'94 avenue',type:'housenumber',lat:45.88807,lng:6.10477}]);
+ const r=await G.chercherPoint(m,'destination',a.f);
+ assert.equal(r.trouve,false,'un point sans housenumber vérifiable ne doit jamais être annoncé comme adresse exacte');
+});
