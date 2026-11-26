@@ -209,7 +209,7 @@
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
-          if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
+          if (numero && (precision !== 'adresse' || String(f.properties.housenumber || '').match(/^\d+/)?.[0] !== numero[1])) continue;
           if (numero && f.properties.street) {
             const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
             const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]);
