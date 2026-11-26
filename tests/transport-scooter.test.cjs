@@ -213,6 +213,17 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
  assert.ok(app.includes("const startIso=first?plancher(firstStart)"));
 });
 
+test('suivi convoyage : départ GPS, relevé toutes les 10 min et seuil routier de 15 min',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(app.includes("const SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000"));
+ assert.ok(app.includes("state.status = 'en_route'"));
+ assert.ok(app.includes('suiviConvoyageEnregistrer(m,t,pos,ts)'));
+ assert.ok(app.includes('routes.estimate('));
+ assert.ok(app.includes('minutes <= 15'));
+ assert.ok(app.includes("new CustomEvent('cp-livraison-approche'"));
+ assert.ok(app.includes("'cp_suivi_convoyage_v1'"));
+});
+
 test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en roulant',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes('suiviReprise ||'));
