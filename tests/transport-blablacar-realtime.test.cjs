@@ -5,7 +5,7 @@ const options={from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when:'2
 const journey=()=>({legs:[
  {mode:'wa_wal',departure:'2026-10-31T09:10:00.000Z',arrival:'2026-10-31T09:15:00.000Z'},
  {mode:'pt_pub_bus',provider:'BlaBlaCar Bus',serviceShortName:'51981',fromStopCode:'NCY',toStopCode:'XGE',departure:'2026-10-31T09:15:00.000Z',arrival:'2026-10-31T10:40:00.000Z'},
- {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:44:34.000Z'}
+ {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:46:34.000Z'}
  ]}),clock=Date.parse(fixture.testNow),copy=()=>JSON.parse(JSON.stringify(fixture.response));
 const feed=data=>rt.parse(data||copy(),{now:clock});
 const current=(data,leg=journey().legs[1])=>rt.assess(feed(data),leg,{now:clock});
@@ -14,7 +14,7 @@ test('recorded operator data matches the same day, service, stops and planned ti
  const j=journey();assert.equal(j.legs[1].serviceShortName,'51981');
  const result=rt.assessJourney(feed(),j,options,{now:clock});
  assert.equal(result.updates[0].reference,'51981:2026-10-31');assert.equal(result.updates[0].status,'observed');assert.equal(result.serviceConfirmed,true);
- assert.equal(result.doorArrival,'2026-10-31T10:44:34.000Z');assert.equal(result.status,'fits_prediction');
+ assert.equal(result.doorArrival,'2026-10-31T10:46:34.000Z');assert.equal(result.status,'fits_prediction');
  assert.equal(result.transportConfirmed,false);assert.equal(result.accessVerified,false);assert.equal(result.realizable,false);
 });
 test('another date, service, stop or planned time cannot reuse the operator observation',()=>{
