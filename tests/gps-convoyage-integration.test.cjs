@@ -40,7 +40,7 @@ test('Actualisation indépendante : chaque section dispose de son bouton et ne r
   assert.match(app, /transportRefreshLabel=key/);
   assert.match(app, /startTransportHub\(false,key\)/);
   assert.match(app, /if\(onlyLabel\)tasks\.splice/);
-  assert.match(app, /const resetLabels=onlyLabel\?\[onlyLabel\]/);
+  assert.match(app, /const resetLabels=onlyJonction\?\['Jonction'\]:\(onlyLabel\?\[onlyLabel\]/);
   assert.ok(app.includes('if(!refresh&&(onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;'));
 });
 
