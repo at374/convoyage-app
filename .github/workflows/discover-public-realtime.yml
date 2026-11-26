@@ -11,19 +11,25 @@ permissions:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python scripts/discover_public_realtime.py
-      - run: python scripts/probe_public_realtime.py 30
+      - run: |
+          python scripts/probe_public_realtime.py 30 0
+          mv realtime-probes.json realtime-probes-000.json
+          python scripts/probe_public_realtime.py 30 30
+          mv realtime-probes.json realtime-probes-030.json
+          python scripts/probe_public_realtime.py 30 60
+          mv realtime-probes.json realtime-probes-060.json
       - uses: actions/upload-artifact@v4
         with:
           name: public-realtime-candidates
           path: |
             realtime-candidates.json
-            realtime-probes.json
+            realtime-probes-*.json
           if-no-files-found: error
           retention-days: 7
