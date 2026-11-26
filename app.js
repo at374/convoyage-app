@@ -1958,8 +1958,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
         section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
         // Un seul affichage des trajets : les cartes classées du hub. Les anciens blocs par moteur restent consultables, repliés.
-        const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
-        const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
+        const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.hidden=true;legacy.style.display='none';legacy.dataset.transportSources=key;
+        // Conteneur technique masqué : seuls les résultats unifiés sont visibles.
         section.appendChild(legacy);legacySources[key]=legacy;
       }
       let missedAt=Number(bt.dataset.transportMissedAt)||0;
@@ -2105,7 +2105,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       // La progression reste indépendante du rendu des cartes.
       const rechercheBadges={};
       const pointInsertion=label=>{const sec=transportDestinations[label];if(!sec)return null;
-        return legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);};
+        return sec.querySelector('.cp-transport-route')||sec.firstChild;};
       const mettreAJourProgression=badge=>{
         if(badge.parentElement.hidden)return;
         const seconds=Math.max(0,Math.ceil((badge.deadline-Date.now())/1000));
