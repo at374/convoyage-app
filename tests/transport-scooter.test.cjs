@@ -259,6 +259,18 @@ test('suivi convoyage : ETA recalculée toutes les 5 min sans accélérer les re
  assert.ok(!block.includes('state.etaCheckedAt || state.departedAt'));
 });
 
+test('géocodage GPS : temporise les adresses sans résultat pour éviter les requêtes à chaque réveil GPS',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('const transportPointRequests = new Map()');
+ const end=app.indexOf('function adrNet',start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes('const transportPointRetryAt = new Map()'));
+ assert.ok(block.includes('TRANSPORT_POINT_RETRY_MS = 5 * 60000'));
+ assert.ok(block.includes('Date.now() < (transportPointRetryAt.get(cle) || 0)'));
+ assert.ok(block.includes('transportPointRetryAt.set(cle, Date.now() + TRANSPORT_POINT_RETRY_MS)'));
+ assert.ok(block.includes('transportPointRetryAt.delete(cle)'));
+});
+
 test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision limitée à l’approche',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  const start=app.indexOf('const SUIVI_GPS_INTERVALLE_ROUTE_MS');
