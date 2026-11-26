@@ -4,22 +4,26 @@ on:
   pull_request:
     paths:
       - 'scripts/discover_public_realtime.py'
+      - 'scripts/probe_public_realtime.py'
       - '.github/workflows/discover-public-realtime.yml'
 permissions:
   contents: read
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python scripts/discover_public_realtime.py
+      - run: python scripts/probe_public_realtime.py 30
       - uses: actions/upload-artifact@v4
         with:
           name: public-realtime-candidates
-          path: realtime-candidates.json
+          path: |
+            realtime-candidates.json
+            realtime-probes.json
           if-no-files-found: error
           retention-days: 7
