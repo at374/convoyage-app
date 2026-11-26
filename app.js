@@ -807,10 +807,68 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       return now >= p - 3600000 && now <= limite && !!d && d.precision !== 'departement';
     });
   }
+  // Suivi du convoyage : départ constaté au point GPS de prise en charge,
+  // puis un relevé persistant toutes les 10 minutes jusqu'à la livraison.
+  const SUIVI_CONVOYAGE_KEY = 'cp_suivi_convoyage_v1';
+  const SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000;
+  const suiviConvoyageEtaEnCours = new Set();
+  function suiviConvoyageEnregistrer(m, t, pos, ts) {
+    const accuracy = Number(pos.coords.accuracy);
+    if (!Number.isFinite(accuracy) || accuracy > 100) return;
+    const here = {lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude)};
+    const origin = G.coordonnees(m, 'origin'), destination = G.coordonnees(m, 'destination');
+    if (!transportAddressPoint(origin) || !transportAddressPoint(destination)) return;
+    const distance = (a,b) => G.volOiseauKm(a,b) * 1000;
+    const store = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
+    let state = store[t.key];
+    if (!state) {
+      if (distance(here, origin) > 300) return;
+      state = {status:'prise_en_charge',pickupDetectedAt:new Date(ts).toISOString(),origin:{lat:origin.lat,lng:origin.lng},destination:{lat:destination.lat,lng:destination.lng},samples:[]};
+      store[t.key] = state; ecrireLocal(SUIVI_CONVOYAGE_KEY, store); return;
+    }
+    if (state.status === 'prise_en_charge') {
+      const away = distance(here, origin), speed = Number(pos.coords.speed);
+      if (away < 500 || (Number.isFinite(speed) && speed < 1.5 && away < 800)) return;
+      state.status = 'en_route'; state.departedAt = new Date(ts).toISOString(); state.lastSampleAt = 0;
+    }
+    if (state.status !== 'en_route' || ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return;
+    const sample = {at:new Date(ts).toISOString(),lat:here.lat,lng:here.lng,accuracy,speed:Number.isFinite(Number(pos.coords.speed))?Number(pos.coords.speed):null};
+    state.samples = (Array.isArray(state.samples)?state.samples:[]).concat(sample).slice(-36);
+    state.lastSampleAt = ts; state.lastPosition = sample; store[t.key] = state;
+    const keys = Object.keys(store); while (keys.length > 40) delete store[keys.shift()];
+    ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
+    suiviConvoyageEstimerArrivee(m,t,here,ts,state);
+  }
+  async function suiviConvoyageEstimerArrivee(m,t,here,ts,state) {
+    if (suiviConvoyageEtaEnCours.has(t.key) || state.approcheDeclencheeAt) return;
+    const routes = window.CPRoutes, auth = window.CPAuthenticatedApi, session = auth?.connecte ? auth.session : null;
+    let config = window.CP_CONFIG?.anonKey ? window.CP_CONFIG : window.CP_CONFIG_ACTIVE?.anonKey ? window.CP_CONFIG_ACTIVE : null;
+    try { if (!config && window.CPNatif?.configuration) config = JSON.parse(window.CPNatif.configuration() || '{}'); } catch (_) {}
+    try { if (!config) config = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_config') || 'null'); } catch (_) {}
+    const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
+    if (!routes?.estimate || !session?.access_token || !config?.url || !config?.anonKey) return;
+    suiviConvoyageEtaEnCours.add(t.key);
+    try {
+      const destination = G.coordonnees(m,'destination');
+      const route = await routes.estimate({endpoint,accessToken:session.access_token,refreshToken:session.refresh_token,expiresAt:session.expires_at,supabaseUrl:config.url,supabaseApiKey:config.anonKey,origin:here,destination:{lat:Number(destination.lat),lng:Number(destination.lng)},mode:'voiture'});
+      const minutes = Number(route?.durationMinutes); if (!Number.isFinite(minutes) || minutes < 0) return;
+      const saved = Object.assign({},lireLocal(SUIVI_CONVOYAGE_KEY,{})), current = saved[t.key];
+      if (!current || current.status !== 'en_route' || current.approcheDeclencheeAt) return;
+      current.etaMinutes = minutes; current.etaCheckedAt = new Date(ts).toISOString();
+      if (minutes <= 15) {
+        current.approcheDeclencheeAt = new Date(ts).toISOString();
+        document.dispatchEvent(new CustomEvent('cp-livraison-approche',{detail:{key:t.key,etaMinutes:minutes,at:current.approcheDeclencheeAt}}));
+      }
+      saved[t.key] = current; ecrireLocal(SUIVI_CONVOYAGE_KEY,saved);
+    } catch (_) { /* indisponibilité du calcul routier : le suivi GPS continue */ }
+    finally { suiviConvoyageEtaEnCours.delete(t.key); }
+  }
   function suiviTraiter(pos) {
     const acc = Number(pos.coords.accuracy); if (Number.isFinite(acc) && acc > 250) return;
-    const vit = pos.coords.speed; if (typeof vit === 'number' && vit > 3) return;   // en roulement (> ~11 km/h) : pas une arrivée
+    const vit = pos.coords.speed; // le suivi du convoyage doit aussi enregistrer les positions en roulant
     const here = { lat: pos.coords.latitude, lng: pos.coords.longitude }, ts = Number(pos.timestamp) || Date.now();
+    for (const {m,t} of missionsASuivre()) suiviConvoyageEnregistrer(m,t,pos,ts);
+    if (typeof vit === 'number' && vit > 3) return; // en roulement : pas de détection d'arrivée, mais le convoyage reste suivi
     for (const { m, t } of missionsASuivre()) {
       const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
       const dist = G.volOiseauKm(here, d) * 1000;
