@@ -8,7 +8,6 @@ const {crc32}=require('../../transport-gtfs-loader');
 const {createRelay,PATH:relayPath}=require('../../server/transport-realtime-relay.cjs');
 const official=require('../fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
-const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
 const siriFixture=require('../fixtures/blablacar-siri-2026-10-31.json');
 const tripgoToday=require('../fixtures/tripgo-blablacar-2026-10-31.json');
 const root=path.resolve(__dirname,'../..');
@@ -172,7 +171,6 @@ async function run(){
    if(url.hostname==='api.tripgo.com'){
     assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
     if(busLiveScenario&&url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793437200')return json(route,tripgoToday.response);
-    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
     return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
    }
    if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
