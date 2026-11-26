@@ -659,6 +659,7 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-diagnostics>summary:focus-visible{outline:2px solid #e74c4c;outline-offset:2px}
 .cp-hub-diagnostics:not([open]){padding-bottom:0}
 .cp-hub-diagnostics .cp-hub-note{overflow-wrap:anywhere}
+.cp-transport-sources[hidden]{display:none!important}
 .cp-hub-none{color:var(--alerte);font-weight:600;margin:0}
 
 /* Fiche mission — cartes transports Android : prix immédiatement lisible,

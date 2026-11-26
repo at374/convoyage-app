@@ -84,6 +84,17 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
 }
 
+// Le doublon historique « Détail par moteur » ne doit plus apparaître sur Android.
+{
+  const fs=require('node:fs');
+  const path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'..','style.css'),'utf8');
+  assert.ok(!app.includes("legacyTitle.textContent='Détail par moteur"));
+  assert.ok(app.includes('legacy.hidden=true'));
+  assert.match(css,/\.cp-transport-sources\[hidden\]\{display:none!important\}/);
+}
+
 // 8-11. Le garde-fou SIBRA respecte la période de validité et ne confirme jamais seul un trajet.
 {
   const fs = require('node:fs');

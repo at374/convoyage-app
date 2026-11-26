@@ -2130,9 +2130,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           startTransportHub(false,key);
         };
         section.appendChild(refreshDirection);
-        // Un seul affichage des trajets : les cartes classées du hub. Les anciens blocs par moteur restent consultables, repliés.
+        // Ancien conteneur conservé pour les écritures des moteurs historiques,
+        // mais jamais affiché : leurs informations utiles sont déjà réunies
+        // dans « Diagnostic et anomalies » du hub.
         const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
-        const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
+        legacy.hidden=true;
         section.appendChild(legacy);legacySources[key]=legacy;
       }
       let missedAt=Number(bt.dataset.transportMissedAt)||0;
@@ -2318,8 +2320,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           const sec=transportDestinations[label];if(!sec||sec.hidden)continue;
           let host=hubHosts[label];
           if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
-            // 20/11/2026 : « Détail par moteur (justificatifs) » doit rester au-dessus des cartes et des
-            // notes du hub (replié comme les autres blocs techniques), jamais relégué tout en bas.
+            // Le conteneur historique est invisible ; les cartes restent dans le hub.
             const after=rechercheBadges[label]?.isConnected?rechercheBadges[label]:pointInsertion(label);
             after.insertAdjacentElement('afterend',host);}
           if(view.done)masquerRecherche(label);else host.hidden=false;
