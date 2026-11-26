@@ -271,6 +271,15 @@ test('géocodage GPS : temporise les adresses sans résultat pour éviter les re
  assert.ok(block.includes('transportPointRetryAt.delete(cle)'));
 });
 
+test('suivi GPS navigateur : aucune nouvelle acquisition lorsque la page est masquée',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('function suiviMaj()');
+ const end=app.indexOf("if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange'",start);
+ const block=app.slice(start,end);
+ assert.ok(block.indexOf('if (document.hidden) return;') > block.indexOf('function suiviMaj()'));
+ assert.ok(block.indexOf('if (document.hidden) return;') < block.indexOf('const missions = missionsASuivre()'));
+});
+
 test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision limitée à l’approche',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  const start=app.indexOf('const SUIVI_GPS_INTERVALLE_ROUTE_MS');
