@@ -40,6 +40,7 @@ def priority(row):
 for row in out:
     row['geographic_priority']=priority(row)
 out.sort(key=lambda row:(row['geographic_priority'],str(row.get('dataset')),row['url']))
+print('Territorial metadata examples:',json.dumps([{k:d.get(k) for k in ('slug','region','regions','territory','aom','type')} for d in datasets[:15]],ensure_ascii=False)[:12000])
 print('Geographic priorities:',dict(Counter(row['geographic_priority'] for row in out)))
 pathlib.Path('realtime-candidates.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
 print('Public realtime candidates:',len(out))
