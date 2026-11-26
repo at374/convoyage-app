@@ -1195,10 +1195,10 @@ function makeProviders(r,opts={}){
      const pair=pairFor(task),w=queryWindow(task);
      if(!pair||!w||signal?.aborted)return [];
      const earliest=Number.isFinite(ms(task.earliestDeparture))?ms(task.earliestDeparture):
-      (w.arriveBy?Date.parse(dateParts(ms(w.when)).date+'T00:00:00Z'):ms(w.when));
+      (w.arriveBy?ms(toISO(dateParts(ms(w.when)).date,'00:00:00')):ms(w.when));
      const latest=w.arriveBy?ms(w.when):
       (Number.isFinite(ms(task.latestArrival))?ms(task.latestArrival):
-       Date.parse(dateParts(earliest).date+'T23:59:59Z'));
+       ms(toISO(dateParts(earliest).date,'23:59:59')));
      if(!Number.isFinite(earliest)||!Number.isFinite(latest)||earliest>latest)return [];
      const start=dateParts(earliest),end=dateParts(latest);
      const beforeSix=Number.isFinite(ms(task.earliestDeparture))&&Number(start.clock.slice(0,2))<6;
