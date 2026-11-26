@@ -152,7 +152,7 @@
     const a = cote === 'origin'
       ? (m.origin_address || m.from_address || m.pickup_address || p.address || p.street)
       : (m.destination_address || m.to_address || m.delivery_address || m.dropoff_address || p.address || p.street);
-    return codeDepartement(m[pre + '_department']) || departementDuCodePostal(cpDans(a) || p.postal_code || p.zip || m[pre + '_postal_code'] || '') ||
+    return codeDepartement(m[pre + '_department']) || departementDuCodePostal(cpDans(a) || p.postal_code || p.zip || m[pre + '_postal_code'] || (cote === 'origin' ? m.pickup_postal_code : (m.delivery_postal_code || m.dropoff_postal_code)) || '') ||
       (trouverVille(m[pre + '_city'] || p.city) || {}).dep || null;
   }
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
@@ -282,8 +282,10 @@
   // Même point GPS (parking P21) pour prendre en charge et pour livrer. L'entrée des retours (46.232278, 6.110413) n'est pas utilisée.
   const GENEVE_SECTEUR_FRANCE = { lat: 46.237722, lng: 6.117667 };
   const estSecteurFranceGeneve = (m, cote) => {
-    const p = (m && m[cote]) || {}, pre = cote === 'origin' ? 'from' : 'to';
-    const t = norm([m && m[cote + '_address'], p.address, p.street, p.name, p.label, m && m[pre + '_city'], p.city, m && m[pre + '_name']].filter(x => typeof x === 'string').join(' '));
+    const pre = cote === 'origin' ? 'from' : 'to';
+    const p = (m && m[cote]) || (m && (cote === 'origin' ? (m.pickup || m.pickup_location) : (m.dropoff || m.delivery || m.dropoff_location))) || {};
+    const x = m ? adresseDe(m, cote) : { a: '', v: '' };
+    const t = norm([x.a, p.address, p.street, p.name, p.label, m && m[pre + '_city'], p.city, m && m[pre + '_name']].filter(z => typeof z === 'string').join(' '));
     return /ferney[\s-]*voltaire/.test(t) || (/secteur\s+france/.test(t) && /geneve/.test(t));
   };
   function coordonnees(m, cote) {
