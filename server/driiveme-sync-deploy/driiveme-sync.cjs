@@ -82,6 +82,20 @@ async function lireCurseur(url, key, userId) {
 async function ecrireCurseur(url, key, userId, position) {
   await supabaseUpsert(url, key, 'plateforme_curseurs', [{ user_id: userId, platform: PLATFORM, position, updated_at: new Date().toISOString() }], 'user_id,platform');
 }
+async function lireCycle(url, key, userId) {
+  const q = new URLSearchParams({ user_id: 'eq.' + userId, platform: 'eq.' + PLATFORM, select: 'cycle_started_at,failed' });
+  const r = await fetch(url + '/rest/v1/plateforme_sync_cycles?' + q.toString(), { headers: { apikey: key, Authorization: 'Bearer ' + key } });
+  if (!r.ok) throw new Error('lecture plateforme_sync_cycles: ' + r.status + ' ' + await r.text());
+  const rows = await r.json(); return rows && rows[0] ? rows[0] : null;
+}
+async function ecrireCycle(url, key, userId, cycleStartedAt, failed) {
+  await supabaseUpsert(url, key, 'plateforme_sync_cycles', [{ user_id: userId, platform: PLATFORM, cycle_started_at: cycleStartedAt, failed: !!failed, updated_at: new Date().toISOString() }], 'user_id,platform');
+}
+async function marquerMissionsAbsentes(url, key, userId, cycleStartedAt) {
+  const q = new URLSearchParams({ user_id: 'eq.' + userId, platform: 'eq.' + PLATFORM, kind: 'eq.disponible', status: 'eq.disponible', last_seen_at: 'lt.' + cycleStartedAt });
+  const r = await fetch(url + '/rest/v1/missions?' + q.toString(), { method: 'PATCH', headers: { 'Content-Type': 'application/json', apikey: key, Authorization: 'Bearer ' + key, Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'plus_vue' }) });
+  if (!r.ok) throw new Error('marquage missions DriiveMe absentes: ' + r.status + ' ' + await r.text());
+}
 
 // ---------- Connexion ----------
 // V2 : premier test réel (20/11/2026) en timeout sur #email après 15 s — probablement un bandeau cookies
@@ -198,6 +212,9 @@ async function runSync() {
 
   const passes = listePassesNationale();
   const cur0 = (await lireCurseur(SUPABASE_URL, SERVICE_KEY, USER_ID)) % passes.length;
+  const cyclePrecedent = await lireCycle(SUPABASE_URL, SERVICE_KEY, USER_ID);
+  const cycleStartedAt = cur0 === 0 || !cyclePrecedent?.cycle_started_at ? new Date().toISOString() : cyclePrecedent.cycle_started_at;
+  let cycleFailed = cur0 === 0 ? false : !!cyclePrecedent?.failed;
   const aLire = Array.from({ length: Math.min(LOT, passes.length) }, (_, i) => passes[(cur0 + i) % passes.length]);
 
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
@@ -237,14 +254,21 @@ async function runSync() {
   // Le curseur avance toujours (même en cas d'échec partiel), pour ne jamais rester bloqué sur le même
   // département en panne ; en cas de déconnexion franche, on ne fait pas avancer le curseur (on retentera
   // le même lot une fois reconnecté, pour ne pas sauter des départements pendant la coupure).
-  if (!connexion) await ecrireCurseur(SUPABASE_URL, SERVICE_KEY, USER_ID, (cur0 + aLire.length) % passes.length);
+  const curseurSuivant = connexion ? cur0 : (cur0 + aLire.length) % passes.length;
+  if (!connexion) await ecrireCurseur(SUPABASE_URL, SERVICE_KEY, USER_ID, curseurSuivant);
+  if (depsOk !== aLire.length || statut !== 'ok') cycleFailed = true;
 
   const store = { cp70_missions_autres: { DriiveMe: missionsBucket }, cp72_acceptees: {}, cp50_hiflow_missions: {}, cp96_factures: {}, cp95_devis: {}, cp98_attente: {} };
   const rows = CPSync.buildRows(store, USER_ID, { plateformes: ['DriiveMe'] }).map((r) => ({ ...r, first_seen_at: undefined }));
   await supabaseUpsert(SUPABASE_URL, SERVICE_KEY, 'missions', rows, 'user_id,platform,external_id,kind');
-  // V1 : pas de purge « plus_vue » ici (lecture par lots, pas de vision complète en un seul appel — voir
-  // la limite connue en tête de fichier). À ajouter plus tard, quand une rotation complète sera détectée.
-
+  // Purge seulement au retour du curseur à zéro et après un tour national sans aucune erreur.
+  if (curseurSuivant === 0 && !connexion) {
+    if (!cycleFailed && depsOk === aLire.length) {
+      await marquerMissionsAbsentes(SUPABASE_URL, SERVICE_KEY, USER_ID, cycleStartedAt);
+      console.log('[driiveme-sync] tour national complet : missions absentes marquées plus_vue');
+    } else { console.warn('[driiveme-sync] tour national incomplet : purge ignorée par sécurité'); }
+    await ecrireCycle(SUPABASE_URL, SERVICE_KEY, USER_ID, null, false);
+  } else if (!connexion) { await ecrireCycle(SUPABASE_URL, SERVICE_KEY, USER_ID, cycleStartedAt, cycleFailed); }
   const etatResp = await fetch(`${SUPABASE_URL}/rest/v1/sources_etat?on_conflict=user_id,platform`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, Prefer: 'resolution=merge-duplicates,return=minimal' },
@@ -260,7 +284,7 @@ async function runSync() {
   }).catch(() => {});
 
   console.log(`[driiveme-sync] résumé : statut=${statut} · ${rows.length} missions · lot ${depsOk}/${aLire.length}` + (detail ? ` · ${detail}` : ''));
-  return { statut, nb_missions: rows.length, lot_ok: depsOk, lot_total: aLire.length, curseur_suivant: connexion ? cur0 : (cur0 + aLire.length) % passes.length, total_passes: passes.length, detail };
+  return { statut, nb_missions: rows.length, lot_ok: depsOk, lot_total: aLire.length, curseur_suivant: curseurSuivant, total_passes: passes.length, detail };
 }
 
 const server = http.createServer(async (req, res) => {
