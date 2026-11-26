@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['ondea',['Ondéa Aix-les-Bains (Grand Lac)','ondea-aix-les-bains',true]],
  ['citea',['Citéa (Valence Romans Mobilités)','citea-valence']],
  ['rubis',['Rubis Bourg-en-Bresse','rubis-bourg-en-bresse']],
  ['jybus',['J’y bus Rumilly','jybus-rumilly']],
@@ -259,21 +260,22 @@ function realtimeNetworkId(row){
  for(const [id,[name]] of LOCAL_REALTIME_NETWORKS)if(row.network===name)return id;
  return null;
 }
-function* protobufFields(bytes){
+function* protobufFields(bytes,signedTag){
  let offset=0;
- function integer(){
-  let value=0;
+ function integer(signed=false){
+  let value=0,low=0;
   for(let shift=0;shift<70&&offset<bytes.length;shift+=7){
    const byte=bytes[offset++];
-   value+=(byte&127)*2**shift;
-   if(byte<128)return value;
+   if(signed){if(shift<32)low|=(byte&127)<<shift;}
+   else value+=(byte&127)*2**shift;
+   if(byte<128)return signed?low:value;
   }
   throw new Error('Champ GTFS-RT invalide');
  }
  while(offset<bytes.length){
   const key=integer(),wire=key%8,tag=Math.floor(key/8);
   if(!tag)throw new Error('Champ GTFS-RT invalide');
-  if(wire===0){yield [tag,integer()];continue;}
+  if(wire===0){yield [tag,integer(tag===signedTag)];continue;}
   const length=wire===2?integer():wire===1?8:wire===5?4:-1;
   if(!Number.isSafeInteger(length)||length<0||offset+length>bytes.length)throw new Error('Flux GTFS-RT tronqué');
   if(wire===2)yield [tag,bytes.subarray(offset,offset+length)];
@@ -302,9 +304,10 @@ function readLocalRealtime(bytes,now){
    const stop=fields(raw),id=text(stop.get(4));
    if(!id)continue;
    if(stops.has(id)){stops.set(id,null);continue;}
-   const time=tag=>stop.has(tag)?Number(fields(stop.get(tag)).get(2))*1000:NaN;
+   const arrival=stop.has(2)?new Map(protobufFields(stop.get(2),1)):null;
+   const departure=stop.has(3)?fields(stop.get(3)):null;
    const status=stop.get(5)||0;
-   stops.set(id,status===1?{skipped:true}:status===0?{arrival:time(2),departure:time(3)}:null);
+   stops.set(id,status===1?{skipped:true}:status===0?{arrival:Number(arrival?.get(2))*1000,arrivalDelay:arrival?.get(1),departure:Number(departure?.get(2))*1000}:null);
   }
   trips.set(id,trips.has(id)?null:{stops,date:text(descriptor.get(3)),cancelled:relationship===3});
  }
@@ -2867,10 +2870,11 @@ async function localRealtimeDaySchedule(raw,schedule){
    row.departureSeconds=inServiceSeconds(update.departure);
    row.arrivalSeconds=inServiceSeconds(update.arrival);
    row.status='Temps réel';
-  }else if(networkId==='cotebus_beaune'){
-   // Beaune peut publier une estimation d’arrivée sans fournir le départ.
+  }else if(LOCAL_REALTIME_NETWORKS.get(networkId)[2]){
+   // Ces réseaux peuvent publier une estimation d’arrivée sans fournir le départ.
    const trip=live.get(row.trip_id);
-   const estimate=trip?.stops.get(raw.to)?.arrival;
+   const stop=trip?.stops.get(raw.to);
+   const estimate=Number.isFinite(stop?.arrival)?stop.arrival:stop?.arrivalDelay?arrival+stop.arrivalDelay*1000:NaN;
    if(trip&&!trip.cancelled&&(!trip.date||trip.date===raw.serviceDate.replaceAll('-',''))&&
       Number.isFinite(estimate)&&estimate>Math.max(now,departure)&&Math.abs(estimate-arrival)<=1800000){
     row.arrivalSeconds=inServiceSeconds(estimate);
