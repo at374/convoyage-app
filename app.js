@@ -22,7 +22,7 @@
   // Pré-calcul automatique Retour/Jonction avant livraison estimée.
   const transportPrefetchTimers = new Map();
   const transportSelectedDays = new Map();
-  const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v1:' + api.session.user_id : '';
+  const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v2:' + api.session.user_id : '';
   function saveTransportViews(key, missionKey, entry) {
     if (!key) return;
     const saved = lireLocal(key, {});
