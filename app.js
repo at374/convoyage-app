@@ -3636,7 +3636,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const b3 = $('btnAnnRetire'); if (b3) b3.onclick = () => { const o = lireLocal('cp_annul', {}) || {}; delete o[cle]; ecrireLocal('cp_annul', o); for (const x of etat.missions) if (x.kind === 'acceptee' && x.platform + '|' + x.external_id === cle && x._statutOrig !== undefined) { x.status = x._statutOrig; delete x._statutOrig; x.annulee_par_moi = false; } sauve('Annulation retirée'); };
     }
     const transportDetailButton = $('btnTransportsMission');
-    const transportDetailButton = $('btnTransportsMission');
     // Le moteur de recherche de la fiche connaît déjà les tâches Retour et Jonction.
     // On le lance une seule fois à T-15 min de la livraison planifiée, puis on masque
     // seulement son panneau : les moteurs continuent et enregistrent les vues dans le cache.
