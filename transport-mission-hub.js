@@ -349,10 +349,12 @@ async function completeWalks(j,task,router){
 }
 // Cache des marches : partagé entre moteurs, directions et fiches (stockage local du téléphone, 30 jours).
 // Clés arrondies au 1/10 000 de degré (≈ 10 m) : deux arrêts « identiques » vus par deux moteurs partagent la marche.
-function cachedRouter(router,{storage=null,key='cp_marches_v2',ttlDays=30,maxEntries=400}={}){
+function cachedRouter(router,{storage=null,key='cp_marches_v3',ttlDays=30,maxEntries=400}={}){
  if(!router||typeof router.route!=='function')return router;
+ // Les clés doivent distinguer les points à ~10 cm près : arrondir à 10 m
+ // pouvait réutiliser une marche vérifiée pour une autre adresse.
+ const id=(a,b)=>[a.lat.toFixed(6),a.lon.toFixed(6),b.lat.toFixed(6),b.lon.toFixed(6)].join(',');
  const round=p=>({lat:Math.round(p.lat*1e4)/1e4,lon:Math.round(p.lon*1e4)/1e4});
- const id=(a,b)=>[round(a).lat,round(a).lon,round(b).lat,round(b).lon].join(',');
  let saved={};try{saved=JSON.parse(storage?.getItem(key)||'{}')||{};}catch(_){saved={};}
  const now=Date.now(),ttl=ttlDays*86400000;
  for(const k of Object.keys(saved))if(!(saved[k]&&now-saved[k].t<ttl))delete saved[k];
@@ -367,10 +369,10 @@ function cachedRouter(router,{storage=null,key='cp_marches_v2',ttlDays=30,maxEnt
   if(s){hits++;const r=Promise.resolve({status:'calculated',provider:(router.mode==='bicycle'?'Valhalla vélo':'Valhalla pedestrian')+' / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
    geometry:s.g||null,steps:s.s||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
   misses++;
-  const r=Promise.resolve(router.route(round(a),round(b))).then(x=>{
+  const r=Promise.resolve(router.route({...a},{...b})).then(x=>{
    if(x&&x.status==='calculated'&&x.endpointsMatched===true){
     // géométrie allégée (≤ 40 points) pour le stockage
-    const g=Array.isArray(x.geometry)?x.geometry.filter((_,i,arr)=>i%Math.max(1,Math.ceil(arr.length/40))===0||i===arr.length-1).map(round):null;
+    const g=Array.isArray(x.geometry)?x.geometry.map((p,i,arr)=>i===0?{...a}:i===arr.length-1?{...b}:round(p)).filter((_,i,arr)=>i%Math.max(1,Math.ceil(arr.length/40))===0||i===arr.length-1):null;
     saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g,s:Array.isArray(x.steps)?x.steps.slice(0,25):undefined};persist();
    }else memory.delete(k); // échec : on pourra réessayer plus tard
    return x;
