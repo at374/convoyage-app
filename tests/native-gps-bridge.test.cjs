@@ -47,3 +47,12 @@ test('pré-calcul transport : le minuteur reste actif jusqu’au tick qui détec
   assert.doesNotMatch(arrival, /transportPrefetchTimers\.delete/);
   assert.match(src, /const arrivalKnown = arriveeGps\(missionTiming\(m\)\.key\)/);
 });
+
+test('pré-calcul transport : continuer si la fiche est fermée tant que son bouton existe', () => {
+  const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+  const start = src.indexOf('const tickPrefetch = () =>');
+  const end = src.indexOf('const timer = setInterval(tickPrefetch', start);
+  const tick = src.slice(start, end);
+  assert.match(tick, /!transportDetailButton\.isConnected/);
+  assert.doesNotMatch(tick, /\$\('feuille'\)\.hidden/);
+});
