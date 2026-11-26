@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: python -m pip install gtfs-realtime-bindings==1.0.0
       - run: python scripts/discover_public_realtime.py
       - run: |
           python scripts/probe_public_realtime.py 30 0
