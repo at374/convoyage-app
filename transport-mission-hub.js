@@ -1698,7 +1698,7 @@ function makeProviders(r,opts={}){
        catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}
       }
       if(rows===null){
-       const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
+       const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).then(feed=>({...feed,bbox:n[3]})).catch(()=>null)))).filter(Boolean);
        if(signal?.aborted||loaded.length<1)return [];
        // 21/11/2026 : « Tous les horaires » (Y22) manquait sur les trajets de correspondance — fromGTFS()
        // lit networkUrls/serviceDate par JAMBE (r.legs[i]), jamais attachés ici (seul le moteur direct le
@@ -1712,7 +1712,7 @@ function makeProviders(r,opts={}){
          const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,scanW);
          const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
          const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
-         const urls=netUrls.get(nets[i][0])||[];
+         const urls=netUrls.get(loaded[i].source.datasetId)||[];
          rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
           legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:urls,serviceDate:l.date||date}))})));
         }catch(_){}
@@ -1729,10 +1729,10 @@ function makeProviders(r,opts={}){
          if(signal?.aborted)return [];
          // 23/11/2026 : même filtre géographique que le worker (voir bboxesNear, transport-gtfs-federation.js)
          // — deux réseaux dont les emprises ne se touchent nulle part ne peuvent produire aucune correspondance.
-         if(!r.CPGTFSFederation.bboxesNear(nets[i][3],nets[j][3]))continue;
+         if(!r.CPGTFSFederation.bboxesNear(loaded[i].bbox,loaded[j].bbox))continue;
          try{
           const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,scanW,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
-          const uI=netUrls.get(nets[i][0])||[],uJ=netUrls.get(nets[j][0])||[];
+          const uI=netUrls.get(loaded[i].source.datasetId)||[],uJ=netUrls.get(loaded[j].source.datasetId)||[];
           rows.push(...c.journeys.map(x=>({...x,legs:x.legs.map(l=>({...l,
            networkUrls:(l.networkId===loaded[j].source.datasetId?uJ:uI),serviceDate:l.date||date}))})));
          }catch(_){}
