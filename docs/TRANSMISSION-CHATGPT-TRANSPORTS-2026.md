@@ -926,3 +926,14 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Les instructions Android et l'architecture documentaire indiquent désormais de ne pas configurer de clé TripGo.
 - Commits : axe `06d1ff6f8488209813b1bc4090c22dd946bd8c73` ; workflow 20 axes `195e77497779034f2d8dc1a8ff556cacc7b12a85` ; chargement fédération diagnostic `d19fce873474d1ad98305e752fbdf6c1ca23637d` ; inventaire sans TripGo `455e21dfc547612242a2c0d1c4888393595140bc` / `bdeafa9b97ead1573f1cdd84bc47ba78babcbb60` ; diagnostic sans métriques TripGo `1413144713a829d78188d43fbaa613272a8c56ed` ; guide transports `dc615d890ca562aa524842ad4f2955127997415f`.
 - Le diagnostic réel, le résultat Annecy–Voiron et les essais Android restent à exécuter/consulter. Aucun résultat CI n'est revendiqué à ce stade.
+
+
+## Correction des codes GTFS étendus — 26/11/2026
+
+- Audit du tableau officiel Google GTFS Extended Route Types : les codes 700–716 sont des bus, 800–899 des trolleybus, 900–907 des tramways, 1000/1200 des transports sur l'eau, 1100 l'aérien, 1300–1307 les remontées mécaniques, 1400 les funiculaires ; 200–209 désignent les autocars.
+- Correction de `gtfsMode` et `gtfsBoat` dans `transport-mission-hub.js` : les anciens intervalles excluaient à tort les bus étendus (700–799) et classaient mal les bateaux (1000–1099). Désormais seuls les types eau (4, 1000, 1200, 1502) sont écartés.
+- Test unitaire étendu aux catégories bus, trolleybus, train régional (106), tram, métro, monorail, autocar, téléphérique, funiculaire et avion ; contrôle d'exclusion des types ferry/eau.
+- Cache navigateur Android/Web du hub renouvelé dans `index.html`.
+- Référence normative : https://developers.google.com/transit/gtfs/reference/extended-route-types
+- Commits : mapping `055646cc6d9a9f83400864cd74ab5b7cde8030e4` ; test `bb0f0c432bc97b9aef2abc64e6efe8bee93ea3cf` ; cache navigateur `441bf1384060476a2a65b26c55e3624db34a35bc`.
+- Les tests CI et la vérification sur Android restent en attente de résultats observables.
