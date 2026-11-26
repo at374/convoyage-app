@@ -8,6 +8,7 @@ assert isinstance(datasets,list), 'Unexpected catalogue schema'
 out = []
 seen = set()
 for ds in datasets:
+    static_resources=[{'id':r.get('id'),'url':r.get('url')} for r in ds.get('resources',[]) if str(r.get('format','')).lower()=='gtfs' and str(r.get('url','')).startswith('https://')]
     for resource in ds.get('resources',[]):
         fmt = str(resource.get('format','')).lower().replace('_','-')
         if fmt not in ('gtfs-rt','gtfsrt','siri','siri lite','siri-lite','sirilite'):
@@ -19,7 +20,7 @@ for ds in datasets:
         if key in seen:
             continue
         seen.add(key)
-        out.append({'dataset':ds.get('slug'),'title':ds.get('title'),'territory':ds.get('territory'),'region':ds.get('region'),'resource_id':resource.get('id'),'format':fmt,'url':url,'status':'discovered_not_validated'})
+        out.append({'dataset':ds.get('slug'),'title':ds.get('title'),'territory':ds.get('territory'),'region':ds.get('region'),'resource_id':resource.get('id'),'format':fmt,'url':url,'static_gtfs_candidates':static_resources,'status':'discovered_not_validated'})
 assert out, 'No matching realtime resources found'
 def normalize(value):
     return ''.join(c for c in unicodedata.normalize('NFKD',str(value or '').lower()) if not unicodedata.combining(c))
