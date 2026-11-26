@@ -1,9 +1,12 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const rt=require('../transport-blablacar-realtime'),tg=require('../transport-tripgo');
-const fixture=require('./fixtures/blablacar-siri-2026-10-31.json'),trip=require('./fixtures/tripgo-blablacar-2026-10-31.json');
-const future=require('./fixtures/tripgo-annecy-grenoble-2026-10-31.json');
+const rt=require('../transport-blablacar-realtime');
+const fixture=require('./fixtures/blablacar-siri-2026-10-31.json');
 const options={from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when:'2026-10-31T10:00:00+01:00'};
-const journey=()=>tg.parse(trip.response,options).itineraries[0],clock=Date.parse(fixture.testNow),copy=()=>JSON.parse(JSON.stringify(fixture.response));
+const journey=()=>({legs:[
+ {mode:'wa_wal',departure:'2026-10-31T09:10:00.000Z',arrival:'2026-10-31T09:15:00.000Z'},
+ {mode:'pt_pub_bus',provider:'BlaBlaCar Bus',serviceShortName:'51981',fromStopCode:'NCY',toStopCode:'XGE',departure:'2026-10-31T09:15:00.000Z',arrival:'2026-10-31T10:40:00.000Z'},
+ {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:44:34.000Z'}
+ ]}),clock=Date.parse(fixture.testNow),copy=()=>JSON.parse(JSON.stringify(fixture.response));
 const feed=data=>rt.parse(data||copy(),{now:clock});
 const current=(data,leg=journey().legs[1])=>rt.assess(feed(data),leg,{now:clock});
 const calls=data=>data.estimatedJourneyVersionFrame[0].estimatedVehicleJourney[0].estimatedCalls.estimatedCall;
@@ -15,7 +18,7 @@ test('recorded operator data matches the same day, service, stops and planned ti
  assert.equal(result.transportConfirmed,false);assert.equal(result.accessVerified,false);assert.equal(result.realizable,false);
 });
 test('another date, service, stop or planned time cannot reuse the operator observation',()=>{
- const later=tg.parse(future.response,{...options,when:'2026-11-02T10:00:00+01:00'}).itineraries[0];
+ const later=journey();later.legs[1]={...later.legs[1],departure:'2026-11-02T09:15:00.000Z',arrival:'2026-11-02T10:40:00.000Z'};
  assert.equal(rt.assessJourney(feed(),later,{...options,when:'2026-11-02T10:00:00+01:00'},{now:clock}).updates[0].status,'not_matched');
  for(const change of [{serviceShortName:'51982'},{fromStopCode:'OTHER'},{toStopCode:'OTHER'},{departure:'2026-10-31T09:15:01Z'}])assert.equal(current(copy(),{...journey().legs[1],...change}).status,'not_matched');
 });
