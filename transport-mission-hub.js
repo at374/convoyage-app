@@ -1028,6 +1028,28 @@ function makeProviders(r,opts={}){
   let deployedBase=null;
   try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
   const cache=new Map();
+  // Full source tables are retained only for the two feeds selected for a cross-network
+  // journey. Ordinary local searches keep their compact indexes to protect Android memory.
+  const federationCache=new Map();
+  const loadFederationFeed=async(entry,serviceDates,signal)=>{
+   const [id,name,file]=entry,key=id+'|'+serviceDates.join(',');
+   let promise=federationCache.get(key);
+   if(!promise){
+    const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+     'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,
+     'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+    const resource={id,datasetId:id,network:name,format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
+    promise=typeof opts.federationFeedLoader==='function'
+     ?opts.federationFeedLoader({id,name,file,resource,serviceDates,signal})
+     :r.CPGTFSLoader.loadResource(resource,{fetcher,signal,indexServiceDates:serviceDates,
+       retainSourceTables:true,timeoutMs:120000});
+    federationCache.set(key,promise);
+    promise.catch(()=>federationCache.delete(key));
+    // At most two complete feeds are retained in memory by this path.
+    while(federationCache.size>2)federationCache.delete(federationCache.keys().next().value);
+   }
+   return promise;
+  };
   const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
   const dateParts=when=>{
    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
@@ -1143,6 +1165,57 @@ function makeProviders(r,opts={}){
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      return fromGTFS(filtered.concat(flexRows),name);
+    }};
+  } 
+  if(r.CPGTFSFederation&&typeof r.CPGTFSFederation.crossNetworkTrips==='function'){
+   const contains=(point,bounds)=>!!point&&point.lat>=bounds[0]&&point.lon>=bounds[1]&&point.lat<=bounds[2]&&point.lon<=bounds[3];
+   const area=b=>Math.max(0,b[2]-b[0])*Math.max(0,b[3]-b[1]);
+   const closest=(point)=>localNetworks.filter(entry=>contains(point,entry[3]))
+    .sort((a,b)=>area(a[3])-area(b[3])||a[0].localeCompare(b[0]))[0]||null;
+   const shiftDate=(date,days)=>new Date(Date.parse(date+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
+   const pairFor=task=>{
+    const from=pt(task.from),to=pt(task.to),a=closest(from),b=closest(to);
+    return a&&b&&a[0]!==b[0]?{a,b,from,to}:null;
+   };
+   P.interNetwork={name:'Correspondances entre réseaux GTFS',
+    enabled:task=>!!queryWindow(task)&&!!pairFor(task),
+    disabledReason:'les deux adresses ne sont pas couvertes par deux réseaux GTFS distincts',
+    run:async(task,signal)=>{
+     const pair=pairFor(task),w=queryWindow(task);
+     if(!pair||!w||signal?.aborted)return [];
+     const earliest=Number.isFinite(ms(task.earliestDeparture))?ms(task.earliestDeparture):
+      (w.arriveBy?Date.parse(dateParts(ms(w.when)).date+'T00:00:00Z'):ms(w.when));
+     const latest=w.arriveBy?ms(w.when):
+      (Number.isFinite(ms(task.latestArrival))?ms(task.latestArrival):
+       Date.parse(dateParts(earliest).date+'T23:59:59Z'));
+     if(!Number.isFinite(earliest)||!Number.isFinite(latest)||earliest>latest)return [];
+     const start=dateParts(earliest),end=dateParts(latest);
+     let serviceDate=start.date;
+     if(Number(start.clock.slice(0,2))<6)serviceDate=shiftDate(serviceDate,-1);
+     const endDate=end.date,connectionDates=[];
+     for(let day=serviceDate;day<=endDate;day=shiftDate(day,1)){
+      connectionDates.push(day);
+      if(connectionDates.length>3)break;
+     }
+     if(!connectionDates.length||connectionDates.length>3||!connectionDates.includes(serviceDate))return [];
+     const window={earliestDeparture:new Date(earliest).toISOString(),latestArrival:new Date(latest).toISOString()};
+     try{
+      const [first,second]=await Promise.all([
+       loadFederationFeed(pair.a,connectionDates,signal),
+       loadFederationFeed(pair.b,connectionDates,signal)
+      ]);
+      if(signal?.aborted)return [];
+      const result=r.CPGTFSFederation.crossNetworkTrips([first,second],serviceDate,pair.from,pair.to,window,{
+       connectionDates,radiusMeters:700,transferRadiusMeters:150,minTransferMinutes:5,maxWaitMinutes:120,
+       maxLegs:5000,maxPairs:3000,maxJourneys:60,maxStopLookups:120
+      });
+      const rows=(result.journeys||[]).map(row=>({...row,network:row.network||pair.a[1]+' → '+pair.b[1]}));
+      return fromGTFS(rows,'Correspondance inter-réseaux').slice(0,8);
+     }catch(error){
+      if(signal?.aborted)return [];
+      if(typeof opts.onFederationError==='function')try{opts.onFederationError({error:String(error?.message||error),networks:[pair.a[0],pair.b[0]]});}catch(_){}
+      return [];
+     }
     }};
   }
  }
