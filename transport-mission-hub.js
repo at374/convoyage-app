@@ -152,13 +152,16 @@ function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
  return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:
   {...row,gtfsFare:row.gtfsFare||one(row)});
 }
+function gtfsRouteType(routeType){
+ return routeType===null||routeType===undefined||routeType===''?NaN:Number(routeType);
+}
 function gtfsBoat(routeType){
- const type=Number(routeType);
+ const type=gtfsRouteType(routeType);
  // GTFS base Ferry, extended Water Transport / Ferry / Water Taxi.
  return type===4||type===1000||type===1200||type===1502;
 }
 function gtfsMode(routeType){
- const type=Number(routeType);
+ const type=gtfsRouteType(routeType);
  if(type===0||type===5||(type>=900&&type<=907))return 'Tram';
  if(type===1||(type>=400&&type<=404))return 'Métro';
  if(type===405||type===12)return 'Monorail';
