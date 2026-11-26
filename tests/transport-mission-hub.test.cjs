@@ -79,6 +79,23 @@ test('correspondance : marche réelle recalculée, trop courte signalée',async(
  assert.ok(x.legs.some(l=>l.kind==='walk'&&l.from==='Gare'));
 });
 
+test('correspondance : seuil de sécurité de 5 minutes, 4 min 59 refusées et 5 min acceptées',async()=>{
+ const S3={lat:45.9500,lon:6.1200};
+ const task={label:'Jonction',from:STOP1,to:STOP2,earliestDeparture:at(7,50),latestArrival:at(10,0)};
+ const make=(minutes,seconds=0)=>{
+  const departure=new Date(Date.parse(at(8,20))+minutes*60000+seconds*1000).toISOString();
+  const arrival=new Date(Date.parse(departure)+20*60000).toISOString();
+  return {source:'t',sources:['t'],legs:[
+   bus(at(8,0),at(8,20),STOP1,S3,{toName:'Gare'}),
+   bus(departure,arrival,S3,STOP2,{fromName:'Gare'})
+  ]};
+ };
+ const short=H.assess(await H.completeWalks(make(4,59),task,fakeRouter()),task);
+ assert.equal(short.feasible,false,'4 min 59 ne doit pas être déclaré réalisable');
+ assert.match(short.statusDetail,/correspondance trop courte/);
+ const exact=H.assess(await H.completeWalks(make(5,0),task,fakeRouter()),task);
+ assert.equal(exact.feasible,true,'5 minutes pleines sont acceptées lorsque les arrêts sont identiques');
+});
 test('trajet à pied : proposé ≤ 3 km de marche réelle, refusé si le chemin réel dépasse le seuil',async()=>{
  const near={lat:45.9200,lon:6.1200};// 2,2 km à vol d’oiseau
  const task={label:'Aller',from:HOME,to:near,latestArrival:at(9,0)};
@@ -340,7 +357,7 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  // Les 8 premiers ont une marche impossible (arrêt inaccessible) ; les suivants sont réalisables.
  const BAD={lat:45.9500,lon:6.1300};
  const router={calls:0,route:async(a,b)=>{router.calls++;if(Math.abs(a.lat-BAD.lat)<1e-6||Math.abs(b.lat-BAD.lat)<1e-6)return {status:'unavailable'};
-  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b]};}};
+  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b],endpointsMatched:true};}};
  const js=[];for(let i=0;i<8;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i),at(7,i+20),BAD,STOP2,{line:'K'+i})]});
  for(let i=0;i<6;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,30+i),at(7,50+i),STOP1,STOP2,{line:'G'+i})]});
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
