@@ -1221,3 +1221,26 @@ test('une nouvelle fiche horaire invalide le rendu même si le trajet reste iden
  redraw();
  assert.doesNotThrow(()=>H.render(host,view));
 });
+
+test('jonction : le temps restant inclut la marche directe après la fin des moteurs',async()=>{
+ let resolveWalk,finish;
+ const done=new Promise(resolve=>{finish=resolve;});
+ const session=H.createSession({
+  tasks:[{label:'Jonction',from:HOME,to:STOP1,earliestDeparture:at(8,30),latestArrival:at(9,30)}],
+  providers:{rapide:{name:'Rapide',enabled:()=>true,run:async()=>[]}},
+  router:{route:()=>new Promise(resolve=>{resolveWalk=resolve;})},
+  enrichmentMs:5000,
+  onUpdate:(label,view)=>{if(label==='Jonction'&&view.done)finish(view);}
+ });
+ try{
+  await new Promise(resolve=>setImmediate(resolve));
+  const pending=session.view('Jonction');
+  assert.equal(pending.pending,1);
+  assert.equal(pending.percent,50);
+  assert.ok(pending.remainingMs>0&&pending.remainingMs<=5000);
+  resolveWalk(null);
+  const complete=await done;
+  assert.equal(complete.percent,100);
+  assert.equal(complete.remainingMs,0);
+ }finally{session.dispose();}
+});

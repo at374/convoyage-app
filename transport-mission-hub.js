@@ -1327,12 +1327,13 @@ const LOCAL_GTFS_NETWORKS=[
  ['taneo_nevers', "Taneo (Nevers)", 'taneo-nevers.zip', [46.903,3.037,47.107,3.228]],
  ['tea_autun', "TEA (Autun)", 'tea-autun.zip', [46.948,4.284,46.967,4.316]]
 ];
+const GTFS_CACHE_TTL_MS=12*3600*1000;
 async function gtfsCacheFetch(r,url,init){
  const key=typeof url==='string'?url:url?.url||'';
  if(!r.caches||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(key))return r.fetch(url,init);
  const cache=await r.caches.open('cp-gtfs-zips').catch(()=>null);
  const hit=await cache?.match(key).catch(()=>null);
- if(hit&&Date.now()-Number(hit.headers.get('x-cp-saved'))<12*3600*1000)return hit;
+ if(hit&&Date.now()-Number(hit.headers.get('x-cp-saved'))<GTFS_CACHE_TTL_MS)return hit;
  const response=await r.fetch(url,init);
  if(cache&&response.ok){
   const copy=response.clone(),headers=new Headers(copy.headers);
@@ -2482,13 +2483,27 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    }).finally(()=>{if(disposed)return;state[label].pending--;
     const idx=state[label].deadlines.indexOf(activeDeadline);if(idx>=0)state[label].deadlines.splice(idx,1);emit(label);});
   }
-  state[label].pending++;state[label].total=(state[label].total||0)+1;
-  until(walkOnly(task,router,walkMaxKm),Date.now()+enrichmentMs,null).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
-   .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
-  if(scooter&&scooter.enabled&&scooterRouter){
-   state[label].pending++;state[label].total=(state[label].total||0)+1;
-   until(scooterOnly(task,scooterRouter,{maxKm:scooter.maxKm,speedKmh:scooter.speedKmh}),Date.now()+enrichmentMs,null).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
-    .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
+  const directDeadline=Date.now()+enrichmentMs;
+  const directRoutes=[walkOnly(task,router,walkMaxKm)];
+  if(scooter&&scooter.enabled&&scooterRouter)
+   directRoutes.push(scooterOnly(task,scooterRouter,{maxKm:scooter.maxKm,speedKmh:scooter.speedKmh}));
+  const s=state[label];
+  s.pending+=directRoutes.length;
+  s.total=(s.total||0)+directRoutes.length;
+  (s.deadlines||=[]).push(directDeadline);
+  let remainingDirect=directRoutes.length;
+  for(const route of directRoutes){
+   until(route,directDeadline,null).then(journey=>{
+    if(!disposed&&journey)s.items.push(assess(journey,task,fareFor));
+   }).catch(()=>{}).finally(()=>{
+    if(disposed)return;
+    s.pending--;
+    if(--remainingDirect===0){
+     const index=s.deadlines.indexOf(directDeadline);
+     if(index>=0)s.deadlines.splice(index,1);
+    }
+    emit(label);
+   });
   }
   emit(label);
  };
@@ -2627,21 +2642,32 @@ function ticketLinks(j){
 }
 const dayScheduleTablesCache=new Map();
 async function gtfsFeedForDaySchedule(raw){
- const key=raw.networkUrls[0]+'|'+raw.serviceDate;
- let promise=dayScheduleTablesCache.get(key);
- if(!promise){
+ const key=JSON.stringify([raw.serviceDate,raw.networkUrls]);
+ let entry=dayScheduleTablesCache.get(key);
+ if(!entry||Date.now()>=entry.expiresAt){
   const loader=root.CPGTFSLoader;
   if(typeof loader?.loadResource!=='function')return null;
-  promise=loader.loadResource({format:'GTFS',url:raw.networkUrls[0],fallbackUrls:raw.networkUrls.slice(1)},
+  entry={expiresAt:Infinity};
+  entry.promise=loader.loadResource({format:'GTFS',url:raw.networkUrls[0],fallbackUrls:raw.networkUrls.slice(1)},
    {fetcher:(url,init)=>gtfsCacheFetch(root,url,init),indexServiceDates:[raw.serviceDate],retainSourceTables:true});
-  dayScheduleTablesCache.set(key,promise);
-  while(dayScheduleTablesCache.size>4)dayScheduleTablesCache.delete(dayScheduleTablesCache.keys().next().value);
-  promise.catch(()=>{if(dayScheduleTablesCache.get(key)===promise)dayScheduleTablesCache.delete(key);});
+  dayScheduleTablesCache.set(key,entry);
+  entry.promise.then(feed=>{
+   if(feed)entry.expiresAt=Date.now()+GTFS_CACHE_TTL_MS;
+   else if(dayScheduleTablesCache.get(key)===entry)dayScheduleTablesCache.delete(key);
+  },()=>{
+   if(dayScheduleTablesCache.get(key)===entry)dayScheduleTablesCache.delete(key);
+  });
  }
- return promise;
+ dayScheduleTablesCache.delete(key);
+ dayScheduleTablesCache.set(key,entry);
+ if(dayScheduleTablesCache.size>4)dayScheduleTablesCache.delete(dayScheduleTablesCache.keys().next().value);
+ return entry.promise;
 }
 async function gtfsTablesForDaySchedule(raw){
- const feed=await gtfsFeedForDaySchedule(raw),pl=root.CPSibraPlanner;
+ return dayScheduleTables(await gtfsFeedForDaySchedule(raw));
+}
+function dayScheduleTables(feed){
+ const pl=root.CPSibraPlanner;
  if(!feed||typeof pl?.parseGtfsCsv!=='function')return null;
  if(!feed.dayScheduleTables){
   const csv=name=>pl.parseGtfsCsv(feed.files?.[name]||'')||[];
@@ -2691,26 +2717,34 @@ function scheduleLabel(value){
 const daySchedulesByFeed=new WeakMap();
 async function dayScheduleForLeg(raw){
  if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
+ const feed=await gtfsFeedForDaySchedule(raw);
+ if(!feed)return [];
  const indexer=root.CPGTFSIndex;
- if(raw.routeId&&raw.from&&raw.to&&typeof indexer?.directTrips==='function'){
-  const feed=await gtfsFeedForDaySchedule(raw);
-  if(feed?.index){
-   let cache=daySchedulesByFeed.get(feed);
-   if(!cache){cache=new Map();daySchedulesByFeed.set(feed,cache);}
-   const key=JSON.stringify([raw.serviceDate,String(raw.routeId),String(raw.from),String(raw.to)]);
-   if(cache.has(key))return cache.get(key).map(row=>({...row}));
-   const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
-   const rows=uniqueDayScheduleRows(indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
-    .filter(ride=>String(ride.routeId)===String(raw.routeId))
-    .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival)})));
-   cache.set(key,rows);
-   if(cache.size>64)cache.delete(cache.keys().next().value);
-   return rows.map(row=>({...row}));
-  }
+ const exact=raw.routeId&&raw.from&&raw.to;
+ const indexed=!!(exact&&feed.index&&typeof indexer?.directTrips==='function');
+ const key=JSON.stringify(exact
+  ?[indexed?'index':'tables',String(raw.routeId),String(raw.from),String(raw.to)]
+  :['stops',scheduleLabel(raw.line),scheduleLabel(raw.fromName),scheduleLabel(raw.toName),pt(raw.fromPoint),pt(raw.toPoint)]);
+ let cache=daySchedulesByFeed.get(feed);
+ if(!cache){cache=new Map();daySchedulesByFeed.set(feed,cache);}
+ if(cache.has(key))return cache.get(key).map(row=>({...row}));
+ let rows;
+ if(indexed){
+  const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
+  rows=indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
+   .filter(ride=>String(ride.routeId)===String(raw.routeId))
+   .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival)}));
+ }else{
+  const tables=dayScheduleTables(feed),pl=root.CPSibraPlanner;
+  if(!tables||typeof pl?.datedInterurbanRides!=='function')return [];
+  rows=dayScheduleFromTables(raw,tables,pl);
  }
- const tables=await gtfsTablesForDaySchedule(raw);
- const pl=root.CPSibraPlanner;
- if(!tables||!pl||typeof pl.datedInterurbanRides!=='function')return [];
+ const schedule=uniqueDayScheduleRows(rows);
+ cache.set(key,schedule);
+ if(cache.size>64)cache.delete(cache.keys().next().value);
+ return schedule.map(row=>({...row}));
+}
+function dayScheduleFromTables(raw,tables,pl){
  const rides=(route,from,to)=>pl.datedInterurbanRides(tables,raw.serviceDate,String(route),String(from),String(to));
  let rows=[];
  if(raw.routeId&&raw.from&&raw.to)rows=rides(raw.routeId,raw.from,raw.to);
@@ -2740,7 +2774,7 @@ async function dayScheduleForLeg(raw){
    }
   }
  }
- return uniqueDayScheduleRows(rows);
+ return rows;
 }
 function uniqueDayScheduleRows(rows){
  return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds,r])).values()]

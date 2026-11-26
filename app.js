@@ -17,6 +17,9 @@
   // Les estimations et résultats de transport sont conservés sur cet appareil.
   const transportReturnPlans = new Map();
   const transportViewCache = new Map();
+  const transportSearches = new Map();
+  const transportSaveTimers = new Map();
+  const transportSelectedDays = new Map();
   const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v1:' + api.session.user_id : '';
   function saveTransportViews(key, missionKey, entry) {
     if (!key) return;
@@ -123,8 +126,8 @@
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
   // Dernier défilement (doigt ou molette) : les mises à jour des transports attendent l'arrêt du défilement pour ne pas saccader.
-  let dernierDefilement = 0;
-  if (typeof document.addEventListener === 'function') { const marque = () => { dernierDefilement = Date.now(); }; document.addEventListener('scroll', marque, { capture: true, passive: true }); document.addEventListener('touchmove', marque, { capture: true, passive: true }); }
+  let dernierDefilement = -Infinity;
+  if (typeof document.addEventListener === 'function') { const marque = () => { dernierDefilement = performance.now(); }; document.addEventListener('scroll', marque, { capture: true, passive: true }); document.addEventListener('touchmove', marque, { capture: true, passive: true }); }
   const lireLocal = (k, d) => { try { return JSON.parse(globalThis.CPAccount?.storage?.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
   // V301 : la copie locale (cp_cache) est plafonnée à ~1,2 Mo : des milliers de missions remplissaient les 5 Mo du téléphone et bloquaient tout enregistrement (choix des plateformes compris).
 const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.storage?.setItem(k, JSON.stringify(x)); return true; } catch (_) { return false; } }; try { if (k === 'cp_cache' && v && Array.isArray(v.missions)) { let ms = v.missions; { const now = Date.now(), vivante = x => { const d = Date.parse((x && (x.delivery_end || x.delivery_start || x.pickup_start)) || ''); return !Number.isFinite(d) || d >= now ? 0 : 1; }; ms = ms.map((x, i) => [x, i]).sort((a, b) => vivante(a[0]) - vivante(b[0]) || a[1] - b[1]).map(a => a[0]); } let s = JSON.stringify({ ...v, missions: ms }); while (s.length > 1200000 && ms.length > 50) { ms = ms.slice(0, Math.floor(ms.length / 2)); s = JSON.stringify({ ...v, missions: ms }); } if (ess({ ...v, missions: ms })) return; try { globalThis.CPAccount?.storage?.removeItem(k); } catch (_) {} for (const m of [400, 150, 50]) if (ess({ ...v, missions: ms.slice(0, m) })) return; return; } ess(v); } catch (_) {} };
@@ -1915,7 +1918,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       refreshTransport.className = 'second';
       refreshTransport.textContent = '🔄 Actualiser maintenant';
       refreshTransport.setAttribute('aria-label', 'Actualiser maintenant les transports de cette mission');
-      refreshTransport.style.marginTop = '8px';
+      refreshTransport.classList.add('cp-transport-refresh');
       const reopenTransport = () => {
         if (!panel.isConnected) return;
         // Explicit user refresh must bypass browser HTTP caches for day JSON.
@@ -1949,7 +1952,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const margin=document.createElement('small');margin.textContent='Arrivée : 15 min minimum avant la prise en charge. Horaires et prix à vérifier avant de partir.';
       hero.append(eyebrow,title,lead,margin);panel.appendChild(hero);
       const transportDestinations={},legacySources={};
-      for(const [key,label,route] of [['Aller','01 · Aller',home+' → '+from],['Jonction','02 · Mission suivante',next?to+' → '+nextOrigin:'Aucune prochaine mission prévue'],['Retour','03 · Retour',to+' → '+home]]){
+      for(const [key,label,route] of [['Aller','01 · Aller',home+' → '+from],['Jonction','02 · Jonction · Mission suivante',next?to+' → '+nextOrigin:'Aucune prochaine mission prévue'],['Retour','03 · Retour',to+' → '+home]]){
         const section=document.createElement('section');section.className='cp-transport-direction';section.dataset.transportDirection=key;
         const heading=document.createElement('h3');heading.textContent=label;
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
@@ -2022,11 +2025,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       // Ordre d'affichage : Aller, Jonction, Retour (les sections de jours supplémentaires ne passent plus en dessous).
       {const rank=k=>k.startsWith('Aller')?0:k.startsWith('Jonction')?1:2;
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
+      const transportMissionKey=missionTiming(m).key;
+      const transportAccountKey=transportCacheKey();
+      const transportMemoryKey=transportAccountKey+'|'+transportMissionKey;
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
-      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null,junctionHub=null,junctionOverride=false;
+      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null,junctionHub=null,junctionOverride=false,attachedSearch=null;
       const lastViews={};
       const hubFor=label=>label==='Jonction'&&junctionOverride?junctionHub:transportHub;
-      const startDayLabels=day=>{try{for(const [l,d] of Object.entries(transportDays))if(d===day){const hub=hubFor(l);if(!hub||labelState[l]?.done)continue;afficherRecherche(l,hub.view(l));hub.start(l);}}catch(_){}};
+      const startDayLabels=day=>{try{for(const [l,d] of Object.entries(transportDays))if(d===day){hubFor(l)?.start(l);}}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2034,6 +2040,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const buttons=[];
         const selectDay=day=>{
           activeDay=day;
+          transportSelectedDays.set(transportMemoryKey,day);
           for(const [direction,section] of Object.entries(transportDestinations)){
             section.hidden=transportDays[direction]!==day;
           }
@@ -2058,7 +2065,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           tabs.appendChild(button);buttons.push(button);
         }
         hero.insertAdjacentElement('afterend',tabs);
-        {const today=parisServiceDay(new Date().toISOString());selectDay((missedAt&&transportDays.Jonction)||availableTransportDays.find(d=>d>=today)||transportDays.Aller||availableTransportDays[0]);}
+        {const today=parisServiceDay(new Date().toISOString());selectDay((missedAt&&transportDays.Jonction)||availableTransportDays.find(d=>d===transportSelectedDays.get(transportMemoryKey))||availableTransportDays.find(d=>d>=today)||transportDays.Aller||availableTransportDays[0]);}
         // Un onglet de jour n'apparaît que si au moins un transport compatible avec le créneau existe (ou si la recherche est en cours).
         updateDayTabs=()=>{
           const empty=day=>{const ls=Object.entries(transportDays).filter(([,d])=>d===day).map(([l])=>l);
@@ -2074,8 +2081,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         transportDestinations.Jonction.hidden=true;
       }
       panel.appendChild(sourcePanel);
-      // Keep manual controls available without placing them ahead of automatic results.
-      sourcePanel.appendChild(refreshTransport);
+      // Actualisation accessible avant les résultats de chaque direction.
+      hero.after(refreshTransport);
       // 21/11/2026 (Laurent : « ça se fige toujours ») : malgré le calcul hors fil et les rendus regroupés,
       // le blocage persiste et n'est pas reproduit ici — on affiche directement la mesure des blocages
       // réels du téléphone (déjà utilisée pour « Voiture et péages ») dans l'onglet Transports lui-même,
@@ -2095,30 +2102,38 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const localCards={};
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       const hubHosts={};
-      // Les premières propositions s’affichent pendant que les autres moteurs répondent.
+      // La progression reste indépendante du rendu des cartes.
       const rechercheBadges={};
       const pointInsertion=label=>{const sec=transportDestinations[label];if(!sec)return null;
         return legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);};
-      // 23/11/2026 (Laurent : « indiquer le pourcentage de 0 à 100 % pour voir en temps réel l'avancée de la
-      // recherche et le temps restant ») : view.percent/view.remainingMs (transport-mission-hub.js, view())
-      // sont déjà recalculés à chaque mise à jour groupée (au plus une par 350 ms, voir emit()) — pas besoin
-      // d'un minuteur séparé ici, juste de réécrire le texte du badge existant à chaque passage.
-      const texteRecherche=view=>{
-        if(!view||!Number.isFinite(view.percent))return 'Recherche en cours, patientez…';
-        const reste=view.remainingMs>500?' (encore '+(view.remainingMs>=1000?Math.round(view.remainingMs/1000)+' s':'1 s')+' au plus)':'';
-        return 'Recherche en cours… '+view.percent+' %'+reste;
+      const mettreAJourProgression=badge=>{
+        if(badge.parentElement.hidden)return;
+        const seconds=Math.max(0,Math.ceil((badge.deadline-Date.now())/1000));
+        const text=badge.percent===100?'Recherche terminée · 100 %':
+          'Recherche en cours… '+badge.percent+' % · Temps restant : '+(seconds?seconds+' s au plus':'finalisation');
+        if(badge.label.textContent!==text)badge.label.textContent=text;
       };
       const afficherRecherche=(label,view)=>{
-        const sec=transportDestinations[label];if(!sec||sec.hidden)return;
+        const sec=transportDestinations[label];if(!sec)return;
         let b=rechercheBadges[label];
         if(!b||!b.isConnected){
-          b=document.createElement('p');b.className='cp-hub-recherche';b.setAttribute('role','status');
+          b=document.createElement('div');b.className='cp-hub-recherche';
+          b.label=document.createElement('span');b.label.setAttribute('role','status');
+          b.bar=document.createElement('progress');b.bar.max=100;
+          b.bar.setAttribute('aria-label','Progression de la recherche · '+label.replace('@',' · '));
+          b.append(b.label,b.bar);
           rechercheBadges[label]=b;
           const apres=pointInsertion(label);
           if(apres)apres.insertAdjacentElement('afterend',b);else sec.appendChild(b);
         }
-        b.textContent=texteRecherche(view);
+        b.percent=Math.min(99,Math.max(0,view?.percent||0));
+        b.deadline=Date.now()+(view?.remainingMs||0);
+        b.bar.value=b.percent;
+        mettreAJourProgression(b);
       };
+      const progressTimer=setInterval(()=>{
+        for(const b of Object.values(rechercheBadges))if(b.isConnected)mettreAJourProgression(b);
+      },1000);
       const masquerRecherche=label=>{
         const b=rechercheBadges[label];if(b&&b.isConnected)b.remove();
         const host=hubHosts[label];if(host)host.hidden=false;
@@ -2132,7 +2147,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
             // 20/11/2026 : « Détail par moteur (justificatifs) » doit rester au-dessus des cartes et des
             // notes du hub (replié comme les autres blocs techniques), jamais relégué tout en bas.
-            const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
+            const after=rechercheBadges[label]?.isConnected?rechercheBadges[label]:pointInsertion(label);
             after.insertAdjacentElement('afterend',host);}
           if(view.done)masquerRecherche(label);else host.hidden=false;
           try{Hub.render(host,view);}catch(_){}
@@ -2152,7 +2167,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Communes absentes de la table intégrée (Archamps, Viviers-du-Lac…) : sans point GPS le moteur refuse de chercher
         // (« adresse GPS manquante »). On interroge d'abord le service officiel d'adresses (déjà utilisé ailleurs dans
         // l'application, géocodage au besoin), puis on relance une seule fois. Rien n'est inventé : sans résultat, le comportement reste identique.
-        if(!onlyJonction&&!panel.cpGeoTried){
+        const missionKey=transportMissionKey,cacheKey=transportAccountKey,memoryKey=transportMemoryKey;
+        const stored=transportViewCache.get(memoryKey)||(cacheKey?lireLocal(cacheKey,{})[missionKey]:null);
+        const refresh=!!bt.dataset.transportRefreshAt&&!panel.cpRefreshStarted;
+        if(!onlyJonction&&!panel.cpGeoTried&&(!stored||refresh)){
           const manque=[[m,'origin'],[m,'destination'],[next,'origin']].filter(([mm,cote])=>{
             if(!mm)return false;const c=G.coordonnees(mm,cote);
             // Adresse de rue connue mais seul le centre de la commune est disponible (ex. « 25 route de la Salle, Annecy ») : chercher le vrai point.
@@ -2162,6 +2180,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             return !c||c.precision==='departement'||(rue.length>3&&!!cle&&(!cache||cache.precision==='ville')&&(c.precision==='ville'||c.precision==='gps'||centre));});
           if(manque.length){
             panel.cpGeoTried=true;
+            for(const [label,section] of Object.entries(transportDestinations))if(!section.hidden)afficherRecherche(label,{percent:0,remainingMs:5500});
             const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');
             note.textContent='📍 Recherche des coordonnées GPS des adresses…';panel.appendChild(note);
             const gpsAbort=new AbortController();
@@ -2294,31 +2313,80 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
         // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
         // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
-        const missionKey=missionTiming(m).key;
-        const cacheKey=transportCacheKey(), memoryKey=cacheKey+'|'+missionKey;
-        const stored=transportViewCache.get(memoryKey)||(cacheKey?lireLocal(cacheKey,{})[missionKey]:null);
-        const refresh=!!bt.dataset.transportRefreshAt;
-        if(refresh&&!onlyJonction)transportViewCache.delete(memoryKey);
-        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?Object.fromEntries(Object.entries(stored.views||{}).filter(([,view])=>view.total>0||view.flexCandidates?.length)):{};
+        if(!onlyJonction)panel.cpRefreshStarted=true;
+        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?stored.views||{}:{};
         const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
         const resetLabels=onlyJonction?['Jonction']:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride);
         for(const label of resetLabels){delete labelState[label];delete pendingViews[label];}
         for(const [label,view] of Object.entries(cachedViews)){
+          masquerRecherche(label);
           const savedAt=view.savedAt||stored.savedAt;
           lastViews[label]=pendingViews[label]={...view,savedAt};
           labelState[label]={done:true,total:view.total};
         }
         if(previousArrival.length)pendingViews.Jonction={task:recalculatedJonction,total:0,done:false,previousArrival};
+        const junctionHasPrevious=!!previousArrival.length;
         renderPending();
         const remainingTasks=tasks.filter(t=>!cachedViews[t.label]);
         if(onlyJonction){junctionOverride=true;junctionHub?.dispose();junctionHub=null;}
-        else{transportHub?.dispose();transportHub=null;}
-        if(!remainingTasks.length)return;
+        else{
+          if(attachedSearch)attachedSearch.detach(panel);
+          transportHub=null;
+        }
+        const displayUpdate=(label,view)=>{
+          if(!panel.isConnected||$('feuille').hidden||!transportDestinations[label]||(!onlyJonction&&junctionOverride&&label==='Jonction'))return;
+          labelState[label]={done:view.done,total:view.total||view.previousArrival?.length||0};
+          if(!view.done){afficherRecherche(label,view);return;}
+          const badge=rechercheBadges[label];
+          if(badge?.isConnected){badge.percent=badge.bar.value=100;mettreAJourProgression(badge);}
+          if(view.total>0)lastViews[label]=view;
+          pendingViews[label]=view;
+          const flush=()=>{
+            if(!panel.isConnected||$('feuille').hidden)return;
+            if(performance.now()-dernierDefilement<250){panel.__cpDefer=setTimeout(flush,300);return;}
+            renderPending();
+          };
+          clearTimeout(panel.__cpDefer);
+          panel.__cpDefer=setTimeout(flush,performance.now()-dernierDefilement<250?300:0);
+        };
+        const existingSearch=onlyJonction?null:transportSearches.get(memoryKey);
+        if(existingSearch&&!refresh&&existingSearch.signature===signature){
+          attachedSearch=existingSearch;
+          transportHub=existingSearch.session;
+          existingSearch.attach(panel,displayUpdate);
+          startDayLabels(activeDay);
+          return true;
+        }
+        if(!remainingTasks.length)return true;
         for(const t of remainingTasks){
-          if(hubHosts[t.label]&&!pendingViews[t.label]?.previousArrival?.length)hubHosts[t.label].hidden=true;
+          if(hubHosts[t.label]&&!(t.label==='Jonction'&&junctionHasPrevious))hubHosts[t.label].hidden=true;
           if(!t.lazy)afficherRecherche(t.label);
+        }
+        existingSearch?.dispose();
+        const search=onlyJonction?null:{
+          signature,views:{...cachedViews},updates:new Map(),pending:new Set(),
+          attach(owner,listener){
+            this.owner=owner;this.listener=listener;
+            for(const [label,{view,updatedAt}] of this.updates){
+              listener(label,view.done?view:{...view,remainingMs:Math.max(0,view.remainingMs-(Date.now()-updatedAt))});
+            }
+          },
+          detach(owner){
+            if(this.owner!==owner)return;
+            this.owner=null;this.listener=null;
+            if(!this.pending.size)this.dispose();
+          },
+          dispose(){
+            if(transportSearches.get(memoryKey)===this)transportSearches.delete(memoryKey);
+            this.session?.dispose();
+          }
+        };
+        if(search){
+          search.attach(panel,displayUpdate);
+          attachedSearch=search;
+          transportSearches.set(memoryKey,search);
         }
         let router=null;
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.CPAccount?.storage});}catch(_){}
@@ -2337,12 +2405,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Les GTFS-Flex sont affichés comme informations de service, jamais comme trajets datés inventés.
         const flexByLabel=new Map();
         const flexFor=label=>[...(flexByLabel.get(label)?.values()||[])].flat();
+        const hubFetch=refresh?(url,init)=>regionalFetch(url,{...init,cache:'no-store'}):regionalFetch;
         const session=Hub.createSession({tasks:remainingTasks,router,fareFor,timeoutMs:35000,maxProviderMs:90000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
-          providers:Hub.makeProviders(window,{fetcher:regionalFetch,feedSizes:transportFeedSizes,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
+          providers:Hub.makeProviders(window,{fetcher:hubFetch,feedSizes:transportFeedSizes,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             onFlexCandidates:({task:gtfsTask,network,candidates})=>{
               const label=gtfsTask?.label;
-              if(!label||!panel.isConnected||hubFor(label)?.signatureKey!==signature)return;
+              if(!label||(!search&&!panel.isConnected))return;
               let byNetwork=flexByLabel.get(label);
               if(!byNetwork){byNetwork=new Map();flexByLabel.set(label,byNetwork);}
               byNetwork.set(network,(Array.isArray(candidates)?candidates:[]).map(c=>({...c,network})));
@@ -2352,43 +2421,50 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
             otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
           onUpdate:(label,view)=>{
-            if(!panel.isConnected||!transportDestinations[label]||(!onlyJonction&&junctionOverride&&label==='Jonction'))return;
-            labelState[label]={done:view.done,total:view.total};
+            if(search&&transportSearches.get(memoryKey)!==search)return;
             view={...view,flexCandidates:flexFor(label)};
-            if(label==='Jonction'&&previousArrival.length){
-              view.previousArrival=Hub.previousOnly(previousArrival,view);
-              if(view.previousArrival.length&&!view.total)labelState[label].total=view.previousArrival.length;
-            }
-            if(!onlyJonction&&view.done&&(view.total>0||view.flexCandidates.length)){
-              const previous=transportViewCache.get(memoryKey);
-              const views=previous?.signature===signature?previous.views:{...cachedViews};
+            if(label==='Jonction'&&previousArrival.length)view.previousArrival=Hub.previousOnly(previousArrival,view);
+            if(!search){displayUpdate(label,view);return;}
+            search.updates.set(label,{view,updatedAt:Date.now()});
+            if(view.done){
+              search.pending.delete(label);
               const savedAt=Date.now();
-              views[label]={...view,savedAt};
+              search.views[label]={...view,savedAt};
+              // Conserver les autres jours jusqu'à ce que leurs nouveaux résultats soient prêts.
+              const retained=stored?.signature===signature?stored.views:{};
+              const views={...retained,...search.views};
               const entry={signature,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
               transportViewCache.set(memoryKey,entry);
-              saveTransportViews(cacheKey,missionKey,entry);
-            }
-            if(!view.done){
-              afficherRecherche(label,view);
-              if(!view.total&&!view.flexCandidates.length&&!view.previousArrival?.length){updateDayTabs();return;}
-            }
-            if(view.total>0)lastViews[label]=view;
-            pendingViews[label]=view;
-            if(transportDestinations[label].hidden){updateDayTabs();return;}
-            if(Date.now()-dernierDefilement<250){
-              clearTimeout(panel.__cpDefer);
-              panel.__cpDefer=setTimeout(()=>{if(panel.isConnected)renderPending();},300);
-              return;
-            }
-            renderPending();
+              clearTimeout(transportSaveTimers.get(memoryKey));
+              const persist=()=>{
+                if(performance.now()-dernierDefilement<250){
+                  transportSaveTimers.set(memoryKey,setTimeout(persist,300));
+                  return;
+                }
+                transportSaveTimers.delete(memoryKey);
+                if(transportViewCache.get(memoryKey)===entry)saveTransportViews(cacheKey,missionKey,entry);
+              };
+              transportSaveTimers.set(memoryKey,setTimeout(persist,300));
+            }else search.pending.add(label);
+            search.listener?.(label,view);
+            if(!search.owner&&!search.pending.size)search.dispose();
           }});
-        session.signatureKey=signature;if(onlyJonction)junctionHub=session;else transportHub=session;
-        if(!onlyJonction)startDayLabels(activeDay);
+        session.signatureKey=signature;
+        if(onlyJonction)junctionHub=session;
+        else{search.session=transportHub=session;startDayLabels(activeDay);}
       };
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
-        if(!panel.isConnected||panel.hidden||$('feuille').hidden){transportHub?.dispose();junctionHub?.dispose();transportHub=null;junctionHub=null;hubObserver.disconnect();}
+        if(!panel.isConnected||panel.hidden||$('feuille').hidden){
+          attachedSearch?.detach(panel);junctionHub?.dispose();
+          clearInterval(progressTimer);clearTimeout(panel.__cpDefer);
+          transportHub=null;junctionHub=null;hubObserver.disconnect();
+        }
       }):null;
       hubObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+      bt.cpRefreshHub=startTransportHub;
+      const reuseTransportSearch=startTransportHub();
+      // Les recherches secondaires sont chargées à la demande quand les résultats sont déjà disponibles.
+      function initializeTransportSources(){
       // Réveil du serveur OTP2 (démarrage à froid) dès l'ouverture des transports : une requête légère, au plus une fois toutes les 5 min.
       try{
         const ep=window.CP_OTP_ENDPOINT,now=Date.now();
@@ -2397,8 +2473,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           fetch(ep,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:'{__typename}'})}).catch(()=>{});
         }
       }catch(_){}
-      bt.cpRefreshHub=startTransportHub;
-      startTransportHub();
       const renderLocalCards=({task,itineraries,candidates})=>{
         try{if(hubFor(task.label)&&window.CPTransportHub&&!(junctionOverride&&task.label==='Jonction'))hubFor(task.label).ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(Array.isArray(candidates)&&candidates.length?candidates:itineraries));}catch(_){}
         // Le moteur GTFS alimente déjà les cartes unifiées. Ne plus fabriquer de
@@ -3517,6 +3591,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         estimate.appendChild(y51Jour);
         estimate.appendChild(y51JourRes);
       }
+      }
+      if(reuseTransportSearch){
+        const loadSources=event=>{
+          if(!event.currentTarget.open)return;
+          for(const details of sourceDetails)details.removeEventListener('toggle',loadSources);
+          if(panel.isConnected&&!$('feuille').hidden)initializeTransportSources();
+        };
+        const sourceDetails=[sourcePanel,...Object.values(legacySources)];
+        for(const details of sourceDetails)details.addEventListener('toggle',loadSources);
+      }else initializeTransportSources();
       bt.setAttribute('aria-controls', panel.id);
       bt.setAttribute('aria-expanded', 'true');
       panel.setAttribute('role', 'region');

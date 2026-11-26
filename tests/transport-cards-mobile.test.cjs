@@ -16,7 +16,7 @@ test('fiche mission : moteur automatique raccordé et sans formulaire de recherc
  assert.match(app,/startTransportHub\(\)/);
 });
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
- assert.match(html,/style\.css\?v=tad-main-20261124a/);
+ assert.match(html,/style\.css\?v=progression-transports-20261126/);
  assert.match(css,/\.cp-hub-card \.cp-hub-price\{[^}]*font-size:1\.28em/);
  assert.match(css,/@media\(max-width:600px\)/);
  assert.match(css,/\.cp-hub-card \.cp-hub-map\{max-width:100%/);
@@ -187,4 +187,46 @@ test('le bouton Train raté relance uniquement la jonction sans réinitialiser l
  assert.match(app,/tasks\.splice\(0,tasks\.length,junction\)/);
  assert.match(app,/const resetLabels=onlyJonction\?\['Jonction'\]/);
  assert.match(app,/if\(onlyJonction\)\{junctionOverride=true;junctionHub\?\.dispose\(\)/);
+});
+
+test('recherche transport : progression et actualisation accessibles avant les cartes',()=>{
+ assert.match(app,/hero\.after\(refreshTransport\)/);
+ assert.match(app,/b\.bar=document\.createElement\('progress'\)/);
+ assert.match(app,/Temps restant/);
+ assert.match(app,/if\(!view\.done\)\{afficherRecherche\(label,view\);return;\}/);
+ assert.match(app,/performance\.now\(\)-dernierDefilement<250/);
+});
+
+test('navigation entre missions : réutilisation de la recherche active et remplacement du résultat enregistré',()=>{
+ assert.match(app,/existingSearch\.attach\(panel,displayUpdate\)/);
+ assert.match(app,/if\(!this\.pending\.size\)this\.dispose\(\)/);
+ assert.match(app,/!onlyJonction&&!refresh&&stored\?\.signature===signature/);
+ assert.match(app,/search\.views\[label\]=\{\.\.\.view,savedAt\}/);
+ assert.match(app,/02 · Jonction · Mission suivante/);
+});
+
+test('une grille déjà en cache ne masque pas l’actualisation de la jonction en cours',()=>{
+ const {runInNewContext}=require('node:vm');
+ const section=app.slice(app.indexOf('        const existingSearch=onlyJonction?null:'),
+  app.indexOf('        for(const t of remainingTasks){',app.indexOf('        const existingSearch=onlyJonction?null:')));
+ const updates=[];
+ const panel={};
+ const session={};
+ const active={signature:'mission',session,attach(owner,listener){
+  assert.equal(owner,panel);
+  listener('Jonction',{done:false,percent:40});
+  this.listener=listener;
+ }};
+ const context={onlyJonction:false,refresh:false,signature:'mission',memoryKey:'key',
+  transportSearches:new Map([['key',active]]),remainingTasks:[],attachedSearch:null,transportHub:null,panel,
+  activeDay:'2026-11-26',startDayLabels:day=>assert.equal(day,'2026-11-26'),
+  displayUpdate:(label,view)=>updates.push({label,view})};
+ assert.equal(runInNewContext('(function(){\n'+section+'\n})()',context),true);
+ assert.equal(context.transportHub,session);
+ assert.equal(context.attachedSearch,active);
+ active.listener('Jonction',{done:true,percent:100});
+ assert.deepEqual(updates,[
+  {label:'Jonction',view:{done:false,percent:40}},
+  {label:'Jonction',view:{done:true,percent:100}}
+ ]);
 });
