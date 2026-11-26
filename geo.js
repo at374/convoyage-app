@@ -148,7 +148,8 @@
   // Côté d'une mission : 'origin' (départ) ou 'destination' (arrivée).
   function departementMission(m, cote) {
     const pre = cote === 'origin' ? 'from' : 'to';
-    const p = m[cote] || (cote === 'origin' ? (m.pickup || m.pickup_location) : (m.dropoff || m.delivery || m.dropoff_location)) || {};
+    const lieu = cote === 'origin' ? (m.pickup || m.pickup_location || {}) : (m.dropoff || m.delivery || m.dropoff_location || {});
+    const p = { ...lieu, ...((m && m[cote]) || {}) };
     const a = cote === 'origin'
       ? (m.origin_address || m.from_address || m.pickup_address || p.address || p.street)
       : (m.destination_address || m.to_address || m.delivery_address || m.dropoff_address || p.address || p.street);
@@ -296,7 +297,8 @@
   function coordonnees(m, cote) {
     if (estSecteurFranceGeneve(m, cote)) return { lat: GENEVE_SECTEUR_FRANCE.lat, lng: GENEVE_SECTEUR_FRANCE.lng, precision: 'gps' };
     const pre = cote === 'origin' ? 'from' : 'to';
-    const p = m[cote] || (cote === 'origin' ? (m.pickup || m.pickup_location) : (m.dropoff || m.delivery || m.dropoff_location));
+    const lieu = cote === 'origin' ? (m.pickup || m.pickup_location || {}) : (m.dropoff || m.delivery || m.dropoff_location || {});
+    const p = { ...lieu, ...((m && m[cote]) || {}) };
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
       // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
       // GPS fourni par la plateforme mais qui n'est que le centre de la commune (adresse de rue connue ailleurs dans la commune) :
