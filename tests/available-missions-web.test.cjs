@@ -7,7 +7,7 @@ test('Available list requires available status', () => {
   assert.match(app, /etat\.missions\.filter\(estDisponible\)/);
 });
 test('Return proposals exclude withdrawn missions', () => {
-  assert.match(app, /RT\.retours\(m, etat\.missions\.filter\(estDisponible\)/);
+  assert.match(app, /RT\.retours\(missionForPlanning\(m\), etat\.missions\.filter\(estDisponible\)/);
 });
 test('Older loads cannot overwrite newer mission lists', () => {
   const load = app.slice(app.indexOf('async function charger(silencieux)'));
@@ -25,7 +25,7 @@ test('Agenda restores the dated Hiflow estimate when a later sync records comple
   const fmtDate = value => new Intl.DateTimeFormat('fr-FR', {
     timeZone: 'Europe/Paris', dateStyle: 'short', timeStyle: 'short'
   }).format(new Date(value));
-  const blocks = vm.runInNewContext(extract + '\nagendaDateBlocks', {
+  const { agendaDateBlocks: blocks, missionForPlanning } = vm.runInNewContext(extract + '\n({ agendaDateBlocks, missionForPlanning })', {
     globalThis: { CPAccount: { storage: { getItem: () => JSON.stringify(Object.fromEntries(gps)) } } },
     transportCacheKey: () => null,
     transportReturnPlans: new Map(),
@@ -40,6 +40,9 @@ test('Agenda restores the dated Hiflow estimate when a later sync records comple
   assert.match(blocks(mission), /LIVRAISON PRÉVUE 23\/11\/2026 12:00/);
   assert.match(blocks(mission), /DATE LIMITE DE LIVRAISON 23\/11\/2026 13:00/);
   assert.doesNotMatch(blocks(mission), /26\/11/);
+  const origin = missionForPlanning(mission);
+  const suggestions = RT.retours(origin, [], {}, { maintenant: Date.parse(mission.pickup_start) });
+  assert.equal(suggestions.finSource.t, Date.parse('2026-11-23T11:00:00Z'));
   gps.set(JSON.stringify(['Hiflow', '123456']), { arrivee: '2026-11-23T10:30:00Z' });
   assert.match(blocks(mission), /LIVRAISON PRÉVUE 23\/11\/2026 11:45.*arrivée détectée par GPS/);
 });

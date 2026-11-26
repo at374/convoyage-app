@@ -331,11 +331,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   function alerteRetour(nouvelles) {
     try {
       const src = missionEnCours(); if (!src || !RT.domicile(etat.reglages)) return;
-      const acceptees = etat.missions.filter(x => x.kind === 'acceptee'), jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
+      const acceptees = planningMissions().filter(x => x.kind === 'acceptee'), jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
       const trouves = [];
       for (const al of nouvelles) {
         const c = missionDeAlerte(al); if (!c || c.kind === 'acceptee' || retourVus.has(RT.cle(c))) continue;
-        const res = RT.retours(src, [c], etat.reglages, { acceptees });
+        const res = RT.retours(missionForPlanning(src), [c], etat.reglages, { acceptees });
         const z = res.compatibles.find(x => RT.cle(x.mission) === RT.cle(c) && Number.isFinite(x.rapprocheKm) && x.rapprocheKm > 0 && !(res.finSource && x.arrivee != null && jP(x.arrivee) !== jP(res.finSource.t)));
         if (z) trouves.push({ c, z });
       }
@@ -1538,8 +1538,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   window.CPLiensTr = (a, ad, b, bd) => { const h = liensTransports(a, ad, b, bd, ''); return h ? h.replace(/<a href="[^"]*travelmode=transit[^"]*">[^<]*<\/a>/, '') : ''; };
   // V78 : retours possibles après cette mission (toutes plateformes), estimés.
   function blocRetours(m) {
-    const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
-    const res = RT.retours(m, etat.missions.filter(estDisponible), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
+    const acceptees = planningMissions().filter(x => x.kind === 'acceptee');
+    const res = RT.retours(missionForPlanning(m), etat.missions.filter(estDisponible), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
     // V223 : une mission « à la suite » doit pouvoir démarrer le MÊME JOUR que la fin de la mission précédente ; les jours suivants relèvent du Planning sur plusieurs jours
     const jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
     const jSrc = (res.finSource && res.finSource.t) ? jP(res.finSource.t) : (Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ? jP(Date.parse(m.delivery_end || m.delivery_start)) : '');
