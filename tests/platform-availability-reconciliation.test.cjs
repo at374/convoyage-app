@@ -19,7 +19,7 @@ test('Delivery Car PWA asset is versioned and precached after the partial-scan f
   const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   assert.match(index, /filtres\.js\?v=deliverycar-complet-20261126/);
-  assert.match(sw, /cp-app-availability-reconcile-20261126-v280/);
+  assert.match(sw, /cp-app-transport-refresh-20261126-v280/);
   assert.match(sw, /filtres\.js\?v=deliverycar-complet-20261126/);
 });
 
