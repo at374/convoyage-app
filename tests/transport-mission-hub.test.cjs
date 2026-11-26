@@ -1,10 +1,8 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const H=require('../transport-mission-hub.js');
-const T=require('../transport-tripgo.js');
 const R=require('../regional-routing.js');
 const W=require('../transport-walking.js');
-const tripgoFixture=require('./fixtures/tripgo-annecy-grenoble-2026-10-31.json');
 const mFixture=require('./fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const valhallaFixture=require('./fixtures/valhalla-annecy-pedestrian-2026-10-30.json');
 
@@ -18,18 +16,6 @@ const at=(h,m,day='2026-11-16')=>new Date(day+'T'+String(h).padStart(2,'0')+':'+
 function bus(dep,arr,from,to,extra={}){return {kind:'transit',mode:'Bus',line:extra.line||'1',provider:extra.provider||'Réseau test',from:extra.fromName||'A',to:extra.toName||'B',
  fromPoint:from,toPoint:to,departure:dep,arrival:arr,fare:extra.fare||null};}
 const HOME={lat:45.9000,lon:6.1200},STOP1={lat:45.9020,lon:6.1200},STOP2={lat:45.9900,lon:6.1200},MISSION={lat:45.9920,lon:6.1200};
-
-test('TripGo réel (fixture 31/10) : marches fournies, cars FlixBus/BlaBlaCar, points conservés',()=>{
- const when=new Date(1793610000*1000).toISOString();
- const parsed=T.parse(tripgoFixture.response,{from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when});
- const js=H.fromTripGo(parsed);
- assert.equal(js.length,2);
- for(const j of js){
-  assert.equal(j.legs[0].kind,'walk');assert.equal(j.legs.at(-1).kind,'walk');
-  assert.equal(j.legs[1].mode,'Car');assert.ok(j.legs.every(l=>l.fromPoint&&l.toPoint));
- }
- assert.match(js[1].legs[1].line,/FlixBus 1789/);
-});
 
 test('Mobilités M réel (fixture 30/10) : réseau M Réso, arrêts géolocalisés',()=>{
  const its=mFixture.response.plan.itineraries.map(it=>R.parseItinerary({...it,numberOfTransfers:it.transfers,legs:it.legs.map(l=>({...l,route:{shortName:l.routeShortName||''}}))}));
@@ -129,14 +115,14 @@ test('tarifs : EUR et CHF séparés, jamais convertis ; tarif manquant => Prix �
 test('classement : moins cher / compromis / plus rapide, fusion des doublons entre moteurs',()=>{
  const base=(dep,arr,fare,src)=>H.assess({source:src,sources:[src],legs:[bus(dep,arr,STOP1,STOP2,{line:'X',fare})],missing:[]},{latestArrival:at(10,0)});
  const cheap=base(at(8,0),at(9,30),{amount:2,currency:'EUR',source:'grille'},'GTFS');
- const fast=base(at(8,0),at(8,30),null,'TripGo');
+ const fast=base(at(8,0),at(8,30),null,'SNCF');
  const dupFast=base(at(8,0),at(8,30),null,'Suisse');
  const r=H.rank([cheap,fast,dupFast]);
  assert.equal(r.total,2);
  const labels=Object.fromEntries(r.picks.flatMap(p=>p.labels.map(l=>[l,p.journey])));
  assert.equal(labels['Moins cher'].price.label,'2,00 €');
  assert.equal(labels['Plus rapide'].durationMinutes,30);
- assert.deepEqual(labels['Plus rapide'].sources.sort(),['Suisse','TripGo']);
+ assert.deepEqual(labels['Plus rapide'].sources.sort(),['SNCF','Suisse']);
  assert.ok(labels['Meilleur compromis']);
 });
 
@@ -145,14 +131,14 @@ test('session : moteurs en parallèle, ingestion GTFS, erreurs et moteurs ignor�
  const providers={
   ok:{name:'Moteur A',enabled:()=>true,run:async()=>[{source:'A',sources:['A'],legs:[bus(at(8,0),at(8,30),STOP1,STOP2)]}]},
   ko:{name:'Moteur B',enabled:()=>true,run:async()=>{throw new Error('HTTP 503');}},
-  off:{name:'TripGo',enabled:()=>false,disabledReason:'clé TripGo absente'}
+  off:{name:'Moteur désactivé',enabled:()=>false,disabledReason:'source non disponible'}
  };
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:fakeRouter(),onUpdate:(l,v)=>updates.push(v)});
  await s.ingest('Aller','GTFS',H.fromGTFS([{network:'Sibra',line:'5',departure:at(8,5),arrival:at(8,35),originStop:{name:'A',...STOP1},destinationStop:{name:'B',...STOP2}}]));
  await new Promise(r=>setTimeout(r,20));
  const v=s.view('Aller');
  assert.equal(v.done,true);assert.equal(v.total,2);
- assert.equal(v.errors['Moteur B'],'HTTP 503');assert.equal(v.skipped.TripGo,'clé TripGo absente');
+ assert.equal(v.errors['Moteur B'],'HTTP 503');assert.equal(v.skipped['Moteur désactivé'],'source non disponible');
  assert.ok(v.picks.length>=1&&v.picks.every(p=>p.journey.feasible));
  s.dispose();
 });
@@ -373,18 +359,6 @@ test('cache des marches : partagé et persistant (stockage du téléphone), clé
  assert.equal(base2.calls.length,0,'réutilisé depuis le stockage');assert.equal(x.status,'calculated');assert.equal(x.cached,true);
  const failing={route:async()=>({status:'unavailable'})};const r3=H.cachedRouter(failing,{storage:null});
  await r3.route(HOME,MISSION);assert.equal((await r3.route(HOME,MISSION)).status,'unavailable','un échec n’est pas mis en cache définitif');
-});
-
-test('TripGo : billet par portion repris comme prix fournisseur ; moneyCost global ignoré',()=>{
- const when=new Date(1793610000*1000).toISOString();
- const resp=JSON.parse(JSON.stringify(tripgoFixture.response));
- for(const g of resp.groups)for(const t of g.trips){t.moneyCost=99;for(const sg of t.segments)if(sg.ticketWebsiteURL)sg.ticket={name:'Billet simple',cost:12.99,currency:'EUR'};}
- const parsed=T.parse(resp,{from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when});
- const [j]=H.fromTripGo(parsed);
- const p=H.priceOf(j);
- assert.equal(p.status,'verified');assert.equal(p.label,'12,99 €');assert.match(p.sources[0],/transmis par TripGo/);
- const plain=H.priceOf(H.fromTripGo(T.parse(tripgoFixture.response,{from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when}))[0]);
- assert.equal(plain.status,'unknown','sans billet : Prix à confirmer');
 });
 
 test('transport à la demande : information affichée seulement dans le secteur concerné',()=>{
@@ -985,9 +959,4 @@ test('un itinéraire piéton dont le moteur signale des extrémités GPS non app
  assert.ok(completed.missing.some(x=>/marche depuis l’adresse exacte.*non calculée/.test(x)));
  assert.equal(H.assess(completed,task).feasible,false);
  assert.equal(await H.walkOnly({...task,to:{lat:HOME.lat+0.001,lon:HOME.lon}},router,3),null);
-});
-
-test('TripGo retiré : aucun fournisseur de mission même si un ancien adaptateur global existe',()=>{
- const providers=H.makeProviders({CPTripGo:{plan:async()=>({itineraries:[]}),getKey:()=> 'legacy-key'}});
- assert.equal(Object.hasOwn(providers,'tripgo'),false);
 });
