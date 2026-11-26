@@ -276,8 +276,8 @@ test('préchargement transports : cache persistant 12 h, invalidé par la signat
  const start=app.indexOf('async function preparerTransports()');
  const end=app.indexOf('setTimeout(preparerTransports',start);
  const block=app.slice(start,end);
- assert.ok(block.includes("PREPARATION_TRANSPORTS_KEY = 'cp_transport_prefetch_v1'"));
- assert.ok(block.includes('PREPARATION_TRANSPORTS_TTL_MS = 12 * 3600000'));
+ assert.ok(app.includes("PREPARATION_TRANSPORTS_KEY = 'cp_transport_prefetch_v1'"));
+ assert.ok(app.includes('PREPARATION_TRANSPORTS_TTL_MS = 12 * 3600000'));
  assert.ok(block.includes('cached?.signature === signature'));
  assert.ok(block.includes('preparees.get(cle) === signature'));
  assert.ok(block.includes('const signature = JSON.stringify([Hub.VERSION ||'));
