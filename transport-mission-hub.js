@@ -152,15 +152,20 @@ function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
  return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:
   {...row,gtfsFare:row.gtfsFare||one(row)});
 }
+function gtfsBoat(routeType){
+ const type=Number(routeType);
+ return type===4||(type>=700&&type<800)||(type>=1000&&type<1100);
+}
 function gtfsMode(routeType){
  const type=Number(routeType);
- if(type===0||type===5)return 'Tram';
- if(type===1||type===109)return 'Métro';
- if(type===2||type===100)return 'Train';
- if(type===3||type===11)return 'Bus';
- if(type===4||type===1000)return 'Bateau';
- if(type===6||type===7)return 'Funiculaire';
+ if(type===0||type===5||(type>=900&&type<1000))return 'Tram';
+ if(type===1||type===109||(type>=400&&type<500))return 'Métro';
+ if(type===2||(type>=100&&type<200))return 'Train';
+ if(type===3||type===11||(type>=500&&type<600))return 'Bus';
+ if(type>=200&&type<300)return 'Car';
+ if(type===6||type===7||(type>=1300&&type<1400)||(type>=1700&&type<1800))return 'Funiculaire';
  if(type===12)return 'Monorail';
+ if(gtfsBoat(type))return 'Bateau';
  return 'Bus';
 }
 function fromGTFS(rows,network='Réseau local'){
@@ -183,7 +188,7 @@ function fromGTFS(rows,network='Réseau local'){
   if(!previous||score<previous.score)bestDirect.set(key,{r,score});
  }
  selected.push(...[...bestDirect.values()].map(x=>x.r));
- return selected.filter(r=>Number(r.routeType)!==4&&!(Array.isArray(r.legs)&&r.legs.some(l=>Number(l.routeType)===4))).map(r=>{
+ return selected.filter(r=>!gtfsBoat(r.routeType)&&!(Array.isArray(r.legs)&&r.legs.some(l=>gtfsBoat(l.routeType)))).map(r=>{
   const raw=Array.isArray(r.legs)&&r.legs.length?r.legs:[{line:r.line,network:r.network,from:r.originStop?.name||r.from,to:r.destinationStop?.name||r.to,departure:r.departure,arrival:r.arrival}];
   const legs=raw.map((l,i)=>{
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
