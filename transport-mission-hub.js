@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['maelis',['Maelis Montluçon','maelis-montlucon']],
  ['mobivie',['MobiVie Vichy','mobivie-vichy']],
  ['t2c',['T2C (Clermont Auvergne Métropole)','t2c-clermont']],
  ['ondea',['Ondéa Aix-les-Bains (Grand Lac)','ondea-aix-les-bains',true]],
@@ -1385,7 +1386,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['toutenbus', "Tout'enbus Aubenas", 'toutenbus-aubenas.zip', [44.54,4.3,44.69,4.47]],
  ['transcab', "Trans'Cab Aurillac", 'transcab-aurillac.zip', [44.8,2.22,45.09,2.68]],
  ['montelibus', "Montélibus Montélimar", 'montelibus-montelimar.zip', [44.44,4.69,44.73,5.02]],
- ['maelis', "Maelis Montluçon", 'maelis-montlucon.zip', [46.15,2.49,46.42,2.74]],
+ ['maelis', "Maelis Montluçon", 'maelis-montlucon-gtfs-rt.zip', [46.15,2.49,46.42,2.74]],
  ['aleo', "Aléo Moulins", 'aleo-moulins.zip', [46.49,3.27,46.65,3.46]],
  ['tcap', "T'CAP Privas", 'tcap-privas.zip', [44.68,4.52,44.84,4.82]],
  ['velay', "Mobilité en Velay (Le Puy)", 'velay-le-puy.zip', [44.97,3.83,45.09,4.01]],

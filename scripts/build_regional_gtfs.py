@@ -81,6 +81,11 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'maelis-montlucon-gtfs-rt', 'network': 'Maelis Montluçon',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/4b0bc62d-0854-4ddb-b703-0882e5ad5981',
+     'bounds': [46.15, 2.49, 46.42, 2.74], 'keep_complete_trips': True,
+     'route_ids': {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'DIM'}},
+
     {'id': 'mobivie-vichy-gtfs-rt', 'network': 'MobiVie Vichy',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/c087ca61-f4db-44b2-bdc1-ec221c2bf762',
      'bounds': [46.06, 3.37, 46.17, 3.49], 'keep_complete_trips': True,
