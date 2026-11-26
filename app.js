@@ -873,9 +873,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
     if (cles.length > 40) delete tous[cles[0]];
     tous[t.key] = { arrivee: new Date(ts).toISOString(), detecte: new Date().toISOString() }; ecrireLocal('cp_arrivees', tous);
-    const prefetchKey = String(m.platform) + '|' + String(m.external_id);
-    const prefetchTimer = transportPrefetchTimers.get(prefetchKey);
-    if (prefetchTimer) { clearInterval(prefetchTimer); transportPrefetchTimers.delete(prefetchKey); }
+    // Ne pas arrêter le minuteur ici : son prochain tick voit arriveeGps() et lance
+    // immédiatement le pré-calcul Retour/Jonction depuis l'heure réelle d'arrivée.
     suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); if(transportCacheKey())saveTransportViews(transportCacheKey()+':plans',t.key,null); transportViewCache.delete(transportCacheKey()+'|'+t.key); saveTransportViews(transportCacheKey(),t.key,null); etat.planResultat = null;
     toast('📍 Arrivée détectée à ' + heureP(ts) + ' : retour calculé à partir de ' + heureP(ts + MARGE_ARRIVEE_MIN * 60000) + ' (marge 15 min)');
     try { if (etat.onglet === 'agenda') vueAgenda(); } catch (_) {}
