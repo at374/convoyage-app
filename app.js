@@ -890,14 +890,27 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     // Android : le service natif continue écran éteint ; les points sont mis en file locale puis traités au retour dans l'application.
     if (natif) {
       try {
-        if (missions.length && !suiviRefus) window.CPNatif.demarrerSuiviGps();
-        else window.CPNatif.arreterSuiviGps();
+        if (missions.length && !suiviRefus) {
+          const cible = missions.slice().sort((a, b) => Date.parse(a.t.pickup || '') - Date.parse(b.t.pickup || ''))[0];
+          const dest = G.coordonnees(cible.m, 'destination');
+          if (dest && Number.isFinite(Number(dest.lat)) && Number.isFinite(Number(dest.lng))) {
+            const rayon = dest.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
+            window.CPNatif.demarrerSuiviGps(Number(dest.lat), Number(dest.lng), cible.t.key, rayon);
+          }
+        } else window.CPNatif.arreterSuiviGps();
         const raw = window.CPNatif.prendrePointsSuiviGps();
         const points = JSON.parse(raw || '[]');
         if (Array.isArray(points)) for (const p of points) {
           const lat = Number(p.lat), lng = Number(p.lng), accuracy = Number(p.accuracy), timestamp = Number(p.timestamp);
           if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(timestamp)) continue;
           suiviTraiter({ timestamp, coords: { latitude: lat, longitude: lng, accuracy: Number.isFinite(accuracy) ? accuracy : 9999, speed: null } });
+        }
+        const arrivRaw = window.CPNatif.prendreArriveesSuiviGps();
+        const arriv = JSON.parse(arrivRaw || '[]');
+        if (Array.isArray(arriv)) for (const ev of arriv) {
+          const cible = missions.find(x => x.t.key === ev.missionKey);
+          const ts = Number(ev.timestamp);
+          if (cible && Number.isFinite(ts) && !arriveeGps(cible.t.key)) suiviArrivee(cible.m, cible.t, ts);
         }
       } catch (_) { }
       if (!actif) suiviDedans.clear();
