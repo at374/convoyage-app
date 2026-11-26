@@ -1657,7 +1657,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> <span class="verif">${esc(verifPast(m))}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}${verifFiche(m) ? '<br>🕒 ' + esc(verifFiche(m)) : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
       ${dv && !dv.accepte && m.kind !== 'acceptee' ? `<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:6px 10px;margin:6px 0;font-weight:600">📝 Devis envoyé · n° ${esc(dv.n)} (envoyé, en attente)${dv.total != null ? ' · total ' + esc(euros(dv.total)) : ''}</div>` : ''}
-      ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
+      ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">Masquer de l’Agenda</button>' : ''}
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       ${m.kind === 'acceptee' ? agendaDateBlocks(m) : bkDates(m, arriveeTxt(m))}
       ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
