@@ -67,6 +67,30 @@ for(const operator of ['blablacarBus','flixbus']){
  });
 }
 
+test('BlaBlaCar Bus réel : tous les départs Lyon Gerland → Saint-Exupéry, plusieurs parcours',async()=>{
+ const file=path.join(path.dirname(zip),'national-blablacarBus-paris-marseille.zip');
+ const loader=require('../transport-gtfs-loader.js');
+ const indexer=require('../transport-gtfs-index.js');
+ const date='2026-11-27';
+ const bytes=fs.readFileSync(file);
+ const feed=await loader.loadResource({url:'https://example.org/'+path.basename(file),format:'GTFS'},
+  {fetcher:async()=>new Response(bytes),indexServiceDates:[date]});
+ const rides=indexer.directTrips(feed.files,feed.index,date,'XYL','LYS');
+ assert.equal(rides.length,18);
+ assert.ok(new Set(rides.map(ride=>feed.index.routeById.get(ride.routeId).route_long_name)).size>1);
+ const previous={fetch:globalThis.fetch,CPGTFSIndex:globalThis.CPGTFSIndex,CPGTFSLoader:globalThis.CPGTFSLoader};
+ try{
+  globalThis.fetch=async()=>new Response(bytes);
+  globalThis.CPGTFSIndex=indexer;
+  globalThis.CPGTFSLoader=loader;
+  const hub=require('../transport-mission-hub.js');
+  const rows=await hub.dayScheduleForLeg({networkUrls:['https://example.org/national-blablacarBus-paris-marseille.zip'],
+   routeId:rides[0].routeId,from:'XYL',to:'LYS',serviceDate:date});
+  assert.equal(rows.length,18,'les parcours différents desservant les deux mêmes arrêts restent visibles');
+  assert.ok(rows.every(row=>row.terminus));
+ }finally{Object.assign(globalThis,previous);}
+});
+
 const lyon={lat:45.7504,lon:4.829};
 const marseille={lat:43.303,lon:5.380};
 for(const [slug,bounds,from,to] of [

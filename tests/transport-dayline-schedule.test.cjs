@@ -10,6 +10,16 @@ const fs=require('node:fs');
 const path=require('node:path');
 const hubSrc=fs.readFileSync(path.join(__dirname,'..','transport-mission-hub.js'),'utf8');
 
+test('diagnostic rouge replié : moteurs, anomalies et explications sont dans le même volet',()=>{
+ const css=fs.readFileSync(path.join(__dirname,'..','style.css'),'utf8');
+ assert.match(hubSrc,/const diagnosticStart=host\.childNodes\.length/);
+ assert.match(hubSrc,/el\(doc,'details','cp-hub-diagnostics'\)/);
+ assert.match(hubSrc,/⚠ Diagnostic et anomalies/);
+ assert.match(hubSrc,/while\(host\.childNodes\.length>diagnosticStart\)section\.appendChild\(host\.childNodes\[diagnosticStart\]\)/);
+ assert.match(hubSrc,/host\.dataset\.cpDiagnosticsOpen==='true'/);
+ assert.match(css,/\.cp-hub-diagnostics>summary\{[^}]*color:#e74c4c/);
+});
+
 test('source : chaque ligne locale GTFS porte networkId/networkUrls/serviceDate pour le bouton horaires du jour',()=>{
  assert.match(hubSrc,/networkId:id,networkUrls:urls,serviceDate:date/);
 });
@@ -181,7 +191,7 @@ test('réel : le bus C de la fiche Thonon affiche tous ses départs et leur term
   assert.match(ride.terminus,/^Saint Disdille campings$/i);
  });
 
-test('BlaBlaCar Bus regroupe les départs du même parcours dont les identifiants diffèrent',async t=>{
+test('BlaBlaCar Bus regroupe tous les départs du segment même si les itinéraires complets diffèrent',async t=>{
  const previous={CPGTFSIndex:globalThis.CPGTFSIndex,CPGTFSLoader:globalThis.CPGTFSLoader};
  t.after(()=>Object.assign(globalThis,previous));
  const primary={agency_id:'0',route_short_name:'BlaBlaCar Bus',route_long_name:'Lyon > Aéroport > Grenoble'};
@@ -199,5 +209,5 @@ test('BlaBlaCar Bus regroupe les départs du même parcours dont les identifiant
  const rows=await hub.dayScheduleForLeg({networkUrls:['https://local.test/coaches.zip'],
   routeId:'first',from:'XYL',to:'LYS',serviceDate:'2026-11-26'});
  assert.deepEqual(rows.map(row=>[hub.hmFromSeconds(row.departureSeconds),row.terminus]),
-  [['10:00','Grenoble'],['11:00','Grenoble']]);
+  [['10:00','Grenoble'],['11:00','Grenoble'],['12:00','Grenoble']]);
 });
