@@ -1191,7 +1191,10 @@ function makeProviders(r,opts={}){
      if(!Number.isFinite(earliest)||!Number.isFinite(latest)||earliest>latest)return [];
      const start=dateParts(earliest),end=dateParts(latest);
      let serviceDate=start.date;
-     if(Number(start.clock.slice(0,2))<6)serviceDate=shiftDate(serviceDate,-1);
+     // Only roll back the service day when a real previous-mission departure bound
+     // is before 06:00. An arrival-only search must still include same-day morning services.
+     if(Number.isFinite(ms(task.earliestDeparture))&&Number(start.clock.slice(0,2))<6)
+      serviceDate=shiftDate(serviceDate,-1);
      const endDate=end.date,connectionDates=[];
      for(let day=serviceDate;day<=endDate;day=shiftDate(day,1)){
       connectionDates.push(day);
