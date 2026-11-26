@@ -2470,7 +2470,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(!onlyJonction)panel.cpRefreshStarted=true;
         const refreshLabel=refresh?(bt.dataset.transportRefreshLabel||null):null;
         if(refreshLabel)delete bt.dataset.transportRefreshLabel;
-        const cachedViews=!onlyJonction&&stored?.views?Object.fromEntries(
+        const cachedViews=!onlyJonction&&stored?.views&&(!refresh||!!refreshLabel)?Object.fromEntries(
           Object.entries(stored.views).filter(([label])=>
             label!==refreshLabel&&(
               stored.partSignatures?.[label]===taskSignatures[label]||
