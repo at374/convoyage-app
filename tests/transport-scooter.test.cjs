@@ -297,7 +297,10 @@ test('suivi GPS Android : utilise le service natif et vide la file locale au ret
  const src=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.match(src,/window\.CPNatif\.demarrerSuiviGps\(plat, plng, Number\(dest\.lat\), Number\(dest\.lng\), cible\.t\.key, rayon\)/);
  assert.match(src,/window\.CPNatif\.arreterSuiviGps\(\)/);
- assert.match(src,/window\.CPNatif\.prendrePointsSuiviGps\(\)/);\n assert.match(src,/window\.CPNatif\.prendreArriveesSuiviGps\(\)/);\n assert.match(src,/arriveeGps\(cible\.t\.key\)/);\n assert.match(src,/window\.CPNatif\.demarrerSuiviGps\(plat, plng/);
+ assert.match(src,/window\.CPNatif\.prendrePointsSuiviGps\(\)/);
+ assert.match(src,/window.CPNatif.prendreArriveesSuiviGps\(\)/);
+ assert.match(src,/arriveeGps\(cible\.t\.key\)/);
+ assert.match(src,/window.CPNatif.demarrerSuiviGps\(plat, plng/);
  assert.match(src,/timestamp, coords: \{ latitude: lat, longitude: lng, accuracy:/);
  // Sur Android, le suivi natif remplace l'acquisition WebView pour éviter deux demandes de localisation simultanées.
  assert.match(src,/if \(natif\) \{[\s\S]*?return;[\s\S]*?navigator\.geolocation\.getCurrentPosition/);
