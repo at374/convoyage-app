@@ -217,6 +217,8 @@ test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en r
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes('suiviReprise ||'));
  assert.ok(app.includes('suiviTimer = setTimeout(suiviMaj, 10 * 60000)'));
+ assert.ok(app.includes('if (!suiviRefus && !document.hidden && navigator.geolocation) suiviTimer = setTimeout(suiviMaj, 10 * 60000)'));
+ assert.ok(app.includes('{ enableHighAccuracy: false, maximumAge: 5 * 60000, timeout: 25000 }'));
  assert.ok(!app.includes('watchPosition(suiviTraiter'));
  assert.ok(app.includes("vit > 3"));
 });
