@@ -37,3 +37,10 @@ test('pré-calcul transport : une arrivée GPS déjà confirmée déclenche imm�
   assert.match(src, /const arrivalKnown = arriveeGps\(missionTiming\(m\)\.key\)/);
   assert.match(src, /if \(!arrivalKnown\) \{/);
 });
+
+test('pré-calcul transport : le minuteur de mission est bien arrêté à la livraison GPS', () => {
+  const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+  assert.match(src, /const prefetchKey = String\(m\.platform\) \+ '\\|' \+ String\(m\.external_id\)/);
+  assert.match(src, /transportPrefetchTimers\.get\(prefetchKey\)/);
+  assert.match(src, /transportPrefetchTimers\.delete\(prefetchKey\)/);
+});
