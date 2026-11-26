@@ -1,3 +1,5 @@
+> **Mise à jour 26/11/2026 :** TripGo a été retiré du produit (adaptateur, fournisseur du hub, tests dédiés, fixture, documentation et chargement navigateur). Les mentions TripGo ci-dessous décrivent uniquement l'historique de cette ancienne photographie et ne constituent plus une source disponible. Les trajets interurbains doivent désormais être couverts par les flux GTFS, SNCF, BlaBlaCar Bus, FlixBus et les API publiques raccordées.
+
 # Module Transports — hub unifié AURA–Suisse (13/11/2026)
 
 Branche locale : `feature/transports-aura-suisse`, partie de `main` du 12/11/2026 (`64d624f`).
@@ -47,16 +49,16 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 
 | Moteur | Couverture | Lancement | État vérifié |
 |---|---|---|---|
-| TripGo | Multimodal : trains, bus, cars, dont FlixBus et BlaBlaCar Bus | Automatique si une clé TripGo est enregistrée | Réponse réelle du 31/10 intégrée et affichée (test navigateur) |
+| TripGo | **Retiré le 26/11/2026** | Aucun chargement ni appel | Historique uniquement ; remplacé par les sources GTFS et API publiques disponibles |
 | transport.opendata.ch | Suisse, Grand Genève, Léman Express, TPG | Automatique si un point est en Suisse ou à ≤ 30 km de Genève | Format vérifié sur la documentation officielle ; **aucun appel réel possible d'ici** |
 | Mobilités M (OTP) | M réso : Métropole grenobloise, Grésivaudan, Voironnais | Automatique dans le périmètre grenoblois | Réponse réelle du 30/10 intégrée (test) |
 | SNCF GTFS (fichiers `data/sncf`) | TER, Intercités, TGV, cars SNCF, de gare à gare | Automatique | Données officielles du dépôt ; correspondance Annecy–Grenoble du 02/11 intégrée (test navigateur) |
 | GTFS locaux (worker existant) | Sibra, Cars Région Haute-Savoie (Y51…), Cars Région Ain, M réso Grenoble et Grésivaudan, GTFS national suisse | Automatique, transmis au hub | Format testé ; pas de flux réel chargé dans ce test |
 | Valhalla (marche) | OpenStreetMap | Automatique | Réponse réelle du 30/10 acceptée ; simulée dans le test navigateur |
 
-**Ajouts du 13/11 (flux GTFS officiels, à valider sur téléphone)** : TAC Annemasse (offre du 31/08/2026 au 31/08/2027), Synchro Bus Chambéry (ODbL : citer Grand Chambéry), Ondéa Aix-les-Bains (jusqu'au 31/12/2026), Star't Thonon (jusqu'au 20/12/2026). TCL n'est pas ajouté : 654 lignes, trop lourd pour le moteur GTFS du téléphone ; TripGo reste sa source.
+**Ajouts du 13/11 (flux GTFS officiels, à valider sur téléphone)** : TAC Annemasse (offre du 31/08/2026 au 31/08/2027), Synchro Bus Chambéry (ODbL : citer Grand Chambéry), Ondéa Aix-les-Bains (jusqu'au 31/12/2026), Star't Thonon (jusqu'au 20/12/2026). TCL n'est pas ajouté : 654 lignes, trop lourd pour le moteur GTFS du téléphone ; son raccordement GTFS léger ou serveur reste à réaliser.
 
-**Réseaux de la liste encore non raccordés au hub par une source propre :** TCL Lyon, J'y bus Rumilly, Ambérieu (Tam). Voiron (Pays Voironnais) fait partie de M réso et est couvert par Mobilités M. Saint-Julien et Archamps sont dans le périmètre du flux TAC (réseau Genevois français Mobilités depuis juillet 2025) : présence effective des lignes à vérifier sur téléphone. ainsi que les transports à la demande. Ils ne sont couverts que si TripGo, l'API suisse ou un GTFS configuré les fournit. **Ce point reste à vérifier, réseau par réseau, avec la clé TripGo.**
+**Réseaux de la liste encore non raccordés au hub par une source propre :** TCL Lyon, J'y bus Rumilly, Ambérieu (Tam). Voiron (Pays Voironnais) fait partie de M réso et est couvert par Mobilités M. Saint-Julien et Archamps sont dans le périmètre du flux TAC (réseau Genevois français Mobilités depuis juillet 2025) : présence effective des lignes à vérifier sur téléphone. ainsi que les transports à la demande. Ils ne sont couverts que si une API publique ou un GTFS configuré les fournit. **Ce point reste à vérifier, réseau par réseau, avec les sources publiques actuellement raccordées.**
 
 ## 5. Tarifs
 
