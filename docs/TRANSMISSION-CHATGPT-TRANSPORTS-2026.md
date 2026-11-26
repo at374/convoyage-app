@@ -825,3 +825,12 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Test ajouté dans `tests/transport-mission-hub.test.cjs` : il vérifie les 92 identifiants, l'enregistrement de chaque fournisseur, le chargement du fichier ZIP correspondant, l'activation dans l'emprise et le rejet hors emprise.
 - Commit du raccordement : `1631adf1fe6b145fd3b5c7d0929bf2efc59a40c3` ; commit du test : `cc6f6d8cf8c4d1eaa8b2c380c539234ea0a46e5c`.
 - Le raccordement est enregistré sur la branche de travail. Il reste à obtenir la CI verte et à tester des trajets réels de bout en bout (adresse GPS exacte, marche, horaires, correspondances et marge). Ne pas annoncer le déploiement Android/Web ou la carte publique avant ces validations.
+
+
+## Session ChatGPT — raccordement de 49 flux supplémentaires (26/11/2026)
+
+- Ajout au moteur mission de 49 flux du manifeste : Forbus Forbach, TeMo'b Thionville, Optymo Belfort, 28 flux Atoumod/Nomad terrestres de Normandie (hors Nomad Train déjà traité par le ferroviaire) et 18 flux Jvmalin/Centre-Val de Loire dont les lignes Rémi 18, 28, 36, 37, 41 et 45.
+- Chaque fournisseur reprend son identifiant, son nom, son ZIP et son emprise GPS du manifeste. Les deux flux Linéotim Morlaix sont exclus : leur latitude minimale et longitude maximale sont nulles, donc leur emprise n'est pas fiable. Nomad Train est également exclu pour ne pas dupliquer le moteur ferroviaire.
+- Test ajouté dans `tests/transport-mission-hub.test.cjs` : 49 fournisseurs doivent être présents, charger le bon ZIP, accepter un trajet dans leur emprise et le refuser hors zone.
+- Commit du raccordement : `f97ae7054418873313c99a1eb5480360c8cddac1` ; commit du test : `4747db5f866f3872723e99abba341d269c787116`.
+- Comme pour les autres tranches, l'enregistrement du code ne vaut pas certification porte-à-porte. Les recherches réelles, la marche, les correspondances, les horaires et la marge de sécurité restent à valider en CI et sur les scénarios métier avant déploiement.
