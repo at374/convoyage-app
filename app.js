@@ -1003,6 +1003,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = null;
+    // Le navigateur ne garantit pas les timers en arrière-plan : ne pas lancer de nouvelle
+    // acquisition GPS lorsque l'onglet est masqué. La reprise se fait sur visibilitychange.
+    if (document.hidden) return;
     const missions = missionsASuivre();
     const actif = !suiviRefus && navigator.geolocation && missions.length > 0;
     for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
