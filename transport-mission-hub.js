@@ -242,8 +242,10 @@ function bookingNote(nets){
  if(/haute[- ]savoie|y9[234]/i.test(n))return '📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000';
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
+const REMI_REALTIME_URL='https://api.okina.fr/gateway/cvl/gtfsrt/trip-updates?useoriginalId=true';
 const LOCAL_REALTIME_NETWORKS=new Map([
- ['remi41_blois_sologne',['Rémi 41','https://api.okina.fr/gateway/cvl/gtfsrt/trip-updates?useoriginalId=true']],
+ ['remi18_cher',['Rémi 18',REMI_REALTIME_URL]],
+ ['remi41_blois_sologne',['Rémi 41',REMI_REALTIME_URL]],
  ['azalys_blois',['Azalys Blois','https://www.data.gouv.fr/api/1/datasets/r/61d5a03f-311d-4fb1-9c14-dd0c8856af32']],
  ['fil_bleu_tours',['Fil Bleu (Tours)','https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates']],
  ['levib_vierzon',['Le Vib’ Vierzon','le-vib-vierzon']],
@@ -290,7 +292,7 @@ function* protobufFields(bytes,signedTag){
   offset+=length;
  }
 }
-function readLocalRealtime(bytes,now,networkId){
+function readLocalRealtime(bytes,now,requiresObservation){
  const fields=b=>new Map(protobufFields(b));
  const decoder=new TextDecoder('utf-8',{fatal:true});
  const text=b=>b instanceof Uint8Array?decoder.decode(b):'';
@@ -304,7 +306,7 @@ function readLocalRealtime(bytes,now,networkId){
   const values=fields(update);
   // Rémi publie aussi des entrées sans position horodatée pour les mêmes courses.
   // Utiliser uniquement les observations récentes pour ce flux.
-  if(networkId==='remi41_blois_sologne'){
+  if(requiresObservation){
    const observedAt=Number(values.get(4))*1000;
    if(!Number.isFinite(observedAt)||observedAt<now-300000||observedAt>now+30000)continue;
   }
@@ -334,7 +336,7 @@ function loadLocalRealtime(runtime,networkId){
  const url=slug.startsWith('https://')?slug:'https://proxy.transport.data.gouv.fr/resource/'+slug+'-gtfs-rt-trip-update';
  let feeds=localRealtimeCache.get(runtime);
  if(!feeds){feeds=new Map();localRealtimeCache.set(runtime,feeds);}
- const now=Date.now(),cached=feeds.get(networkId);
+ const now=Date.now(),cached=feeds.get(url);
  if(cached&&cached.until>now)return cached.promise;
  const promise=(async()=>{
   const response=await runtime.fetch(url,{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(1800)});
@@ -353,9 +355,9 @@ function loadLocalRealtime(runtime,networkId){
   const bytes=new Uint8Array(size);
   let offset=0;
   for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
-  return readLocalRealtime(bytes,Date.now(),networkId);
+  return readLocalRealtime(bytes,Date.now(),url===REMI_REALTIME_URL);
  })().catch(()=>null);
- feeds.set(networkId,{until:now+15000,promise});
+ feeds.set(url,{until:now+15000,promise});
  return promise;
 }
 function applyLocalRealtime(row,trips,now){
@@ -1355,6 +1357,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
  ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
  ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
+ ['remi18_cher','Rémi 18','remi18-cher-gtfs-rt.zip',[46.53,2.04,47.58,2.95]],
  ['remi41_blois_sologne','Rémi 41','remi41-blois-vendome-gtfs-rt.zip',[47.20,1.03,47.87,2.09]],
  ['azalys_blois','Azalys Blois','azalys-blois-gtfs-rt.zip',[47.55,1.27,47.64,1.39]],
  ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.31,0.591,47.489,0.878]],
