@@ -1,6 +1,6 @@
 name: Diagnostic réel des transports (15 axes AURA–Suisse)
 # Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
-# TripGo seulement si le secret CP_TRIPGO_KEY est défini. Publie docs/diagnostic-serveur.json sur la branche source.
+# TripGo retiré du produit. Publie docs/diagnostic-serveur.json sur la branche source.
 on:
   workflow_dispatch:
   push:
@@ -10,7 +10,6 @@ on:
       - 'scripts/diagnostic-transports-reel.cjs'
       - 'scripts/moteurs_regionaux_paires.py'
       - 'scripts/test-pedestrian-hub.cjs'
-      - 'transport-tripgo.js'
       - 'transport-mission-hub.js'
       - 'transport-fare-grids.js'
       - 'transport-coverage.js'
@@ -461,7 +460,6 @@ jobs:
         run: |
           node --check transport-fare-grids.js
           node --check transport-isere-zonal-fares.js
-          node --check transport-tripgo.js
           node --check transport-mission-hub.js
           node --check transport-national-gtfs-journeys.js
           node --check transport-gtfs-loader.js
