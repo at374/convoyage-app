@@ -878,13 +878,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     suiviMaj();
   }
   function suiviMaj() {
-    clearTimeout(suiviTimer);
-    const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
+    clearTimeout(suiviTimer); suiviTimer = null;
+    const missions = missionsASuivre();
+    const actif = !suiviRefus && !document.hidden && !!navigator.geolocation && missions.length > 0;
+    // Toujours reprogrammer le prochain contrôle : une mission peut être synchronisée après le démarrage de l'application.
+    if (!suiviRefus && !document.hidden && navigator.geolocation) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
-    for (const { m } of missionsASuivre()) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
+    for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
     if (!actif) { suiviDedans.clear(); return; }
-    // Une seule acquisition GPS, puis extinction du capteur jusqu'au prochain cycle.
+    // Une seule acquisition GPS basse consommation, puis extinction du capteur jusqu'au prochain cycle.
     if (!suiviLectureEnCours) {
       suiviLectureEnCours = true;
       navigator.geolocation.getCurrentPosition(pos => {
@@ -892,10 +895,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (!document.hidden) suiviTraiter(pos);
       }, e => {
         suiviLectureEnCours = false;
-        if (e && e.code === 1) { suiviRefus = true; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
-      }, { enableHighAccuracy: true, maximumAge: 2 * 60000, timeout: 25000 });
+        if (e && e.code === 1) { suiviRefus = true; clearTimeout(suiviTimer); suiviTimer = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
+      }, { enableHighAccuracy: false, maximumAge: 5 * 60000, timeout: 25000 });
     }
-    suiviTimer = setTimeout(suiviMaj, 10 * 60000);
   }
   if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => {
     if (document.hidden) { clearTimeout(suiviTimer); suiviTimer = null; suiviDedans.clear(); }
