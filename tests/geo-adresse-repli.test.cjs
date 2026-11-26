@@ -128,3 +128,15 @@ test('secteur France Genève est reconnu depuis une adresse pickup imbriquée',(
  assert.equal(G.estSecteurFranceGeneve(m,'origin'),true);
  assert.equal(G.coordonnees(m,'origin').lat,46.237722);
 });
+
+test('un objet origin partiel ne masque pas pickup_address ni pickup.address',()=>{
+ const m={from_city:'Annecy',origin:{city:'Annecy'},pickup_address:'12 rue Royale',pickup:{address:'12 rue Royale',postal_code:'74000'}};
+ assert.equal(G.adresseDe(m,'origin').a,'12 rue Royale');
+ assert.equal(G.adresseDe(m,'origin').cp,'74000');
+});
+
+test('un objet destination partiel ne masque pas delivery_address',()=>{
+ const m={to_city:'Voiron',destination:{city:'Voiron'},delivery_address:'Rue Louis Armand',delivery:{postal_code:'38500'}};
+ assert.equal(G.adresseDe(m,'destination').a,'Rue Louis Armand');
+ assert.equal(G.adresseDe(m,'destination').cp,'38500');
+});
