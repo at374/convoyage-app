@@ -41,7 +41,7 @@ test('Actualisation indépendante : chaque section dispose de son bouton et ne r
   assert.match(app, /startTransportHub\(false,key\)/);
   assert.match(app, /if\(onlyLabel\)tasks\.splice/);
   assert.match(app, /const resetLabels=onlyLabel\?\[onlyLabel\]/);
-  assert.match(app, /if\(!refresh\).*signature===signature/);
+  assert.ok(app.includes('if(!refresh&&(onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;'));
 });
 
 test('Cache indépendant : les signatures Aller, Jonction et Retour sont persistées séparément', () => {
