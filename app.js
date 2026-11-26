@@ -2399,7 +2399,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             Promise.all(manque.map(async([mm,cote])=>{
               try{
                 const r=await G.chercherPoint(mm,cote,u=>fetch(u,{signal:geoAbort.signal}));
-                if(!geoFinished&&!geoAbort.signal.aborted&&r&&r.trouve&&r.cle)G.POINTS[r.cle]=r.point;
+                if(!geoFinished&&!geoAbort.signal.aborted&&r&&r.trouve&&r.cle){G.POINTS[r.cle]=r.point;gpsMem.pts[r.cle]=r.point;delete gpsMem.rate[r.cle];ecrireLocal('cp_gps',gpsMem);}
               }catch(_){}
             })).then(()=>{
               if(geoFinished)return;
