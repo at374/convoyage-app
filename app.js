@@ -964,7 +964,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   // Acquisition ponctuelle et adaptative : pas de watch GPS haute précision en continu.
   // En route : position basse consommation toutes les 5 min (échantillons persistés à 10 min).
   // À moins de 2 km du point de prise en charge/livraison : précision renforcée brièvement, toutes les 60 s.
-  const SUIVI_GPS_INTERVALLE_ROUTE_MS = 5 * 60000;
+  const SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000;
   const SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000;
   function suiviParametresAcquisition() {
     const pos = suiviDernierePosition;
