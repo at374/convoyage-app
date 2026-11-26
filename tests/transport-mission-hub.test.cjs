@@ -868,7 +868,7 @@ test('cache piéton : ne conserve pas une géométrie dont les extrémités ne c
 
 
 test('cache piéton v2 : ignore les anciennes entrées sans preuve de correspondance GPS',async()=>{
- const oldKey='cp_marches_v1',newKey='cp_marches_v2';
+ const oldKey='cp_marches_v2',newKey='cp_marches_v3';
  const legacy={[oldKey]:JSON.stringify({'45.9,6.12,45.992,6.12':{t:Date.now(),d:600,m:800,g:[HOME,MISSION]}})};
  const reads=[];
  const storage={getItem:k=>(reads.push(k),legacy[k]||null),setItem:(k,v)=>{legacy[k]=v;}};
@@ -888,4 +888,40 @@ test('précision rue BAN : conserve 15 minutes ; 5 minutes réservées au GPS ex
  assert.equal(H.marginFor({toPrecision:'ville',exactTarget:false,allowShortMargin:true}),15);
  assert.equal(H.marginFor({exactTarget:true,allowShortMargin:true}),5);
  assert.equal(H.marginFor({exactTarget:true,allowShortMargin:false}),15);
+});
+
+
+
+test('cache piéton v3 : route les coordonnées GPS exactes sans arrondi préalable',async()=>{
+ const calls=[];
+ const storage={getItem:()=>null,setItem:()=>{}};
+ const router={route:async(a,b)=>{calls.push([a,b]);return {status:'calculated',distanceMeters:800,durationSeconds:600,
+  from:{...a},to:{...b},geometry:[a,{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2},b],endpointsMatched:true};}};
+ const cached=H.cachedRouter(router,{storage});
+ const a={lat:45.3640341,lon:5.5949591},b={lat:45.3816822,lon:5.5792572};
+ await cached.route(a,b);
+ assert.deepEqual(calls[0],[a,b],'le routeur reçoit les coordonnées exactes, sans arrondi à 10 m');
+});
+
+test('cache piéton v3 : deux adresses proches ne partagent pas une marche GPS',async()=>{
+ const calls=[];
+ const router={route:async(a,b)=>{calls.push([a,b]);return {status:'calculated',distanceMeters:800,durationSeconds:600,
+  from:{...a},to:{...b},geometry:[a,b],endpointsMatched:true};}};
+ const cached=H.cachedRouter(router,{storage:{getItem:()=>null,setItem:()=>{}}});
+ const start={lat:45.3640341,lon:5.5949591},end={lat:45.3816822,lon:5.5792572};
+ await cached.route(start,end);
+ await cached.route({...start,lat:start.lat+0.00004},end);
+ assert.equal(calls.length,2,'un point déplacé de quelques mètres exige un nouveau calcul');
+});
+
+test('cache piéton v3 : les extrémités de géométrie stockées restent exactes',async()=>{
+ const saved={};
+ const a={lat:45.3640341,lon:5.5949591},b={lat:45.3816822,lon:5.5792572};
+ const router={route:async()=>({status:'calculated',distanceMeters:800,durationSeconds:600,
+  geometry:[{lat:45.3640341,lon:5.5949591},{lat:45.37,lon:5.58},{lat:45.3816822,lon:5.5792572}],endpointsMatched:true})};
+ const cached=H.cachedRouter(router,{storage:{getItem:()=>null,setItem:(k,v)=>{saved[k]=v;}}});
+ await cached.route(a,b);
+ const entry=Object.values(JSON.parse(saved.cp_marches_v3))[0];
+ assert.deepEqual(entry.g[0],a);
+ assert.deepEqual(entry.g.at(-1),b);
 });
