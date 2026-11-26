@@ -323,7 +323,7 @@ function loadDiviaRealtime(runtime){
 }
 function applyDiviaRealtime(row,trips,now){
  const trip=trips?.get(row.tripId);
- if(!trip||row.onDemand||(trip.date&&trip.date!==row.serviceDate.replaceAll('-','')))return row;
+ if(!trip||row.onDemand||(trip.date&&trip.date!==row.serviceDate?.replaceAll('-','')))return row;
  const departure=trip.stops.get(row.from)?.departure,arrival=trip.stops.get(row.to)?.arrival;
  const scheduledDeparture=ms(row.departure),scheduledArrival=ms(row.arrival);
  if(trip.cancelled&&Math.abs(scheduledDeparture-now)<10800000)return null;
@@ -331,6 +331,19 @@ function applyDiviaRealtime(row,trips,now){
     Math.abs(departure-scheduledDeparture)>1800000||Math.abs(arrival-scheduledArrival)>1800000)return row;
  return {...row,departure:iso(departure),arrival:iso(arrival),realtime:true,
   delayMinutes:Math.max(0,Math.round((departure-scheduledDeparture)/60000))};
+}
+
+function applyDiviaConnection(row,trips,now){
+ if(row.legs?.length!==2)return row;
+ const legs=row.legs.map(l=>l.networkId==='divia_dijon'||l.network==='Divia Mobilités (Dijon)'?applyDiviaRealtime(l,trips,now):l);
+ const [first,second]=legs;
+ if(!first||!second)return null;
+ if(!legs.some(l=>l.realtime))return row;
+ const interval=ms(second.departure)-ms(first.arrival);
+ const minimum=row.minTransferSeconds??(row.minimumTransferMinutes??5)*60;
+ if(interval<minimum*1000)return null;
+ return {...row,legs,departure:first.departure,arrival:second.arrival,
+  transferMinutes:interval/60000,realtime:legs.every(l=>l.realtime)};
 }
 
 function fromGTFS(rows,network='Réseau local'){
@@ -359,7 +372,7 @@ function fromGTFS(rows,network='Réseau local'){
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
    const end=i===raw.length-1?r.destinationStop:(r.transferStop||null);
    const out=leg({mode:'Bus',line:l.line||r.line,headsign:l.headsign||(r.legs?.length?'':r.headsign),terminus:l.terminus||(r.legs?.length?'':r.terminus),provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
-    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival,realtime:r.realtime,delayMinutes:r.delayMinutes});
+    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival,realtime:l.realtime??r.realtime,delayMinutes:l.delayMinutes??r.delayMinutes});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
    out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
    // Tarif publié par l'autorité dans le flux GTFS lui-même (fare_attributes / fare_rules).
@@ -1839,7 +1852,13 @@ function makeProviders(r,opts={}){
      if(signal?.aborted)return [];
      if((!Array.isArray(rows)||rows.length===0)&&scanWindow!==window)rows=await runPass(window);
      if(signal?.aborted)return [];
-     const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
+     const now=Date.now();
+     const live=nets.some(n=>n[0]==='divia_dijon')&&rows.length&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
+      ?await loadDiviaRealtime(r):null;
+     if(signal?.aborted)return [];
+     const out=rows.filter(x=>x&&x.departure&&x.arrival)
+      .map(x=>live?applyDiviaConnection(x,live,now):x).filter(Boolean)
+      .map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
      // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut
      // techniquement « correspondre » à n'importe quel arrêt commun qu'ils desservent tous les deux (des
      // dizaines, le long de toute la ligne), ce qui produit des milliers de doublons du MÊME trajet logique
