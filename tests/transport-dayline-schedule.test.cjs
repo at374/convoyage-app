@@ -106,16 +106,38 @@ test('Sibra : la fiche sans identifiants GTFS retrouve les 20 horaires entre Mai
  const bytes=fs.readFileSync(path.join(__dirname,'..','data','gtfs','sibra-annecy.zip'));
  const previous=[globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner];
  try{
+  let downloads=0,scans=0;
   globalThis.fetch=async url=>{
+   downloads++;
    assert.ok(url.endsWith('/sibra-annecy.zip'));
    return new Response(bytes);
   };
   globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
-  globalThis.CPSibraPlanner=require('../sibra-planner.js');
+  const planner=require('../sibra-planner.js');
+  globalThis.CPSibraPlanner={...planner,datedInterurbanRides(...args){
+   scans++;
+   return planner.datedInterurbanRides(...args);
+  }};
   const hub=require('../transport-mission-hub.js');
   const source=hub.scheduleSourceForLeg({provider:'SIBRA',line:'25',from:'Mairie Épagny',to:'Hôpital',
    departure:'2026-11-27T05:56:00+01:00'});
-  const rows=await hub.dayScheduleForLeg(source);
+  const [rows,duplicate]=await Promise.all([hub.dayScheduleForLeg(source),hub.dayScheduleForLeg(source)]);
+  assert.deepEqual(duplicate,rows);
+  assert.equal(downloads,1);
+  assert.ok(scans>0);
+  const initialScans=scans;
+  assert.deepEqual(await hub.dayScheduleForLeg(source),rows);
+  assert.equal(scans,initialScans);
+  const now=Date.now;
+  try{
+   const expired=now()+12*3600*1000;
+   Date.now=()=>expired;
+   assert.deepEqual(await hub.dayScheduleForLeg(source),rows);
+   assert.equal(downloads,2);
+   assert.equal(scans,2*initialScans);
+  }finally{
+   Date.now=now;
+  }
   const clocks=rows.map(row=>[hub.hmFromSeconds(row.departureSeconds),hub.hmFromSeconds(row.arrivalSeconds)]);
   assert.equal(clocks.length,20);
   assert.deepEqual(clocks[0],['05:56','06:07']);
