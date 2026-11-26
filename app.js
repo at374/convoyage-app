@@ -126,8 +126,8 @@
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
   // Dernier défilement (doigt ou molette) : les mises à jour des transports attendent l'arrêt du défilement pour ne pas saccader.
-  let dernierDefilement = 0;
-  if (typeof document.addEventListener === 'function') { const marque = () => { dernierDefilement = Date.now(); }; document.addEventListener('scroll', marque, { capture: true, passive: true }); document.addEventListener('touchmove', marque, { capture: true, passive: true }); }
+  let dernierDefilement = -Infinity;
+  if (typeof document.addEventListener === 'function') { const marque = () => { dernierDefilement = performance.now(); }; document.addEventListener('scroll', marque, { capture: true, passive: true }); document.addEventListener('touchmove', marque, { capture: true, passive: true }); }
   const lireLocal = (k, d) => { try { return JSON.parse(globalThis.CPAccount?.storage?.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
   // V301 : la copie locale (cp_cache) est plafonnée à ~1,2 Mo : des milliers de missions remplissaient les 5 Mo du téléphone et bloquaient tout enregistrement (choix des plateformes compris).
 const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.storage?.setItem(k, JSON.stringify(x)); return true; } catch (_) { return false; } }; try { if (k === 'cp_cache' && v && Array.isArray(v.missions)) { let ms = v.missions; { const now = Date.now(), vivante = x => { const d = Date.parse((x && (x.delivery_end || x.delivery_start || x.pickup_start)) || ''); return !Number.isFinite(d) || d >= now ? 0 : 1; }; ms = ms.map((x, i) => [x, i]).sort((a, b) => vivante(a[0]) - vivante(b[0]) || a[1] - b[1]).map(a => a[0]); } let s = JSON.stringify({ ...v, missions: ms }); while (s.length > 1200000 && ms.length > 50) { ms = ms.slice(0, Math.floor(ms.length / 2)); s = JSON.stringify({ ...v, missions: ms }); } if (ess({ ...v, missions: ms })) return; try { globalThis.CPAccount?.storage?.removeItem(k); } catch (_) {} for (const m of [400, 150, 50]) if (ess({ ...v, missions: ms.slice(0, m) })) return; return; } ess(v); } catch (_) {} };
@@ -2345,11 +2345,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           pendingViews[label]=view;
           const flush=()=>{
             if(!panel.isConnected||$('feuille').hidden)return;
-            if(Date.now()-dernierDefilement<250){panel.__cpDefer=setTimeout(flush,300);return;}
+            if(performance.now()-dernierDefilement<250){panel.__cpDefer=setTimeout(flush,300);return;}
             renderPending();
           };
           clearTimeout(panel.__cpDefer);
-          panel.__cpDefer=setTimeout(flush,Date.now()-dernierDefilement<250?300:0);
+          panel.__cpDefer=setTimeout(flush,performance.now()-dernierDefilement<250?300:0);
         };
         const existingSearch=onlyJonction?null:transportSearches.get(memoryKey);
         if(existingSearch&&!refresh&&existingSearch.signature===signature){
@@ -2437,7 +2437,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               transportViewCache.set(memoryKey,entry);
               clearTimeout(transportSaveTimers.get(memoryKey));
               const persist=()=>{
-                if(Date.now()-dernierDefilement<250){
+                if(performance.now()-dernierDefilement<250){
                   transportSaveTimers.set(memoryKey,setTimeout(persist,300));
                   return;
                 }

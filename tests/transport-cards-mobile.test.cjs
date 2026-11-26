@@ -194,7 +194,7 @@ test('recherche transport : progression et actualisation accessibles avant les c
  assert.match(app,/b\.bar=document\.createElement\('progress'\)/);
  assert.match(app,/Temps restant/);
  assert.match(app,/if\(!view\.done\)\{afficherRecherche\(label,view\);return;\}/);
- assert.match(app,/Date\.now\(\)-dernierDefilement<250/);
+ assert.match(app,/performance\.now\(\)-dernierDefilement<250/);
 });
 
 test('navigation entre missions : réutilisation de la recherche active et remplacement du résultat enregistré',()=>{
