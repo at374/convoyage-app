@@ -1051,7 +1051,9 @@ function makeProviders(r,opts={}){
    const [id,name,file]=entry,key=id+'|'+serviceDates.join(',');
    let promise=federationCache.get(key);
    if(!promise){
-    const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+    // Prefer the exact feature-branch archive so an older GitHub Pages copy
+    // cannot silently shadow the latest validated GTFS dataset.
+    const urls=[...new Set([base+file,deployedBase?deployedBase+file:null,
      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,
      'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
     const resource={id,datasetId:id,network:name,format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
