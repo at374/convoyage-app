@@ -53,3 +53,14 @@ test('Cache indépendant : les signatures Aller, Jonction et Retour sont persist
   assert.match(app, /stored\.partSignatures\?\.\[label\]===taskSignatures\[label\]/);
   assert.match(app, /partSignatures:taskSignatures/);
 });
+
+
+test('GPS T-15 : la recherche complète des transports se déclenche même après fermeture de la fiche', () => {
+  assert.match(app, /document\.addEventListener\('cp-livraison-approche'/);
+  assert.match(app, /function lancerPrefetchLivraison\(key\)/);
+  assert.match(app, /missionTiming\(m\)\.key === key/);
+  assert.match(app, /button\.click\(\)/);
+  assert.match(app, /panel\.dataset\.cpPrefetched = 'true'/);
+  assert.match(app, /\$\('feuille'\)\.hidden = true/);
+  assert.match(app, /setInterval\(viderPrefetchLivraison, 30000\)/);
+});
