@@ -3,7 +3,7 @@ const G=require('../geo.js');
 const mission={from_city:'Ferney-Voltaire',from_department:'01',origin_address:'Aéroport De Genève – Secteur France Route Douanière, 01210 Ferney-Voltaire'};
 function fetcher(reponses){const urls=[];return {urls,f:async u=>{urls.push(decodeURIComponent(u));const q=decodeURIComponent(u);
  const hit=reponses.find(r=>q.includes(r.contient)&&(r.commune?q.includes('type=municipality'):!q.includes('type=municipality')));
- return {ok:true,json:async()=>({features:hit?[{geometry:{coordinates:[hit.lng,hit.lat]},properties:{score:hit.score??0.9,type:hit.type,label:'x'}}]:[]})};}};}
+ return {ok:true,json:async()=>({features:hit?[{geometry:{coordinates:[hit.lng,hit.lat]},properties:{score:hit.score??0.9,type:hit.type,label:'x',housenumber:hit.housenumber,street:hit.street,city:hit.city,postcode:hit.postcode,citycode:hit.citycode}}]:[]})};}};}
 
 test('adresse de lieu non trouvée : repli sur la voie, puis la commune, avec la précision réelle',async()=>{
  const a=fetcher([{contient:'Route Douanière',type:'street',lat:46.2593,lng:6.1066}]);
@@ -24,7 +24,7 @@ test('un résultat centre-ville ne masque pas le numéro de rue trouvé ensuite'
  const adresse={from_city:'Voiron',from_department:'38',origin_address:'Dépôt – 12 rue Exemple 38500 Voiron'};
  const a=fetcher([
   {contient:'Dépôt',type:'municipality',lat:45.36,lng:5.59},
-  {contient:'12 rue Exemple',type:'housenumber',lat:45.38,lng:5.58}
+  {contient:'12 rue Exemple',type:'housenumber',housenumber:'12',street:'rue Exemple',city:'Voiron',lat:45.38,lng:5.58}
  ]);
  const r=await G.chercherPoint(adresse,'origin',a.f);
  assert.deepEqual(r.point,{lat:45.38,lng:5.58,precision:'adresse'});
