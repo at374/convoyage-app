@@ -50,6 +50,10 @@ def probe(r):
                     else:
                         result['entity_count']=len(feed.entity)
                         result['trip_updates']=sum(e.HasField('trip_update') for e in feed.entity)
+                        trip_ids={e.trip_update.trip.trip_id for e in feed.entity if e.HasField('trip_update') and e.trip_update.trip.trip_id}
+                        result['distinct_trip_ids']=len(trip_ids)
+                        result['trip_id_sample']=sorted(trip_ids)[:50]
+                        result['cancelled_updates']=sum(e.HasField('trip_update') and e.trip_update.trip.schedule_relationship==gtfs_realtime_pb2.TripDescriptor.CANCELED for e in feed.entity)
                         result['vehicle_positions']=sum(e.HasField('vehicle') for e in feed.entity)
                         result['alerts']=sum(e.HasField('alert') for e in feed.entity)
                         result['gtfs_rt_version']=feed.header.gtfs_realtime_version
