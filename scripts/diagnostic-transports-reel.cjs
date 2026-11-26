@@ -2,7 +2,7 @@
 // v4 (13/11/2026) : + 7 axes de couverture ; v3 : SNCF en 3 recherches décalées, API suisse avec repli gare la plus proche et 2e tentative.
 /* Convoyage Ultra — diagnostic RÉEL des transports sur les 8 axes, exécuté sur un serveur GitHub Actions (accès Internet).
  * Moteurs réellement interrogés : API suisse (transport.opendata.ch), Mobilités M, SNCF (fichiers officiels du dépôt),
- * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s). TripGo seulement si CP_TRIPGO_KEY est fourni.
+ * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s).
  * Aucune donnée inventée : un moteur indisponible est consigné comme erreur.
  * Sortie : docs/diagnostic-serveur.json et docs/DIAGNOSTIC-SERVEUR.md
  */
@@ -11,7 +11,7 @@ const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
 const g=globalThis;g.window=g;
 for(const f of ['transport-adapters.js','transport-fares.js','transport-y51-fares.js','transport-fare-grids.js','swiss-transport-api.js','regional-routing.js',
- 'sncf-fallback.js','transport-tripgo.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
+ 'sncf-fallback.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
  'transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js','transport-mission-hub.js','transport-coverage.js','transport-gtfs-agenda.js'])require(path.join(ROOT,f));
 const H=g.CPTransportHub,C=g.CPTransportCoverage,A=g.CPGTFSAgenda,L=g.CPGTFSLoader,I=g.CPGTFSIndex,T=g.CPGTFSTime;
 // Les fichiers « data/… » de l'application sont lus dans le dépôt ; le reste part sur Internet.
@@ -23,7 +23,6 @@ const fetcher=async(url,init)=>{
   return new Response(fs.readFileSync(file),{status:200,headers:{'content-type':file.endsWith('.json')?'application/json':'application/zip'}});}
  return fetch(u,{...init,headers:{...(init&&init.headers||{}),'User-Agent':'ConvoyageUltra-Diagnostic/1.0'}});
 };
-if(process.env.CP_TRIPGO_KEY)g.localStorage={getItem:k=>k==='cp_tripgo_key'?process.env.CP_TRIPGO_KEY:null,setItem(){},removeItem(){}};
 const feeds=new Map();
 async function feed(resource,dates){
  const key=resource.id;if(feeds.has(key))return feeds.get(key);
@@ -65,7 +64,7 @@ async function gtfsRows(axis,when){
  const NATIONAL='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
  const nationalGTFSResources=Object.fromEntries(['sncf','blablacarBus','flixbus'].map(o=>[o,{url:NATIONAL+'national-'+o+'-aura.zip',format:'GTFS'}]));
  const providers=H.makeProviders(g,{fetcher,nationalGTFSResources});
- const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:providers.tripgo?.enabled?.()===true,axes:[],networks:{}};
+ const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',axes:[],networks:{}};
  for(const axis of [...C.AXES,...C.AXES_COUVERTURE.map(a=>({...a,coverage:true}))]){
   const started=Date.now();let firstAt=null;
   const task={label:'Diag',from:axis.from,to:axis.to,fromName:axis.from.name,toName:axis.to.name,
@@ -84,27 +83,6 @@ async function gtfsRows(axis,when){
   // Réseaux que l'APPLICATION choisirait (flux principal + réseau partenaire, même logique que mount), pour détecter un mauvais choix de flux.
   const pick=A.chooseResources(A.DEFAULT_RESOURCES,[{from:axis.from,to:axis.to}]);
   const appFirst=pick.resource?[pick.resource,...pick.partners].map(r=>r.network).join(' + '):null;
-  const tripgoJourneys=all.filter(j=>(j.sources||[]).some(s=>/tripgo/i.test(s)));
-  const tripgoPriced=tripgoJourneys.filter(j=>j.price?.status==='verified').length;
-  const tripgoTicketLegs=tripgoJourneys.reduce((n,j)=>n+j.legs.filter(l=>l.kind!=='walk'&&l.fare&&Number.isFinite(l.fare.amount)).length,0);
-  // Un tarif de réseau connu peut être appliqué par la grille après TripGo.
-  // Ne pas confondre « prix vérifié au total » avec « billet fourni par TripGo ».
-  const tripgoPricedFromGrids=tripgoJourneys.filter(j=>j.price?.status==='verified'&&
-   !j.legs.some(l=>l.kind!=='walk'&&l.fare&&/TripGo/i.test(String(l.fare.source||'')))).length;
-  const tripgoMissingFareByOperator={};
-  const tripgoFareLegsFromGridsByOperator={};
-  for(const j of tripgoJourneys)for(const l of j.legs){
-   if(l.kind==='walk')continue;
-   const ticket=l.fare&&Number.isFinite(l.fare.amount)&&l.fare.amount>=0&&
-    /^(EUR|CHF)$/.test(l.fare.currency)&&l.fare.source;
-   if(ticket)continue;
-   const operator=String(l.provider||'opérateur inconnu').slice(0,80);
-   const gridFare=g.CPTransportFareGrids.fareFor(l);
-   if(gridFare&&Number.isFinite(gridFare.amount)&&gridFare.amount>=0&&
-    /^(EUR|CHF)$/.test(gridFare.currency)&&gridFare.source){
-    tripgoFareLegsFromGridsByOperator[operator]=(tripgoFareLegsFromGridsByOperator[operator]||0)+1;
-   }else tripgoMissingFareByOperator[operator]=(tripgoMissingFareByOperator[operator]||0)+1;
-  }
   // Les portions sans prix, toutes sources confondues, sont regroupées pour
   // cibler les prochains raccordements tarifaires sans inventer de montant.
   const missingFareByOperator={};
@@ -158,7 +136,7 @@ async function gtfsRows(axis,when){
     }
    }
   }
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialMissingLineSamples,partialPricedJourneys,walked:all.filter(walkedOk).length,
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialMissingLineSamples,partialPricedJourneys,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,scheduled:all.filter(j=>j.scheduled).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,discarded:v.discarded||{},hiddenTooEarly:(v.hidden&&v.hidden.tooEarly)||0,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -174,26 +152,15 @@ async function gtfsRows(axis,when){
  for(const a of report.axes)for(const [name,count] of Object.entries(a.partialMissingByOperator))report.totals.partialMissingByOperator[name]=(report.totals.partialMissingByOperator[name]||0)+count;
  report.totals.fareLegsByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.fareLegsByOperator))report.totals.fareLegsByOperator[name]=(report.totals.fareLegsByOperator[name]||0)+count;
- report.totals.tripgoJourneys=report.axes.reduce((n,a)=>n+a.tripgoJourneys,0);
- report.totals.tripgoPriced=report.axes.reduce((n,a)=>n+a.tripgoPriced,0);
- report.totals.tripgoTicketLegs=report.axes.reduce((n,a)=>n+a.tripgoTicketLegs,0);
- report.totals.tripgoPricedFromGrids=report.axes.reduce((n,a)=>n+a.tripgoPricedFromGrids,0);
  report.totals.missingFareByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.missingFareByOperator))report.totals.missingFareByOperator[name]=(report.totals.missingFareByOperator[name]||0)+count;
- report.totals.tripgoFareLegsFromGridsByOperator={};
- for(const a of report.axes)for(const [name,count] of Object.entries(a.tripgoFareLegsFromGridsByOperator))report.totals.tripgoFareLegsFromGridsByOperator[name]=(report.totals.tripgoFareLegsFromGridsByOperator[name]||0)+count;
- report.totals.tripgoMissingFareByOperator={};
- for(const a of report.axes)for(const [name,count] of Object.entries(a.tripgoMissingFareByOperator))report.totals.tripgoMissingFareByOperator[name]=(report.totals.tripgoMissingFareByOperator[name]||0)+count;
  report.totals.pricedPct=report.totals.trips?Math.round(report.totals.priced*1000/report.totals.trips)/10:0;
  report.totals.walkedPct=report.totals.trips?Math.round(report.totals.walked*1000/report.totals.trips)/10:0;
  console.log('BILAN_GLOBAL '+JSON.stringify(report.totals));
- if(report.tripgo&&report.totals.tripgoJourneys>0&&report.totals.tripgoPriced===0)console.warn('::warning::TripGo fournit des trajets mais aucun de ces trajets ne possède un prix vérifié : contrôler les billets transmis par l’API.');
  report.router=router.stats?router.stats():null;
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
- const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo : ${report.tripgo?'oui':'non (pas de clé)'}.`,'',
+ const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; moteurs nationaux et régionaux hors TripGo.`,'',
   `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables, ${report.totals.scheduled} en horaire programmé (officiel, marches et marge vérifiées, sans temps réel).**`,'',
-  `**TripGo : ${report.totals.tripgoJourneys} trajets, ${report.totals.tripgoPriced} avec prix vérifié, ${report.totals.tripgoTicketLegs} portions avec billet chiffré.**`,'',
-  'Portions TripGo sans prix par opérateur : '+(Object.entries(report.totals.tripgoMissingFareByOperator).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   'Exemples de lignes sans tarif (3 par opérateur et par axe) :','',
   ...report.axes.flatMap(a=>Object.entries(a.missingFareSamples).map(([operator,samples])=>
    '- '+a.id+' / '+operator+' : '+samples.map(s=>s.mode+' '+s.line+' ('+s.from+' → '+s.to+')').join(' ; '))),'',
