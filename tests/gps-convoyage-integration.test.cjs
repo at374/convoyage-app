@@ -34,3 +34,18 @@ test('Pré-calcul des transports : seuil T-15, panneau conservé masqué et minu
   assert.match(app, /prefetchPanel\.dataset\.cpPrefetched = 'true'/);
   assert.match(app, /prefetchPanel\.style\.display = 'none'/);
 });
+
+test('Actualisation indépendante : chaque section dispose de son bouton et ne relance que sa tâche', () => {
+  assert.match(app, /Actualiser '\+key/);
+  assert.match(app, /transportRefreshLabel=key/);
+  assert.match(app, /startTransportHub\(false,key\)/);
+  assert.match(app, /if\(onlyLabel\)tasks\.splice/);
+  assert.match(app, /const resetLabels=onlyLabel\?\[onlyLabel\]/);
+  assert.match(app, /if\(!refresh\).*signature===signature/);
+});
+
+test('Cache indépendant : les signatures Aller, Jonction et Retour sont persistées séparément', () => {
+  assert.match(app, /const taskSignatures=Object\.fromEntries\(allTasks/);
+  assert.match(app, /stored\.partSignatures\?\.\[label\]===taskSignatures\[label\]/);
+  assert.match(app, /partSignatures:taskSignatures/);
+});
