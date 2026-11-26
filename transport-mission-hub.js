@@ -349,7 +349,7 @@ async function completeWalks(j,task,router){
 }
 // Cache des marches : partagé entre moteurs, directions et fiches (stockage local du téléphone, 30 jours).
 // Clés arrondies au 1/10 000 de degré (≈ 10 m) : deux arrêts « identiques » vus par deux moteurs partagent la marche.
-function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEntries=400}={}){
+function cachedRouter(router,{storage=null,key='cp_marches_v2',ttlDays=30,maxEntries=400}={}){
  if(!router||typeof router.route!=='function')return router;
  const round=p=>({lat:Math.round(p.lat*1e4)/1e4,lon:Math.round(p.lon*1e4)/1e4});
  const id=(a,b)=>[round(a).lat,round(a).lon,round(b).lat,round(b).lon].join(',');
