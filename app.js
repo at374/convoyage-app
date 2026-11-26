@@ -811,6 +811,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   // puis un relevé persistant toutes les 10 minutes jusqu'à la livraison.
   const SUIVI_CONVOYAGE_KEY = 'cp_suivi_convoyage_v1';
   const SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000;
+  // L'itinéraire voiture vers la livraison est réestimé toutes les 5 min,
+  // indépendamment des relevés GPS persistés toutes les 10 min : le seuil
+  // « arrivée dans 15 min » ne dépend donc pas uniquement d'un relevé sur deux.
+  const SUIVI_CONVOYAGE_ETA_INTERVALLE_MS = 5 * 60000;
   const suiviConvoyageEtaEnCours = new Set();
   function suiviConvoyageEnregistrer(m, t, pos, ts) {
     const accuracy = Number(pos.coords.accuracy);
@@ -831,7 +835,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       if (away < 500 || (Number.isFinite(speed) && speed < 1.5 && away < 800)) return;
       state.status = 'en_route'; state.departedAt = new Date(ts).toISOString(); state.lastSampleAt = 0;
     }
-    if (state.status !== 'en_route' || ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return;
+    if (state.status !== 'en_route') return;
+    // Le suivi de position reste à 10 min, mais l'ETA est actualisée à 5 min
+    // pour déclencher le préchargement au plus près du seuil de 15 min.
+    suiviConvoyageEstimerArrivee(m,t,here,ts,state);
+    if (ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return;
     const sample = {at:new Date(ts).toISOString(),lat:here.lat,lng:here.lng,accuracy,speed:Number.isFinite(Number(pos.coords.speed))?Number(pos.coords.speed):null};
     state.samples = (Array.isArray(state.samples)?state.samples:[]).concat(sample).slice(-36);
     state.lastSampleAt = ts; state.lastPosition = sample; store[t.key] = state;
@@ -841,6 +849,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   async function suiviConvoyageEstimerArrivee(m,t,here,ts,state) {
     if (suiviConvoyageEtaEnCours.has(t.key) || state.approcheDeclencheeAt) return;
+    const lastAttempt = Date.parse(state.etaAttemptAt || state.etaCheckedAt || state.departedAt || '');
+    if (Number.isFinite(lastAttempt) && ts - lastAttempt < SUIVI_CONVOYAGE_ETA_INTERVALLE_MS) return;
+    // Persister le dernier essai même en cas d'erreur réseau pour éviter de solliciter
+    // l'API à chaque position GPS fournie par Android.
+    const attemptStore = Object.assign({},lireLocal(SUIVI_CONVOYAGE_KEY,{})), attemptState = attemptStore[t.key];
+    if (!attemptState || attemptState.status !== 'en_route' || attemptState.approcheDeclencheeAt) return;
+    attemptState.etaAttemptAt = new Date(ts).toISOString();
+    attemptStore[t.key] = attemptState; ecrireLocal(SUIVI_CONVOYAGE_KEY,attemptStore);
     const routes = window.CPRoutes, auth = window.CPAuthenticatedApi, session = auth?.connecte ? auth.session : null;
     let config = window.CP_CONFIG?.anonKey ? window.CP_CONFIG : window.CP_CONFIG_ACTIVE?.anonKey ? window.CP_CONFIG_ACTIVE : null;
     try { if (!config && window.CPNatif?.configuration) config = JSON.parse(window.CPNatif.configuration() || '{}'); } catch (_) {}
