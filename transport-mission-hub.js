@@ -242,9 +242,18 @@ function bookingNote(nets){
  if(/haute[- ]savoie|y9[234]/i.test(n))return '📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000';
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
-const DIVIA_RT_URL='https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-trip-update';
-const DIVIA_RT_LIMIT=1024*1024;
-const diviaFeeds=new WeakMap();
+const LOCAL_REALTIME_NETWORKS=new Map([
+ ['divia_dijon',['Divia Mobilités (Dijon)','divia-dijon']],
+ ['grandole_dole',['Grandole Mobilités (Dole)','tgd-dole']],
+ ['moova_vesoul',['Moova (Vesoul)','moova-vesoul']]
+]);
+const LOCAL_REALTIME_LIMIT=1024*1024;
+const localRealtimeCache=new WeakMap();
+function realtimeNetworkId(row){
+ if(row.networkId)return LOCAL_REALTIME_NETWORKS.has(row.networkId)?row.networkId:null;
+ for(const [id,[name]] of LOCAL_REALTIME_NETWORKS)if(row.network===name)return id;
+ return null;
+}
 function* protobufFields(bytes){
  let offset=0;
  function integer(){
@@ -266,7 +275,7 @@ function* protobufFields(bytes){
   offset+=length;
  }
 }
-function readDiviaRealtime(bytes,now){
+function readLocalRealtime(bytes,now){
  const fields=b=>new Map(protobufFields(b));
  const decoder=new TextDecoder('utf-8',{fatal:true});
  const text=b=>b instanceof Uint8Array?decoder.decode(b):'';
@@ -296,13 +305,17 @@ function readDiviaRealtime(bytes,now){
  }
  return Number.isFinite(timestamp)&&timestamp>=now-120000&&timestamp<=now+30000?trips:null;
 }
-function loadDiviaRealtime(runtime){
+function loadLocalRealtime(runtime,networkId){
  if(typeof runtime.fetch!=='function')return Promise.resolve(null);
- const now=Date.now(),cached=diviaFeeds.get(runtime);
+ const [,slug]=LOCAL_REALTIME_NETWORKS.get(networkId);
+ const url='https://proxy.transport.data.gouv.fr/resource/'+slug+'-gtfs-rt-trip-update';
+ let feeds=localRealtimeCache.get(runtime);
+ if(!feeds){feeds=new Map();localRealtimeCache.set(runtime,feeds);}
+ const now=Date.now(),cached=feeds.get(networkId);
  if(cached&&cached.until>now)return cached.promise;
  const promise=(async()=>{
-  const response=await runtime.fetch(DIVIA_RT_URL,{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(1800)});
-  if(!response.ok||!response.body||Number(response.headers.get('content-length'))>DIVIA_RT_LIMIT)return null;
+  const response=await runtime.fetch(url,{credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(1800)});
+  if(!response.ok||!response.body||Number(response.headers.get('content-length'))>LOCAL_REALTIME_LIMIT)return null;
   const reader=response.body.getReader(),chunks=[];
   let size=0;
   try{
@@ -310,19 +323,19 @@ function loadDiviaRealtime(runtime){
     const {done,value}=await reader.read();
     if(done)break;
     size+=value.byteLength;
-    if(size>DIVIA_RT_LIMIT){await reader.cancel();return null;}
+    if(size>LOCAL_REALTIME_LIMIT){await reader.cancel();return null;}
     chunks.push(value);
    }
   }finally{reader.releaseLock();}
   const bytes=new Uint8Array(size);
   let offset=0;
   for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
-  return readDiviaRealtime(bytes,Date.now());
+  return readLocalRealtime(bytes,Date.now());
  })().catch(()=>null);
- diviaFeeds.set(runtime,{until:now+15000,promise});
+ feeds.set(networkId,{until:now+15000,promise});
  return promise;
 }
-function applyDiviaRealtime(row,trips,now){
+function applyLocalRealtime(row,trips,now){
  const trip=trips?.get(row.tripId);
  if(!trip||row.onDemand||(trip.date&&trip.date!==row.serviceDate?.replaceAll('-','')))return row;
  const boarding=trip.stops.get(row.from),alighting=trip.stops.get(row.to);
@@ -336,9 +349,9 @@ function applyDiviaRealtime(row,trips,now){
   delayMinutes:Math.max(0,Math.round((departure-scheduledDeparture)/60000))};
 }
 
-function applyDiviaConnection(row,trips,now){
+function applyLocalRealtimeConnection(row,trips,now){
  if(row.legs?.length!==2)return row;
- const legs=row.legs.map(l=>l.networkId==='divia_dijon'||l.network==='Divia Mobilités (Dijon)'?applyDiviaRealtime(l,trips,now):l);
+ const legs=row.legs.map(l=>applyLocalRealtime(l,trips.get(realtimeNetworkId(l)),now));
  const [first,second]=legs;
  if(!first||!second)return null;
  if(!legs.some(l=>l.realtime))return row;
@@ -1603,8 +1616,8 @@ function makeProviders(r,opts={}){
      const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
      const now=Date.now();
-     const live=id==='divia_dijon'&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
-      ?await loadDiviaRealtime(r):null;
+     const live=LOCAL_REALTIME_NETWORKS.has(id)&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
+      ?await loadLocalRealtime(r,id):null;
      if(signal?.aborted)return [];
      const skippedStops=new Map();
      for(const [tripId,trip] of live||[]){
@@ -1693,7 +1706,7 @@ function makeProviders(r,opts={}){
      const filtered=[...best.values()].map(({x})=>({...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
       .filter(x=>x.departure&&x.arrival)
-      .map(x=>live?applyDiviaRealtime(x,live,now):x)
+      .map(x=>live?applyLocalRealtime(x,live,now):x)
       .filter(x=>x&&(!x.realtime||(w.arriveBy?ms(x.arrival)<=when:ms(x.departure)>=when)))
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
@@ -1864,11 +1877,17 @@ function makeProviders(r,opts={}){
      if((!Array.isArray(rows)||rows.length===0)&&scanWindow!==window)rows=await runPass(window);
      if(signal?.aborted)return [];
      const now=Date.now();
-     const live=nets.some(n=>n[0]==='divia_dijon')&&rows.length&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
-      ?await loadDiviaRealtime(r):null;
+     const live=new Map();
+     if(rows.length&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000){
+      const ids=new Set(rows.flatMap(row=>(row.legs||[]).map(realtimeNetworkId)).filter(Boolean));
+      await Promise.all([...ids].map(async id=>{
+       const feed=await loadLocalRealtime(r,id);
+       if(feed)live.set(id,feed);
+      }));
+     }
      if(signal?.aborted)return [];
      const out=rows.filter(x=>x&&x.departure&&x.arrival)
-      .map(x=>live?applyDiviaConnection(x,live,now):x).filter(Boolean)
+      .map(x=>live.size?applyLocalRealtimeConnection(x,live,now):x).filter(Boolean)
       .map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
      // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut
      // techniquement « correspondre » à n'importe quel arrêt commun qu'ils desservent tous les deux (des
@@ -2816,12 +2835,11 @@ function scheduleLabel(value){
  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
-async function diviaDaySchedule(raw,schedule){
+async function localRealtimeDaySchedule(raw,schedule){
  const rows=schedule.map(row=>({...row}));
- const now=Date.now(),timestamp=root.CPGTFSTime?.serviceTimestamp;
- if(!rows.length||!raw.from||!raw.to||typeof timestamp!=='function'||raw.serviceDate!==parisDayParts(now)?.day||
-    (raw.networkId!=='divia_dijon'&&raw.network!=='Divia Mobilités (Dijon)'))return rows;
- const live=await loadDiviaRealtime(root);
+ const now=Date.now(),timestamp=root.CPGTFSTime?.serviceTimestamp,networkId=realtimeNetworkId(raw);
+ if(!rows.length||!raw.from||!raw.to||typeof timestamp!=='function'||raw.serviceDate!==parisDayParts(now)?.day||!networkId)return rows;
+ const live=await loadLocalRealtime(root,networkId);
  if(!live)return rows;
  const inServiceSeconds=value=>{
   const instant=new Date(value);
@@ -2835,7 +2853,7 @@ async function diviaDaySchedule(raw,schedule){
   if(!live.has(row.trip_id)||![row.departureSeconds,row.arrivalSeconds].every(Number.isSafeInteger))continue;
   const departure=scheduled(row.departureSeconds),arrival=scheduled(row.arrivalSeconds);
   if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<now||Math.abs(departure-now)>=10800000)continue;
-  const update=applyDiviaRealtime({tripId:row.trip_id,from:raw.from,to:raw.to,serviceDate:raw.serviceDate,
+  const update=applyLocalRealtime({tripId:row.trip_id,from:raw.from,to:raw.to,serviceDate:raw.serviceDate,
    departure:iso(departure),arrival:iso(arrival)},live,now);
   if(!update)row.status=live.get(row.trip_id)?.cancelled?'Course annulée':'Arrêt non desservi';
   else if(update.realtime){
@@ -2860,8 +2878,8 @@ async function dayScheduleForLeg(raw){
   :['stops',scheduleLabel(raw.line),scheduleLabel(raw.fromName),scheduleLabel(raw.toName),pt(raw.fromPoint),pt(raw.toPoint)]);
  let cache=daySchedulesByFeed.get(feed);
  if(!cache){cache=new Map();daySchedulesByFeed.set(feed,cache);}
- const isDivia=raw.networkId==='divia_dijon'||raw.network==='Divia Mobilités (Dijon)';
- const display=schedule=>isDivia?diviaDaySchedule(raw,schedule):schedule.map(row=>({...row}));
+ const hasRealtime=!!realtimeNetworkId(raw);
+ const display=schedule=>hasRealtime?localRealtimeDaySchedule(raw,schedule):schedule.map(row=>({...row}));
  if(cache.has(key))return display(cache.get(key));
  let rows;
  if(indexed){
@@ -2874,7 +2892,7 @@ async function dayScheduleForLeg(raw){
   if(!tables||typeof pl?.datedInterurbanRides!=='function')return [];
   rows=dayScheduleFromTables(raw,tables,pl);
  }
- const schedule=uniqueDayScheduleRows(rows,isDivia);
+ const schedule=uniqueDayScheduleRows(rows,hasRealtime);
  cache.set(key,schedule);
  if(cache.size>64)cache.delete(cache.keys().next().value);
  return display(schedule);
@@ -3162,7 +3180,7 @@ function card(doc,j,labels,expanded=false,task=null){
       const ul=el(doc,'ul',null);
       for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)+(row.status?' · '+row.status:'')));
       dayRes.appendChild(ul);
-      dayRes.appendChild(el(doc,'small',null,rows.some(row=>row.status)?'Horaires GTFS et mises à jour de Divia. Les passages sans mention restent théoriques.':'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
+      dayRes.appendChild(el(doc,'small',null,rows.some(row=>row.status)?'Horaires GTFS et mises à jour de l’opérateur. Les passages sans mention restent théoriques.':'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
      }).catch(showSource)
       .finally(()=>{dayBtn.disabled=false;});
     });
