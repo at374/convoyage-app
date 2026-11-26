@@ -860,3 +860,11 @@ Une vérification corrigée par recherche littérale des noms de ZIP dans le hub
 - `atoumod-nomad-train.zip` : flux ferroviaire, volontairement non dupliqué dans le moteur GTFS local.
 - `bretagne-lineotim-morlaix.zip` et `bretagne-lineotim-periurbain.zip` : exclus de la génération automatique de fournisseurs car les emprises du manifeste ont des bornes GPS nulles/incomplètes. Ils doivent être corrigés à la source avant raccordement.
 Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub. Cette rectification remplace l'estimation précédente de neuf archives manquantes.
+
+
+## Contrôle strict des extrémités GPS des marches — 26/11/2026
+
+- `completeWalks` et `walkOnly` rejettent maintenant un résultat Valhalla explicitement marqué `endpointsMatched: false`. Un moteur qui a calculé une marche après avoir accroché le départ ou l'arrivée à un point différent ne peut donc plus faire confirmer un trajet vers l'adresse GPS exacte.
+- Les réponses qui ne fournissent pas ce champ restent compatibles avec les adaptateurs existants ; seule une non-correspondance explicite est bloquante.
+- Test ajouté : une marche faussement déclarée « calculée » avec extrémités non appariées doit laisser le trajet non réalisable et être refusée en marche seule.
+- Commits : `9a5287f1ec332f826937e0645013d5d48cad4dbd` et `aae4ccdd98a30f35678603abb4b7cfdb0b7e3096`.
