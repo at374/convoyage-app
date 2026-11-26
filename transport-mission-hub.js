@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['fil_bleu_tours',['Fil Bleu (Tours)','https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates']],
  ['levib_vierzon',['Le Vib’ Vierzon','le-vib-vierzon']],
  ['agglobus_bourges',['Agglobus (Bourges)','agglobus-bourges']],
  ['maelis',['Maelis Montluçon','maelis-montlucon']],
@@ -321,7 +322,7 @@ function readLocalRealtime(bytes,now){
 function loadLocalRealtime(runtime,networkId){
  if(typeof runtime.fetch!=='function')return Promise.resolve(null);
  const [,slug]=LOCAL_REALTIME_NETWORKS.get(networkId);
- const url='https://proxy.transport.data.gouv.fr/resource/'+slug+'-gtfs-rt-trip-update';
+ const url=slug.startsWith('https://')?slug:'https://proxy.transport.data.gouv.fr/resource/'+slug+'-gtfs-rt-trip-update';
  let feeds=localRealtimeCache.get(runtime);
  if(!feeds){feeds=new Map();localRealtimeCache.set(runtime,feeds);}
  const now=Date.now(),cached=feeds.get(networkId);
