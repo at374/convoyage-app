@@ -960,3 +960,14 @@ test('un itinéraire piéton dont le moteur signale des extrémités GPS non app
  assert.equal(H.assess(completed,task).feasible,false);
  assert.equal(await H.walkOnly({...task,to:{lat:HOME.lat+0.001,lon:HOME.lon}},router,3),null);
 });
+
+test('le navigateur charge la fédération GTFS après index/loader et avant le hub mission',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+ const index=html.indexOf('transport-gtfs-index.js');
+ const loader=html.indexOf('transport-gtfs-loader.js');
+ const federation=html.indexOf('transport-gtfs-federation.js');
+ const hub=html.indexOf('transport-mission-hub.js');
+ assert.ok(index>=0&&loader>index&&federation>loader&&hub>federation,
+  'les dépendances doivent être chargées dans cet ordre');
+});
