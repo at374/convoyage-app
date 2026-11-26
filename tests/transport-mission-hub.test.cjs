@@ -1040,3 +1040,17 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
   'une mission dans le même réseau ne déclenche pas le fédérateur inter-réseaux');
 });
 
+
+
+test('normalisation GTFS conserve les modes de ligne et écarte toutes les catégories bateau',()=>{
+ const origin={name:'Départ',lat:45.9,lon:6.1},destination={name:'Arrivée',lat:45.8,lon:6.2};
+ const row=routeType=>({routeType,network:'Réseau test',line:'L1',tripId:'T',
+  departure:at(8,0),arrival:at(9,0),originStop:origin,destinationStop:destination});
+ for(const [type,expected] of [[0,'Tram'],[1,'Métro'],[2,'Train'],[3,'Bus'],[200,'Car'],[1300,'Funiculaire']]){
+  const journeys=H.fromGTFS([row(type)]);
+  assert.equal(journeys.length,1,'type GTFS '+type);
+  assert.equal(journeys[0].legs[0].mode,expected,'type GTFS '+type);
+ }
+ for(const type of [4,700,1000])assert.equal(H.fromGTFS([row(type)]).length,0,'bateau GTFS '+type);
+});
+
