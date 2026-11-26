@@ -834,3 +834,11 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Test ajouté dans `tests/transport-mission-hub.test.cjs` : 49 fournisseurs doivent être présents, charger le bon ZIP, accepter un trajet dans leur emprise et le refuser hors zone.
 - Commit du raccordement : `f97ae7054418873313c99a1eb5480360c8cddac1` ; commit du test : `4747db5f866f3872723e99abba341d269c787116`.
 - Comme pour les autres tranches, l'enregistrement du code ne vaut pas certification porte-à-porte. Les recherches réelles, la marche, les correspondances, les horaires et la marge de sécurité restent à valider en CI et sur les scénarios métier avant déploiement.
+
+
+## Audit du manifeste après raccordement — 26/11/2026
+
+- Le manifeste contient 285 entrées. L'audit des références de fichiers dans `transport-mission-hub.js` retrouve 276 ZIP référencés, dont les 191 entrées des nouvelles tranches (22 Bretagne + 10 PACA/Occitanie/Nouvelle-Aquitaine + 18 Pays de la Loire + 92 IDFM + 49 Normandie/Centre-Val de Loire/Grand Est).
+- Neuf fichiers ne sont pas cités directement dans le tableau `localNetworks` : six flux AURA (Ondéa, Sibra, M Réso Métropole, Grésivaudan, Voironnais et Star't) relèvent des raccordements opérateurs spécifiques déjà présents dans le hub; Nomad Train relève du moteur ferroviaire et n'est pas dupliqué; les deux flux Linéotim Morlaix ont des bornes GPS nulles et restent exclus jusqu'à correction du manifeste.
+- Cet audit est une vérification statique des références et non un test d'exécution des 276 archives. La CI ne remonte aucun statut ni workflow run dans le connecteur sur le commit de test consulté; la validation distante reste donc **non confirmée**.
+- Dernier raccordement de cette tranche : `f97ae7054418873313c99a1eb5480360c8cddac1` ; dernier test ajouté : `4747db5f866f3872723e99abba341d269c787116`.
