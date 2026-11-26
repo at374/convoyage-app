@@ -10,6 +10,16 @@ const fs=require('node:fs');
 const path=require('node:path');
 const hubSrc=fs.readFileSync(path.join(__dirname,'..','transport-mission-hub.js'),'utf8');
 
+test('diagnostic rouge replié : moteurs, anomalies et explications sont dans le même volet',()=>{
+ const css=fs.readFileSync(path.join(__dirname,'..','style.css'),'utf8');
+ assert.match(hubSrc,/const diagnosticStart=host\.childNodes\.length/);
+ assert.match(hubSrc,/el\(doc,'details','cp-hub-diagnostics'\)/);
+ assert.match(hubSrc,/⚠ Diagnostic et anomalies/);
+ assert.match(hubSrc,/while\(host\.childNodes\.length>diagnosticStart\)section\.appendChild\(host\.childNodes\[diagnosticStart\]\)/);
+ assert.match(hubSrc,/host\.dataset\.cpDiagnosticsOpen==='true'/);
+ assert.match(css,/\.cp-hub-diagnostics>summary\{[^}]*color:#e74c4c/);
+});
+
 test('source : chaque ligne locale GTFS porte networkId/networkUrls/serviceDate pour le bouton horaires du jour',()=>{
  assert.match(hubSrc,/networkId:id,networkUrls:urls,serviceDate:date/);
 });

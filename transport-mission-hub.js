@@ -3285,6 +3285,9 @@ function render(host,v){
  for(const item of timeline)addCard(host,item.journey,item.labels);
  if(v.done&&v.total>timeline.length&&timeline.length)
   host.appendChild(el(doc,'p','cp-hub-note',timeline.length+' trajets affichés sur '+v.total+' propositions comparées.'));
+ // Regrouper les informations techniques et anomalies dans un seul accordéon.
+ // Par défaut il reste fermé, y compris lorsque les moteurs ont terminé.
+ const diagnosticStart=host.childNodes.length;
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
  const errs=Object.entries(v.errors||{});
@@ -3430,6 +3433,14 @@ function render(host,v){
  // désormais aussi dès qu'il reste des trajets non affichés, même quand d'autres trajets sont visibles.
  if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
  if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
+ if(v.done&&host.childNodes.length>diagnosticStart){
+  const section=el(doc,'details','cp-hub-diagnostics');
+  section.open=host.dataset.cpDiagnosticsOpen==='true';
+  section.appendChild(el(doc,'summary',null,'⚠ Diagnostic et anomalies'));
+  while(host.childNodes.length>diagnosticStart)section.appendChild(host.childNodes[diagnosticStart]);
+  section.ontoggle=()=>{host.dataset.cpDiagnosticsOpen=section.open?'true':'false';};
+  host.appendChild(section);
+ }
  if(v.done&&tads.length){
   const group=el(doc,'section','cp-hub-tad-results');
   group.appendChild(el(doc,'h3','cp-hub-tad-heading','Autres résultats TAD à réserver'));

@@ -654,6 +654,11 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-map{width:100%;max-width:420px;height:auto;background:var(--fond);border:1px solid var(--ligne);border-radius:10px;margin:6px 0}
 .cp-hub-note{margin:4px 0;font-size:.9em}
 .cp-hub-more>summary,.cp-hub-diag>summary{cursor:pointer;font-weight:600;padding:6px 0}
+.cp-hub-diagnostics{margin:12px 0;border:1px solid #c83b3b;border-radius:9px;background:rgba(180,30,30,.09);padding:0 10px 8px;color:inherit}
+.cp-hub-diagnostics>summary{cursor:pointer;color:#e74c4c;font-weight:800;font-size:1.05em;padding:12px 4px;list-style:revert}
+.cp-hub-diagnostics>summary:focus-visible{outline:2px solid #e74c4c;outline-offset:2px}
+.cp-hub-diagnostics:not([open]){padding-bottom:0}
+.cp-hub-diagnostics .cp-hub-note{overflow-wrap:anywhere}
 .cp-hub-none{color:var(--alerte);font-weight:600;margin:0}
 
 /* Fiche mission — cartes transports Android : prix immédiatement lisible,
