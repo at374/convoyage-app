@@ -71,7 +71,8 @@ const lyon={lat:45.7504,lon:4.829};
 const marseille={lat:43.303,lon:5.380};
 for(const [slug,bounds,from,to] of [
  ['paris-lyon',[45.55,2.15,49.05,5.45],{lat:48.8443,lon:2.373},lyon],
- ['lyon-marseille',[43.10,3.65,46.15,5.85],lyon,marseille]
+ ['lyon-marseille',[43.10,3.65,46.15,5.85],lyon,marseille],
+ ['paris-marseille',[43.10,2.15,49.05,5.85],{lat:48.8443,lon:2.373},marseille]
 ]){
 test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet',async()=>{
  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
@@ -99,8 +100,21 @@ test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet
    assert.equal(aura.enabled(task),false);
    assert.equal(corridor.enabled(task),true);
    assert.equal(corridor.enabled({...task,to:{lat:47.22,lon:-1.55}}),false);
-   const [trip]=await corridor.run(task);
+   const trips=await corridor.run(task);
+   const [trip]=trips;
    assert.ok(trip);
+   if(slug==='paris-marseille'){
+    const localDay=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short'});
+    const crossesMidnight=journey=>localDay.format(new Date(journey.legs[0].departure))!==
+     localDay.format(new Date(journey.legs.at(-1).arrival));
+    const candidate=trips.find(journey=>crossesMidnight(journey)===(operator!=='sncf'));
+    assert.ok(candidate,operator+' : trajet '+(operator==='sncf'?'du jour':'après minuit'));
+    const assessed=hub.assess(candidate,task,()=>null);
+    assert.equal(assessed.reasons.some(reason=>reason.includes('hors plage de jour')),operator!=='sncf',operator);
+    const reverse={...task,from:to,to:from};
+    assert.equal(corridor.enabled(reverse),true);
+    assert.ok((await corridor.run(reverse)).length>0,operator+' Marseille → Paris');
+   }
    for(const leg of trip.legs){
     const source=hub.scheduleSourceForLeg(leg);
     assert.ok(source?.networkUrls[0].endsWith('-'+slug+'.zip'));

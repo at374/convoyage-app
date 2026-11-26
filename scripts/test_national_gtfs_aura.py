@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end offline test: official-shaped GTFS ZIP -> AURA slice -> validated ZIP."""
 import csv
+from datetime import datetime, timedelta
 import io
 import json
 import os
@@ -8,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+from zoneinfo import ZoneInfo
 
 def table(headers, rows):
     s = io.StringIO()
@@ -63,6 +65,28 @@ def main():
         with zipfile.ZipFile(os.path.join(temp,result['file'])) as z:
             trips=list(csv.DictReader(io.StringIO(z.read('trips.txt').decode())))
             assert [t['trip_id'] for t in trips]==['t'],trips
+        today=datetime.now(ZoneInfo('Europe/Paris')).date()
+        end=today+timedelta(days=30)
+        data['calendar.txt']=table(['service_id','monday','tuesday','wednesday','thursday','friday','saturday','sunday','start_date','end_date'],[
+            ['s','1','1','1','1','1','1','1',today.strftime('%Y%m%d'),end.strftime('%Y%m%d')]])
+        with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED) as z:
+            for name, text in data.items():
+                z.writestr(name,text)
+        corridor_cmd=cmd+['--region','paris-marseille']
+        corridor=json.loads(subprocess.check_output(corridor_cmd,text=True))
+        assert corridor['details']['lastServiceDate']==end.isoformat()
+        assert corridor['keepsCompleteTrips'] is True
+        with zipfile.ZipFile(os.path.join(temp,corridor['file'])) as z:
+            times=list(csv.DictReader(io.StringIO(z.read('stop_times.txt').decode())))
+            assert [t['stop_id'] for t in times if t['trip_id']=='t']==['a','b','c']
+            assert [t['stop_id'] for t in times if t['trip_id']=='detour']==['a','c','b']
+        with zipfile.ZipFile(source,'a',zipfile.ZIP_DEFLATED) as z:
+            z.writestr('calendar_dates.txt', table(['service_id','date','exception_type'], [
+                ['s',end.strftime('%Y%m%d'),'2']]))
+        expired=subprocess.run(corridor_cmd,capture_output=True,text=True)
+        assert expired.returncode!=0 and 'fewer than 30 days' in expired.stderr
+        with open(os.path.join(temp,corridor['file']+'.json'),encoding='utf-8') as metadata:
+            assert json.load(metadata)==corridor
         with zipfile.ZipFile(source,'a',zipfile.ZIP_DEFLATED) as z:
             z.writestr('../unsafe.txt','should not be processed')
         rejected=subprocess.run(cmd,capture_output=True,text=True)

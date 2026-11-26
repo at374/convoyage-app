@@ -1,0 +1,28 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-paris-marseille.zip",
+  "sha256": "657aac0d523a9fa30fb77259a5ed2c6c99fec77e4304746f9aec39d413626bed",
+  "bytes": 101967,
+  "bounds": [
+    43.1,
+    2.15,
+    49.05,
+    5.85
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "Static GTFS slice for paris-marseille; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 871,
+    "trips": 871,
+    "stops": 200,
+    "fares": false,
+    "bounds": [
+      43.1,
+      2.15,
+      49.05,
+      5.85
+    ]
+  }
+}

@@ -85,7 +85,8 @@ window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
   flixbus: Object.freeze({bounds:nationalAuraBounds,url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-flixbus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-flixbus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-flixbus-aura.zip'])}),
   ...Object.fromEntries([
     ['paris-lyon','Paris–Lyon',[45.55,2.15,49.05,5.45]],
-    ['lyon-marseille','Lyon–Marseille',[43.10,3.65,46.15,5.85]]
+    ['lyon-marseille','Lyon–Marseille',[43.10,3.65,46.15,5.85]],
+    ['paris-marseille','Paris–Marseille',[43.10,2.15,49.05,5.85]]
   ].flatMap(([slug,area,bounds])=>['sncf','blablacarBus','flixbus'].map(operator=>{
     const file='national-'+operator+'-'+slug+'.zip';
     return [operator+'_'+slug.replaceAll('-','_'),Object.freeze({operator,area,
