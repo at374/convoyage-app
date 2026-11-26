@@ -2816,6 +2816,37 @@ function scheduleLabel(value){
  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
+async function diviaDaySchedule(raw,schedule){
+ const rows=schedule.map(row=>({...row}));
+ const now=Date.now(),timestamp=root.CPGTFSTime?.serviceTimestamp;
+ if(!rows.length||!raw.from||!raw.to||typeof timestamp!=='function'||raw.serviceDate!==parisDayParts(now)?.day||
+    (raw.networkId!=='divia_dijon'&&raw.network!=='Divia Mobilités (Dijon)'))return rows;
+ const live=await loadDiviaRealtime(root);
+ if(!live)return rows;
+ const inServiceSeconds=value=>{
+  const instant=new Date(value);
+  const parts=parisDayParts(value);
+  return (Date.parse(parts.day)-Date.parse(raw.serviceDate))/86400000*86400+parts.minute*60+instant.getUTCSeconds();
+ };
+ const scheduled=seconds=>timestamp(raw.serviceDate,[
+  Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60
+ ].map(part=>String(part).padStart(2,'0')).join(':'),'Europe/Paris');
+ for(const row of rows){
+  if(!live.has(row.trip_id)||![row.departureSeconds,row.arrivalSeconds].every(Number.isSafeInteger))continue;
+  const departure=scheduled(row.departureSeconds),arrival=scheduled(row.arrivalSeconds);
+  if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<now||Math.abs(departure-now)>=10800000)continue;
+  const update=applyDiviaRealtime({tripId:row.trip_id,from:raw.from,to:raw.to,serviceDate:raw.serviceDate,
+   departure:iso(departure),arrival:iso(arrival)},live,now);
+  if(!update)row.status=live.get(row.trip_id)?.cancelled?'Course annulée':'Arrêt non desservi';
+  else if(update.realtime){
+   row.departureSeconds=inServiceSeconds(update.departure);
+   row.arrivalSeconds=inServiceSeconds(update.arrival);
+   row.status='Temps réel';
+  }
+ }
+ return rows.sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
+}
+
 const daySchedulesByFeed=new WeakMap();
 async function dayScheduleForLeg(raw){
  if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
@@ -2829,7 +2860,9 @@ async function dayScheduleForLeg(raw){
   :['stops',scheduleLabel(raw.line),scheduleLabel(raw.fromName),scheduleLabel(raw.toName),pt(raw.fromPoint),pt(raw.toPoint)]);
  let cache=daySchedulesByFeed.get(feed);
  if(!cache){cache=new Map();daySchedulesByFeed.set(feed,cache);}
- if(cache.has(key))return cache.get(key).map(row=>({...row}));
+ const isDivia=raw.networkId==='divia_dijon'||raw.network==='Divia Mobilités (Dijon)';
+ const display=schedule=>isDivia?diviaDaySchedule(raw,schedule):schedule.map(row=>({...row}));
+ if(cache.has(key))return display(cache.get(key));
  let rows;
  if(indexed){
   const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
@@ -2841,10 +2874,10 @@ async function dayScheduleForLeg(raw){
   if(!tables||typeof pl?.datedInterurbanRides!=='function')return [];
   rows=dayScheduleFromTables(raw,tables,pl);
  }
- const schedule=uniqueDayScheduleRows(rows);
+ const schedule=uniqueDayScheduleRows(rows,isDivia);
  cache.set(key,schedule);
  if(cache.size>64)cache.delete(cache.keys().next().value);
- return schedule.map(row=>({...row}));
+ return display(schedule);
 }
 function dayScheduleFromTables(raw,tables,pl){
  const rides=(route,from,to)=>pl.datedInterurbanRides(tables,raw.serviceDate,String(route),String(from),String(to));
@@ -2878,8 +2911,8 @@ function dayScheduleFromTables(raw,tables,pl){
  }
  return rows;
 }
-function uniqueDayScheduleRows(rows){
- return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
+function uniqueDayScheduleRows(rows,keepTrips=false){
+ return [...new Map(rows.map(r=>[(keepTrips?r.trip_id+':':'')+r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
   .sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
 }
 function hmFromSeconds(sec){
@@ -3127,9 +3160,9 @@ function card(doc,j,labels,expanded=false,task=null){
       if(!rows.length){showSource();return;}
       dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+(raw?.serviceDate||parisDayParts(l.departure)?.day)+' :'));
       const ul=el(doc,'ul',null);
-      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)));
+      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)+(row.status?' · '+row.status:'')));
       dayRes.appendChild(ul);
-      dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
+      dayRes.appendChild(el(doc,'small',null,rows.some(row=>row.status)?'Horaires GTFS et mises à jour de Divia. Les passages sans mention restent théoriques.':'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
      }).catch(showSource)
       .finally(()=>{dayBtn.disabled=false;});
     });
