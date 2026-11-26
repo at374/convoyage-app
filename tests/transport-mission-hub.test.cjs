@@ -880,3 +880,12 @@ test('cache piéton v2 : ignore les anciennes entrées sans preuve de correspond
  assert.equal(result.endpointsMatched,true);
  assert.equal(cached.stats().misses,1);
 });
+
+
+
+test('précision rue BAN : conserve 15 minutes ; 5 minutes réservées au GPS exact explicite',()=>{
+ assert.equal(H.marginFor({toPrecision:'rue',exactTarget:false,allowShortMargin:true}),15);
+ assert.equal(H.marginFor({toPrecision:'ville',exactTarget:false,allowShortMargin:true}),15);
+ assert.equal(H.marginFor({exactTarget:true,allowShortMargin:true}),5);
+ assert.equal(H.marginFor({exactTarget:true,allowShortMargin:false}),15);
+});
