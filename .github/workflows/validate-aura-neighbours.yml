@@ -38,6 +38,22 @@ jobs:
             python scripts/build_national_gtfs_aura.py --input /tmp/source.zip --operator "$OPERATOR" --region "$corridor" --source-url "$url" --out /tmp/validated
           done
           python scripts/audit_aura_neighbour_links.py /tmp/validated
+      - name: Verify published slice metadata and integrity
+        run: |
+          python - <<'PY'
+          import pathlib, json, hashlib, zipfile
+          root = pathlib.Path('/tmp/validated')
+          archives = list(root.glob('*.zip'))
+          assert len(archives) == 5, archives
+          for archive in archives:
+              meta = json.loads(pathlib.Path(str(archive)+'.json').read_text())
+              assert meta['sha256'] == hashlib.sha256(archive.read_bytes()).hexdigest()
+              assert meta['bytes'] == archive.stat().st_size
+              assert meta['keepsCompleteTrips']
+              with zipfile.ZipFile(archive) as z:
+                  assert z.testzip() is None
+              print(archive.name, meta['details']['lastServiceDate'], meta['bytes'])
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: gtfs-aura-neighbours-${{ matrix.operator }}
