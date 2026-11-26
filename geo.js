@@ -204,6 +204,12 @@
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
           if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
+          if (numero && f.properties.street) {
+            const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
+            const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]);
+            const trouvee = motsVoie(f.properties.street);
+            if (demandee && trouvee && demandee !== trouvee && !demandee.startsWith(trouvee+' ')) continue;
+          }
           if (precision === 'adresse' || !x.a) return { cle, trouve: true, point };
           if (!meilleur || (meilleur.precision === 'ville' && precision === 'rue')) meilleur = point;
         }
