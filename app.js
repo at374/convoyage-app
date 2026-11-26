@@ -3732,6 +3732,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     });
   }
 
+  // ---------- V77 : notifications même application fermée (Web Push) ----------
   // Préchargement réel à T-15 de l'arrivée GPS : déclenche la recherche complète
   // Retour/Jonction même si la fiche mission a été fermée entre-temps.
   const prefetchLivraisonEnAttente = new Map();
@@ -3777,7 +3778,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     else if (!prefetchLivraisonTimer) prefetchLivraisonTimer = setInterval(viderPrefetchLivraison, 30000);
   });
 
-  // ---------- V77 : notifications même application fermée (Web Push) ----------
+
   const estIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const installee = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
   const b64uEnOctets = s => { const p = s.replace(/-/g, '+').replace(/_/g, '/'); const b = atob(p + '==='.slice((p.length + 3) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); };
