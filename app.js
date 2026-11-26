@@ -847,7 +847,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     state.lastSampleAt = ts; state.lastPosition = sample; store[t.key] = state;
     const keys = Object.keys(store); while (keys.length > 40) delete store[keys.shift()];
     ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
-    suiviConvoyageEstimerArrivee(m,t,here,ts,state);
+    // L'estimation a déjà été tentée une fois au début de cette acquisition GPS.
+    // Ne pas rappeler l'API une seconde fois après l'enregistrement de l'échantillon.
   }
   async function suiviConvoyageEstimerArrivee(m,t,here,ts,state) {
     if (suiviConvoyageEtaEnCours.has(t.key) || state.approcheDeclencheeAt) return;
