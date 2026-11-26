@@ -96,3 +96,20 @@ test('un résultat housenumber sans numéro vérifiable est rejeté',async()=>{
  const r=await G.chercherPoint(m,'destination',a.f);
  assert.equal(r.trouve,false,'un point sans housenumber vérifiable ne doit jamais être annoncé comme adresse exacte');
 });
+
+test('la détection de rue est exposée et le cache passe à geo-v3',()=>{
+ const m={to_city:'Annecy',to_department:'74',destination_address:"94 avenue d'Aix-les-Bains"};
+ assert.equal(typeof G.aAdresseRue,'function');
+ assert.equal(G.aAdresseRue(m,'destination'),true);
+ assert.match(G.cleAdresse(m,'destination'),/^geo-v3\\|/);
+ assert.equal(G.aAdresseRue({to_city:'Annecy',destination_address:'Annecy'},'destination'),false);
+});
+
+test('coordonnées imbriquées pickup et dropoff sont reconnues directement',()=>{
+ const a={from_city:'Annecy',pickup:{address:'12 rue Royale',city:'Annecy',lat:45.91,lng:6.12}};
+ const b={to_city:'Voiron',dropoff:{street:'Rue Louis Armand',city:'Voiron',lat:45.39,lng:5.57}};
+ assert.equal(G.coordonnees(a,'origin').lat,45.91);
+ assert.equal(G.coordonnees(a,'origin').precision,'gps');
+ assert.equal(G.coordonnees(b,'destination').lng,5.57);
+ assert.equal(G.coordonnees(b,'destination').precision,'gps');
+});
