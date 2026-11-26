@@ -916,3 +916,13 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Il est inclus dans `AXES_COUVERTURE` et sera exécuté par le diagnostic réel serveur avec les autres axes ; le titre du workflow a été corrigé pour indiquer les 20 axes de couverture.
 - Cet axe doit vérifier les moteurs nationaux (notamment SNCF), les réseaux locaux concernés et le nouveau fournisseur inter-réseaux. Le résultat réel reste à obtenir : l'ajout d'un axe de test n'est pas une preuve qu'un itinéraire existe.
 - Commits : axe `06d1ff6f8488209813b1bc4090c22dd946bd8c73` ; titre workflow `195e77497779034f2d8dc1a8ff556cacc7b12a85`.
+
+
+## Diagnostic national : axe Annecy–Voiron et retrait des métriques TripGo — 26/11/2026
+
+- L'axe `annecy-voiron` a été ajouté aux 20 axes `AXES_COUVERTURE` pour lancer un contrôle réel des horaires et correspondances avec les moteurs actuellement raccordés. Le diagnostic charge maintenant explicitement `transport-gtfs-federation.js` avant le hub.
+- L'inventaire `transport-coverage.js` ne présente plus TripGo comme une source, ni comme une solution de secours pour J'y bus, TAM, Cars Région ou les cars longue distance. Les prix commerciaux FlixBus/BlaBlaCar restent « à confirmer » tant qu'une source de billet vérifiable ne les fournit pas.
+- Le script de diagnostic ne calcule plus de métriques TripGo inexistantes ; il se concentre sur les trajets, prix officiels, marches, faisabilité et moteurs actifs.
+- Les instructions Android et l'architecture documentaire indiquent désormais de ne pas configurer de clé TripGo.
+- Commits : axe `06d1ff6f8488209813b1bc4090c22dd946bd8c73` ; workflow 20 axes `195e77497779034f2d8dc1a8ff556cacc7b12a85` ; chargement fédération diagnostic `d19fce873474d1ad98305e752fbdf6c1ca23637d` ; inventaire sans TripGo `455e21dfc547612242a2c0d1c4888393595140bc` / `bdeafa9b97ead1573f1cdd84bc47ba78babcbb60` ; diagnostic sans métriques TripGo `1413144713a829d78188d43fbaa613272a8c56ed` ; guide transports `dc615d890ca562aa524842ad4f2955127997415f`.
+- Le diagnostic réel, le résultat Annecy–Voiron et les essais Android restent à exécuter/consulter. Aucun résultat CI n'est revendiqué à ce stade.
