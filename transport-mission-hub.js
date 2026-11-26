@@ -289,7 +289,8 @@ function readDiviaRealtime(bytes,now){
    if(!id)continue;
    if(stops.has(id)){stops.set(id,null);continue;}
    const time=tag=>stop.has(tag)?Number(fields(stop.get(tag)).get(2))*1000:NaN;
-   stops.set(id,stop.get(5)?null:{arrival:time(2),departure:time(3)});
+   const status=stop.get(5)||0;
+   stops.set(id,status===1?{skipped:true}:status===0?{arrival:time(2),departure:time(3)}:null);
   }
   trips.set(id,trips.has(id)?null:{stops,date:text(descriptor.get(3)),cancelled:relationship===3});
  }
@@ -324,7 +325,9 @@ function loadDiviaRealtime(runtime){
 function applyDiviaRealtime(row,trips,now){
  const trip=trips?.get(row.tripId);
  if(!trip||row.onDemand||(trip.date&&trip.date!==row.serviceDate?.replaceAll('-','')))return row;
- const departure=trip.stops.get(row.from)?.departure,arrival=trip.stops.get(row.to)?.arrival;
+ const boarding=trip.stops.get(row.from),alighting=trip.stops.get(row.to);
+ if(boarding?.skipped||alighting?.skipped)return null;
+ const departure=boarding?.departure,arrival=alighting?.arrival;
  const scheduledDeparture=ms(row.departure),scheduledArrival=ms(row.arrival);
  if(trip.cancelled&&Math.abs(scheduledDeparture-now)<10800000)return null;
  if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<=departure||departure<now||
@@ -1487,7 +1490,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=transferts-gtfs-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=divia-skipped-stops-20261126');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1599,8 +1602,18 @@ function makeProviders(r,opts={}){
      // 5000 m déjà utilisé par OpenTripPlanner (ligne ~1270), qui lui trouvait bien ce trajet.
      const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
+     const now=Date.now();
+     const live=id==='divia_dijon'&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
+      ?await loadDiviaRealtime(r):null;
+     if(signal?.aborted)return [];
+     const skippedStops=new Map();
+     for(const [tripId,trip] of live||[]){
+      if(!trip||(trip.date&&trip.date!==date.replaceAll('-','')))continue;
+      const stops=new Set([...trip.stops].filter(([,stop])=>stop?.skipped).map(([stopId])=>stopId));
+      if(stops.size)skippedStops.set(tripId,stops);
+     }
      let rows=null,_viaWorker=false,_feedInfo=null,localFeed=null,workerCandidates=null;
-     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
+     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,skippedStops,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
      if(rows===null){
       _viaWorker=false;
       let promise=cache.get(id+'|'+date);
@@ -1653,6 +1666,8 @@ function makeProviders(r,opts={}){
      // from a few vehicles can hide later distinct departures.
      const best=new Map(),directMeters=meters(pt(task.from),pt(task.to));
      for(const x of rows){
+      const skipped=skippedStops.get(x.tripId);
+      if(skipped?.has(x.from)||skipped?.has(x.to))continue;
       if(!(w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
       const key=String(x.tripId||'')+'|'+date;
       const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
@@ -1675,10 +1690,6 @@ function makeProviders(r,opts={}){
      // 21/11/2026 (demande Laurent) : networkId/networkUrls/serviceDate conservés sur chaque ligne —
      // nécessaires pour le bouton « Tous les horaires » (dayScheduleForLeg) qui refait une requête GTFS
      // complète sur CE réseau précis, pour CETTE ligne et CES arrêts, sans le filtre « après maintenant ».
-     const now=Date.now();
-     const live=id==='divia_dijon'&&best.size&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
-      ?await loadDiviaRealtime(r):null;
-     if(signal?.aborted)return [];
      const filtered=[...best.values()].map(({x})=>({...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
       .filter(x=>x.departure&&x.arrival)

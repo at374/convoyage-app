@@ -145,13 +145,15 @@ self.onmessage=async({data})=>{
   catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
   return;
  }
- const {urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex}=data||{};
+ const {urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex,skippedStops}=data||{};
  try{
   const feed=await feedFor(urls,date);
   // Pré-sélection (même règle que le fil principal) : un seul passage par véhicule (le plus proche à pied), avant d'envoyer le résultat à l'écran.
   const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
   const all=CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,from,to,radius||3000),best=new Map();
   for(const x of all){
+   const skipped=skippedStops?.get(x.tripId);
+   if(skipped?.has(x.from)||skipped?.has(x.to))continue;
    if(!(arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
    const k=String(x.tripId||'')+'|'+date,a=Number(x.accessDistanceMeters),e=Number(x.egressDistanceMeters);
    if(!k||!Number.isFinite(a)||!Number.isFinite(e))continue;
