@@ -56,3 +56,10 @@ test('pré-calcul transport : continuer si la fiche est fermée tant que son bou
   assert.match(tick, /!transportDetailButton\.isConnected/);
   assert.doesNotMatch(tick, /\$\('feuille'\)\.hidden/);
 });
+
+test('pré-calcul transport masqué : conserver le hub et le worker GTFS actifs', () => {
+  const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+  assert.match(src, /const prefetchKeepsHubAlive=\(\)=>panel\.dataset\.cpPrefetched==='true'/);
+  assert.match(src, /\(\(panel\.hidden\|\|\$\('feuille'\)\.hidden\)&&!prefetchKeepsHubAlive\(\)\)/);
+  assert.match(src, /\(\(panel\.hidden \|\| \$\('feuille'\)\.hidden\) && !prefetchKeepsHubAlive\(\)\)/);
+});
