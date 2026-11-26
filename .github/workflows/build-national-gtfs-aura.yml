@@ -3,7 +3,7 @@ on:
   schedule:
     - cron: '17 3 * * 2'   # chaque mardi : SNCF, FlixBus, BlaBlaCar Bus (extraits AURA) restent à jour
   push:
-    branches: [feature/transports-aura-suisse]
+    branches: [main, feature/transports-aura-suisse]
     paths:
       - '.github/workflows/build-national-gtfs-aura.yml'
       - 'scripts/build_national_from_catalogue.py'
@@ -28,7 +28,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
