@@ -101,7 +101,7 @@ test('la détection de rue est exposée et le cache passe à geo-v3',()=>{
  const m={to_city:'Annecy',to_department:'74',destination_address:"94 avenue d'Aix-les-Bains"};
  assert.equal(typeof G.aAdresseRue,'function');
  assert.equal(G.aAdresseRue(m,'destination'),true);
- assert.match(G.cleAdresse(m,'destination'),/^geo-v3\\|/);
+ assert.ok(G.cleAdresse(m,'destination').startsWith('geo-v3|'));
  assert.equal(G.aAdresseRue({to_city:'Annecy',destination_address:'Annecy'},'destination'),false);
 });
 
