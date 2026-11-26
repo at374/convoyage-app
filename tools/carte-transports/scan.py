@@ -24,16 +24,22 @@ for f in sorted(glob.glob(R+'*.zip')):
             if r.get('exception_type')=='1': ends.append(r.get('date',''))
         end=max([e for e in ends if len(e)==8] or [''])
         nm,orig=names.get(b,(b[:-4],'(hors manifeste)'))
+        routes=sorted([{'ligne':r.get('route_short_name','').strip(), 'destination':r.get('route_long_name','').strip()}
+                       for r in rd('routes.txt') if r.get('route_short_name','').strip()],
+                      key=lambda r:r['ligne'])
+        typ=('nat' if b.startswith('national-') else
+             'car' if b.startswith('cars-region-') or b.startswith('remi') or 'Cars Région' in nm else 'urb')
         if not la: out.append(dict(file=b,name=nm,err='aucun arrêt')); continue
         la.sort();lo.sort();n=len(la)
         out.append(dict(file=b,name=nm,lat=round(statistics.median(la),4),lon=round(statistics.median(lo),4),
           b=[round(la[int(n*.03)],3),round(lo[int(n*.03)],3),round(la[int(n*.97)],3),round(lo[int(n*.97)],3)],
-          stops=len(st),end=end,moteur=(b in hub or b.startswith('national-')),mb=round(os.path.getsize(f)/1e6,1)))
+          stops=len(st),end=end,moteur=(b in hub or b.startswith('national-')),
+          type=typ,routes=routes,mb=round(os.path.getsize(f)/1e6,1)))
     except Exception as e: out.append(dict(file=b,err=str(e)[:60]))
 json.dump(out,open(sys.argv[1] if len(sys.argv)>1 else 'scan.json','w'),ensure_ascii=False)
 print(len(out),[o for o in out if 'err' in o][:5])
 import datetime
-t=datetime.date(2026,11,20)
+t=datetime.date.today()
 low=[(o['end'],o['name']) for o in out if o.get('end') and o['end']<(t+datetime.timedelta(days=14)).strftime('%Y%m%d')]
 print(sorted(low)[:20], len(low))
 print([o['name'] for o in out if not o.get('end')][:10])

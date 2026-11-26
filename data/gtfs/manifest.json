@@ -2921,6 +2921,23 @@
     49.25,
     3.6
    ]
+  },
+  "remi36-tours-line800-gtfs-rt": {
+   "network": "Rémi 36 · ligne 800",
+   "file": "remi36-tours-line800-gtfs-rt.zip",
+   "sha256": "07e27c9763eba78032afa56840faa2725bdeccb2642fcbd18f14d4f48dbad5f5",
+   "bytes": 121309,
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e",
+   "routes": 1,
+   "trips": 885,
+   "stops": 167,
+   "fares": false,
+   "bounds": [
+    46.78,
+    0.55,
+    47.45,
+    1.78
+   ]
   }
  },
  "errors": {

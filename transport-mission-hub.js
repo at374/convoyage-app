@@ -244,6 +244,7 @@ function bookingNote(nets){
 }
 const REMI_REALTIME_URL='https://api.okina.fr/gateway/cvl/gtfsrt/trip-updates?useoriginalId=true';
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['remi36_tours_800',['Rémi 36 · ligne 800',REMI_REALTIME_URL]],
  ['remi36_indre',['Rémi 36',REMI_REALTIME_URL]],
  ['remi18_cher',['Rémi 18',REMI_REALTIME_URL]],
  ['remi41_blois_sologne',['Rémi 41',REMI_REALTIME_URL]],
@@ -1359,6 +1360,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
  ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
  ['remi36_indre','Rémi 36','remi36-indre-gtfs-rt.zip',[46.79,1.32,47.15,2.42]],
+ ['remi36_tours_800','Rémi 36 · ligne 800','remi36-tours-line800-gtfs-rt.zip',[46.78,0.55,47.45,1.78]],
  ['remi18_cher','Rémi 18','remi18-cher-v2-gtfs-rt.zip',[46.53,1.79,47.58,3.05]],
  ['remi41_blois_sologne','Rémi 41','remi41-blois-vendome-gtfs-rt.zip',[47.20,1.03,47.87,2.09]],
  ['azalys_blois','Azalys Blois','azalys-blois-gtfs-rt.zip',[47.55,1.27,47.64,1.39]],
