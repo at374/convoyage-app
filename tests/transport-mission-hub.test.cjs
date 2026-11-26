@@ -806,3 +806,18 @@ test('mission GTFS Isere: official complete stop zones price journey, missing pr
   assert.equal(H.priceOf(unpriced,()=>null).status,'unknown');
  }finally{globalThis.CPIsereZonalFares=previous;}
 });
+
+
+test('marge de sécurité calculée après la marche finale : 15 min acceptées, 14 min rejetées',()=>{
+ const walk=(departure,arrival)=>({kind:'walk',mode:'Marche',from:'Arrêt Voiron',to:'Adresse exacte',
+  fromPoint:STOP2,toPoint:MISSION,departure,arrival,distanceMeters:420,durationSeconds:600,walkSource:'valhalla'});
+ const task={label:'Annecy → Voiron',from:HOME,to:MISSION,latestArrival:at(9,0)};
+ const onTime={source:'GTFS',legs:[bus(at(8,0),at(8,30),STOP1,STOP2),walk(at(8,30),at(8,45))],missing:[]};
+ const late={...onTime,legs:[onTime.legs[0],walk(at(8,30),at(8,46))]};
+ const accepted=H.assess(onTime,task,null),rejected=H.assess(late,task,null);
+ assert.equal(accepted.slackMinutes,15);
+ assert.equal(accepted.feasible,true,'l’arrivée à l’adresse exacte conserve 15 min');
+ assert.equal(rejected.slackMinutes,14);
+ assert.equal(rejected.feasible,false,'14 min après la marche finale ne suffit pas');
+ assert.match(rejected.statusDetail,/marge insuffisante/);
+});
