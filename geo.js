@@ -156,15 +156,21 @@
   const POINTS = {};
   const adresseDe = (m, cote) => {
     const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
-    const v = String(m[pre + '_city'] || p.city || '').trim(), d = m[pre + '_department'] || '';
+    const lieu = cote === 'origin' ? (m.pickup || m.pickup_location || {}) : (m.dropoff || m.delivery || m.dropoff_location || {});
     const mail = m.mail_info?.[cote === 'origin' ? 'depart' : 'arrivee']?.adresse;
-    const candidates = [m[cote + '_address'], p.address, p.street, m[pre + '_address'], mail]
-      .filter(value => typeof value === 'string')
+    const v = String(m[pre + '_city'] || p.city || lieu.city || '').trim();
+    const d = m[pre + '_department'] || '';
+    // Les plateformes n'emploient pas toutes le même schéma : normaliser ici, avant tout appel
+    // au géocodeur, pour que Hiflow, DriiveMe, Otoqi et Pop Valet partagent la même résolution.
+    const champs = cote === 'origin'
+      ? [m.origin_address, m.from_address, m.pickup_address, p.address, p.street, lieu.address, lieu.street, mail]
+      : [m.destination_address, m.to_address, m.delivery_address, m.dropoff_address, p.address, p.street, lieu.address, lieu.street, mail];
+    const candidates = champs.filter(value => typeof value === 'string')
       .map(value => value.replace(/\\+(?=['’])/g, '').replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').trim())
       .filter(Boolean);
     const city = norm(v);
     const a = candidates.find(value => !city || norm(value).replace(/\b(?:\d{5}|\d{2})\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() !== city) || '';
-    const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
+    const cp = String(p.postal_code || p.zip || lieu.postal_code || lieu.zip || m[pre + '_postal_code'] || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
     return { a, v, cp, d };
   };
   const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v2', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
