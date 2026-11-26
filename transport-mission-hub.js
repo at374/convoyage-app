@@ -899,6 +899,16 @@ function signature(j){
   Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
  ].join('|')).join(';');
 }
+function mergeRideDetails(target,source){
+ const rides=source.legs.filter(leg=>!isFoot(leg));
+ const byRide=new Map(rides.map(leg=>[signature({legs:[leg]}),leg]));
+ for(const leg of target.legs){
+  if(isFoot(leg))continue;
+  const other=byRide.get(signature({legs:[leg]}));
+  if(!leg.gtfsRaw&&other?.gtfsRaw)leg.gtfsRaw=other.gtfsRaw;
+  if(!leg.terminus&&other?.terminus)leg.terminus=other.terminus;
+ }
+}
 function rank(items,task={},includeLongWalk=false){
  const seen=new Map();
  for(const j of items){if(!j||j.durationMinutes===null)continue;
@@ -2313,18 +2323,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   for(const j of clean){
    const key=signature(j),known=key&&(s.bySignature.get(key)||queuedBySignature.get(key));
    if(known){known.sources=[...new Set([...(known.sources||[known.source]),...(j.sources||[j.source])])];
-    // 22/11/2026 (Laurent : le bouton « Tous les horaires » manque sur certaines lignes d'un trajet, alors
-    // qu'il existe pour d'autres lignes identiques ailleurs) : quand le MÊME trajet est retrouvé par plusieurs
-    // moteurs (ex. OpenTripPlanner ET le moteur GTFS de correspondances), seul le premier arrivé était gardé —
-    // si ce premier moteur ne pose pas gtfsRaw/routeId sur ses jambes (OTP ne le fait pas), le bouton restait
-    // absent même quand un AUTRE moteur avait bien ces métadonnées pour le même trajet. On complète maintenant
-    // les jambes déjà affichées avec le gtfsRaw d'un doublon plus tard, quand celui qui est déjà affiché n'en a pas.
-    if(Array.isArray(known.legs)&&Array.isArray(j.legs)&&known.legs.length===j.legs.length)
-     for(let i=0;i<known.legs.length;i++){
-      const current=known.legs[i],other=j.legs[i];
-      if(!current.gtfsRaw&&other?.gtfsRaw)current.gtfsRaw=other.gtfsRaw;
-      if(!current.terminus&&other?.terminus)current.terminus=other.terminus;
-     }
+    mergeRideDetails(known,j);
     continue;}
    const quick=assess(j,s.task,fareFor);
    if(quick.reasons.some(r=>immediateRejection.test(r))){
@@ -2352,7 +2351,10 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   }
   emit(label);
   const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
-   if(old)a.sources=[...new Set([...(a.sources||[]),...(old.sources||[])])];
+   if(old){
+    a.sources=[...new Set([...(a.sources||[]),...(old.sources||[])])];
+    mergeRideDetails(a,old);
+   }
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
   const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,walking,{enabled:!!(scooter&&scooter.enabled&&cycling),router:cycling,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},nearby).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);

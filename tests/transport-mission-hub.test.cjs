@@ -1180,3 +1180,31 @@ test('trois moteurs partagent le budget piéton de la section',async()=>{
   assert.ok(calls<=29,'appels marche : '+calls);
  }finally{session.dispose();}
 });
+
+test('la fiche horaire survit à un doublon reçu pendant le calcul des marches',async()=>{
+ const ride=bus(at(8,0),at(8,25),STOP1,STOP2);
+ const raw={routeId:'R1',from:'S1',to:'S2',serviceDate:'2026-11-16',networkUrls:['https://example.org/gtfs.zip']};
+ const router=fakeRouter();
+ let release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ let started;
+ const routing=new Promise(resolve=>{started=resolve;});
+ const session=H.createSession({
+  tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{},
+  router:{route:async(a,b)=>{started();await gate;return router.route(a,b);}}
+ });
+ try{
+  const first=session.ingest('Aller','A',[{source:'A',legs:[ride]}]);
+  await routing;
+  await session.ingest('Aller','B',[{source:'B',legs:[
+   {kind:'walk',mode:'Marche',fromPoint:HOME,toPoint:STOP1,departure:at(7,55),arrival:at(8,0)},
+   {...ride,gtfsRaw:raw,terminus:'Gare centrale'}
+  ]}]);
+  release();
+  await first;
+  const view=session.view('Aller');
+  const [trip]=H.selectJourneyCards(view,null);
+  assert.deepEqual(trip?.legs.find(l=>l.line===ride.line)?.gtfsRaw,raw);
+  assert.equal(trip.legs.find(l=>l.line===ride.line).terminus,'Gare centrale');
+ }finally{release();session.dispose();}
+});
