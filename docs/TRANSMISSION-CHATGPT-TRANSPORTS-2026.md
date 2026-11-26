@@ -937,3 +937,14 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Référence normative : https://developers.google.com/transit/gtfs/reference/extended-route-types
 - Commits : mapping `055646cc6d9a9f83400864cd74ab5b7cde8030e4` ; test `bb0f0c432bc97b9aef2abc64e6efe8bee93ea3cf` ; cache navigateur `441bf1384060476a2a65b26c55e3624db34a35bc`.
 - Les tests CI et la vérification sur Android restent en attente de résultats observables.
+
+
+## Durcissement final de la fédération GTFS et CI — 26/11/2026
+
+- Les archives inter-réseaux privilégient désormais l'URL exacte de la branche `feature/transports-aura-suisse` avant la copie GitHub Pages, pour éviter qu'une archive Pages plus ancienne soit choisie alors qu'elle reste téléchargeable.
+- Les fixtures d'intégration Sibra/M Réso incluent maintenant `route_type` (champ GTFS obligatoire) et vérifient explicitement les recherches avec heure d'arrivée seule et avant 06 h.
+- Le mapping des modes est aligné sur la table GTFS étendue officielle : les bus 700–716 ne sont plus éliminés, les trolleybus 800–899 et tramways 900–907 sont reconnus ; l'eau (4, 1000, 1200, 1502) seule est écartée. Les codes absents restent « Transport » et ne deviennent plus faussement « Tram ».
+- `tests/transport-gtfs-index.test.cjs` vérifie aussi que le code étendu (ex. bus 700) survit jusqu'aux candidats porte-à-porte. Le workflow diagnostic lance maintenant ce test et se déclenche lorsque ce test, le hub ou `index.html` changent.
+- Cache navigateur Android/Web du hub actualisé : `hub-20261126-gtfs-route-types-2`.
+- Commits : priorité d'archives `d71e38095dcc60ad4f2457f588244629bd27f77e` ; mapping `055646cc6d9a9f83400864cd74ab5b7cde8030e4` ; test modes `bb0f0c432bc97b9aef2abc64e6efe8bee93ea3cf` ; route_type manquant `59da38fe58722194dbf91f6f65f3799ee5e33190` ; fixtures valides `2caa21df160444168ac8af0c320615835b5751b6` ; test index `c2a211df3a3c4e6824d8422c5a8858466eab0584` ; CI `07c22afe7158af5203dfff6fc35c84adf45584f2` et déclenchement `7842458aac65c00e2e67aa85845c685de2e3b636`.
+- À la dernière lecture, l'API de statut GitHub ne retournait encore aucun statut ni run exploitable ; aucune réussite CI n'est affirmée.
