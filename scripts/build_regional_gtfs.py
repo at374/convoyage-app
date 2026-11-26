@@ -81,6 +81,11 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'remi36-indre-gtfs-rt', 'network': 'Rémi 36',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
+     'bounds': [46.79, 1.32, 47.15, 2.42], 'keep_complete_trips': True,
+     'route_ids': {'REMI36:Line:V', 'REMI36:Line:S'}},
+
     {'id': 'remi18-cher-v2-gtfs-rt', 'network': 'Rémi 18',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
      'bounds': [46.53, 1.79, 47.58, 3.05], 'keep_complete_trips': True,
