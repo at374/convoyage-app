@@ -4,7 +4,7 @@ name: Diagnostic réel des transports (15 axes AURA–Suisse)
 on:
   workflow_dispatch:
   push:
-    branches: [feature/transports-aura-suisse]
+    branches: [feature/transports-aura-suisse, fix/national-morning-arrival-validation]
     paths:
       - '.github/workflows/diagnostic-transports.yml'
       - 'scripts/diagnostic-transports-reel.cjs'
@@ -98,6 +98,16 @@ jobs:
             .then(()=>{throw Error('HTTP must be rejected')},e=>assert.match(e.message,/HTTPS/));
           national.loadAndSearch({...args,resource:{url:'https://example.org/feed.zip'},loadOptions:{maxArchiveBytes:30*1024*1024}})
             .then(()=>{throw Error('Oversized archive must be rejected')},e=>assert.match(e.message,/safe mobile cap/));
+          // Départ matinal : une arrivée avant la limite doit conserver un départ à l'aube.
+          const morningFiles={...files,
+            'trips.txt':'route_id,service_id,trip_id\\nr1,s1,early\\nr1,s1,late\\n',
+            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\\nearly,05:40:00,05:40:00,a,1\\nearly,07:10:00,07:10:00,b,2\\nlate,08:00:00,08:00:00,a,1\\nlate,10:00:00,10:00:00,b,2\\n'
+          };
+          const morningIndex=indexer.buildIndex(morningFiles);
+          const morning=national.search({...args,files:morningFiles,index:morningIndex,latestArrival:'07:30',maxResults:20});
+          assert.ok(morning.some(j=>j.tripId==='early'),'Aube 05:40 → 07:10 must be searched for a 07:30 arrival deadline');
+          assert.ok(morning.every(j=>j.tripId!=='late'),'Arrival after deadline must be excluded');
+          assert.equal(morning.find(j=>j.tripId==='early').departure,'05:40:00');
           console.log('Trajet national GTFS, fenêtre horaire, prix inconnus et validations OK');
           NODE
       - name: Vérifier les archives nationales publiées et leur accès HTTPS
