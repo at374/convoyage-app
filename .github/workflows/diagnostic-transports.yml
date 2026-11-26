@@ -1,4 +1,4 @@
-name: Diagnostic réel des transports (15 axes AURA–Suisse)
+name: Diagnostic réel des transports (20 axes de couverture AURA–Suisse)
 # Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
 # TripGo retiré du produit. Publie docs/diagnostic-serveur.json sur la branche source.
 on:
