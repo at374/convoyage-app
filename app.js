@@ -892,10 +892,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       try {
         if (missions.length && !suiviRefus) {
           const cible = missions.slice().sort((a, b) => Date.parse(a.t.pickup || '') - Date.parse(b.t.pickup || ''))[0];
+          const origine = G.coordonnees(cible.m, 'origin');
           const dest = G.coordonnees(cible.m, 'destination');
           if (dest && Number.isFinite(Number(dest.lat)) && Number.isFinite(Number(dest.lng))) {
             const rayon = dest.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
-            window.CPNatif.demarrerSuiviGps(Number(dest.lat), Number(dest.lng), cible.t.key, rayon);
+            const plat = origine && Number.isFinite(Number(origine.lat)) ? Number(origine.lat) : NaN;
+            const plng = origine && Number.isFinite(Number(origine.lng)) ? Number(origine.lng) : NaN;
+            window.CPNatif.demarrerSuiviGps(plat, plng, Number(dest.lat), Number(dest.lng), cible.t.key, rayon);
           }
         } else window.CPNatif.arreterSuiviGps();
         const raw = window.CPNatif.prendrePointsSuiviGps();
