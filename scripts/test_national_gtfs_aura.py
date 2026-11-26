@@ -31,7 +31,7 @@ def main():
                 ['t','08:00:00','08:00:00','a','1'],['t','10:00:00','10:00:00','b','2'],
                 ['t','13:00:00','13:00:00','c','3']]),
             'calendar.txt': table(['service_id','monday','tuesday','wednesday','thursday','friday','saturday','sunday','start_date','end_date'],[
-                ['s','1','1','1','1','1','1','1','20260101','20261231']])
+                ['s','1','1','1','1','1','1','1',(datetime.now(ZoneInfo('Europe/Paris')).date()-timedelta(days=1)).strftime('%Y%m%d'),(datetime.now(ZoneInfo('Europe/Paris')).date()+timedelta(days=60)).strftime('%Y%m%d')]])
         }
         with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED) as z:
             for name, text in data.items():
@@ -85,6 +85,8 @@ def main():
                 ['s',end.strftime('%Y%m%d'),'2']]))
         expired=subprocess.run(corridor_cmd,capture_output=True,text=True)
         assert expired.returncode!=0 and 'fewer than 30 days' in expired.stderr
+        expired_aura=subprocess.run(cmd,capture_output=True,text=True)
+        assert expired_aura.returncode!=0 and 'fewer than 30 days' in expired_aura.stderr,expired_aura.stderr
         with open(os.path.join(temp,corridor['file']+'.json'),encoding='utf-8') as metadata:
             assert json.load(metadata)==corridor
         with zipfile.ZipFile(source,'a',zipfile.ZIP_DEFLATED) as z:
