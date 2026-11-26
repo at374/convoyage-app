@@ -7,6 +7,8 @@ on:
       - 'index.html'
       - 'sw.js'
       - 'tests/platform-availability-reconciliation.test.cjs'
+      - 'tests/hiflow-pagination.test.cjs'
+      - 'server/hiflow-sync-deploy/hiflow-sync.cjs'
       - '.github/workflows/test-platform-availability-reconciliation.yml'
   pull_request:
     paths:
@@ -14,6 +16,8 @@ on:
       - 'index.html'
       - 'sw.js'
       - 'tests/platform-availability-reconciliation.test.cjs'
+      - 'tests/hiflow-pagination.test.cjs'
+      - 'server/hiflow-sync-deploy/hiflow-sync.cjs'
       - '.github/workflows/test-platform-availability-reconciliation.yml'
 jobs:
   regression:
@@ -24,4 +28,4 @@ jobs:
         with:
           node-version: 20
       - run: node --check filtres.js
-      - run: node --test tests/platform-availability-reconciliation.test.cjs
+      - run: node --test tests/platform-availability-reconciliation.test.cjs tests/hiflow-pagination.test.cjs
