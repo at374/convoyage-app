@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['rubis',['Rubis Bourg-en-Bresse','rubis-bourg-en-bresse']],
  ['jybus',['J’y bus Rumilly','jybus-rumilly']],
  ['tac',['TAC Annemasse','tac-annemasse']],
  ['divia_dijon',['Divia Mobilités (Dijon)','divia-dijon']],
@@ -1355,7 +1356,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['jybus','J’y bus Rumilly','jybus-rumilly-gtfs-rt.zip',[45.80,5.85,45.93,6.05]],
  ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
  // 15/11/2026 : autres réseaux de l'agrégat officiel Oùra (extraits par la tâche serveur, emprises relevées).
- ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg.zip', [46.15,5.05,46.52,5.41]],
+ ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg-gtfs-rt.zip', [46.15,5.05,46.52,5.41]],
  ['evad', "ÉVA'D Évian", 'evad-evian.zip', [46.24,6.45,46.42,6.86]],
  ['chamonix', "Chamonix Bus", 'chamonix-bus.zip', [45.87,6.74,46.06,6.96]],
  ['proximiti', "Proxim iTi Bonneville – La Roche", 'proximiti-bonneville.zip', [45.91,6.17,46.23,6.53]],
@@ -1565,7 +1566,7 @@ function makeProviders(r,opts={}){
   base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
   deployedBase=null;
   try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
-  const branchArchive=file=>file==='jybus-rumilly-gtfs-rt.zip'
+  const branchArchive=file=>file.endsWith('-gtfs-rt.zip')
    ?'https://raw.githubusercontent.com/at374/convoyage-app/feature/native-gps-bridge/data/gtfs/'+file:null;
   // Les réseaux déjà lus restent en mémoire d'une recherche à l'autre (10 au maximum) : la 2e recherche et les actualisations de 5 min sont instantanées.
   const cache=r.__cpHubFeedCache||(r.__cpHubFeedCache=new Map());
