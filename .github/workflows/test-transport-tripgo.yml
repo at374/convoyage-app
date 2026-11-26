@@ -1,14 +1,14 @@
-name: Test TripGo transport evidence
+name: Test BlaBlaCar transport evidence
 on:
   push:
     branches: [feature/transport-ranking-safe]
-    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/transport-realtime-relay.test.cjs', 'server/transport-realtime-relay.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
+    paths: ['transport-tripgo-retired.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo-retired.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/transport-realtime-relay.test.cjs', 'server/transport-realtime-relay.cjs', 'tests/fixtures/blablacar-*.json', '', '.github/workflows/test-transport-tripgo.yml']
   pull_request:
-    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/transport-realtime-relay.test.cjs', 'server/transport-realtime-relay.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
+    paths: ['transport-tripgo-retired.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo-retired.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/transport-realtime-relay.test.cjs', 'server/transport-realtime-relay.cjs', 'tests/fixtures/blablacar-*.json', '', '.github/workflows/test-transport-tripgo.yml']
 permissions:
   contents: read
 jobs:
-  tripgo:
+  blablacar:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -16,7 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --check transport-tripgo.js
       - run: node --check app.js
       - run: node --check transport-blablacar-realtime.js
-      - run: node --test tests/transport-tripgo.test.cjs tests/transport-blablacar-realtime.test.cjs tests/transport-realtime-relay.test.cjs
+      - run: node --test tests/transport-blablacar-realtime.test.cjs tests/transport-realtime-relay.test.cjs
