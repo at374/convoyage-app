@@ -1010,9 +1010,10 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
   CPGTFSFederation:federation
  };
  const providers=H.makeProviders(root,{federationFeedLoader:async request=>{
-  loaded.push(request.id);
-  assert.deepEqual(request.serviceDates,['2026-11-27']);
-  return feeds[request.id];
+  loaded.push({id:request.id,dates:request.serviceDates});
+  const original=feeds[request.id],files={...original.files,
+   'calendar_dates.txt':'service_id,date,exception_type\\n'+request.serviceDates.map(day=>'S,'+day.replaceAll('-','')+',1').join('\\n')};
+  return {...original,files,index:indexer.buildIndex(files),indexServiceDates:request.serviceDates};
  }});
  const provider=providers.interNetwork;
  assert.ok(provider,'le fournisseur inter-réseaux est enregistré');
@@ -1020,7 +1021,8 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
   earliestDeparture:at(8,0,'2026-11-27'),latestArrival:at(12,0,'2026-11-27')};
  assert.equal(provider.enabled(task),true,'Annecy et Voiron sont dans deux réseaux distincts');
  const rows=await provider.run(task);
- assert.deepEqual(loaded.sort(),['mreso_voironnais','sibra_annecy']);
+ assert.deepEqual(loaded.map(x=>x.id).sort(),['mreso_voironnais','sibra_annecy']);
+ assert.deepEqual(loaded[0].dates,['2026-11-27']);
  assert.equal(rows.length,1,'une correspondance horaire réelle est construite');
  assert.equal(rows[0].legs.length,2);
  assert.equal(rows[0].legs[0].provider,'Sibra');
@@ -1029,6 +1031,11 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
  assert.equal(rows[0].legs[1].fromPoint.lat,45.5005);
  assert.ok(rows[0].missing.some(x=>/GTFS local non confirmé/.test(x)),
   'les horaires statiques ne sont jamais déclarés confirmés en temps réel');
+ const morningOnly=await provider.run({from:task.from,to:task.to,latestArrival:task.latestArrival});
+ assert.equal(morningOnly.length,1,'une recherche limitée par l’heure d’arrivée conserve les départs matinaux');
+ const early=await provider.run({...task,earliestDeparture:at(4,0,'2026-11-27')});
+ assert.equal(early.length,1,'avant 06 h, les deux conventions de jour de service sont explorées');
+ assert.deepEqual(loaded.at(-1).dates,['2026-11-26','2026-11-27']);
  assert.equal(provider.enabled({...task,to:{lat:45.9,lon:6.12}}),false,
   'une mission dans le même réseau ne déclenche pas le fédérateur inter-réseaux');
 });
