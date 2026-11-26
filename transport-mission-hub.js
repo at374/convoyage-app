@@ -894,7 +894,7 @@ function signature(j){
  return j.legs.filter(l=>!isFoot(l)).map(l=>[
   String(l.provider||'').replace(/\s+/g,'').toLowerCase(),
   String(l.line||'').replace(/\s+/g,'').toLowerCase(),
-  String(l.from||'').trim().toLowerCase(),String(l.to||'').trim().toLowerCase(),
+  scheduleLabel(l.from),scheduleLabel(l.to),
   l.fromPoint?.lat,l.fromPoint?.lon,l.toPoint?.lat,l.toPoint?.lon,
   Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
  ].join('|')).join(';');

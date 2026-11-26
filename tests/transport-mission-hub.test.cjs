@@ -541,12 +541,12 @@ test('doublons : la signature distingue les compagnies de cars',()=>{
  assert.match(signature,/String\(l\.line\|\|''\)/);
 });
 
-test('doublons : les arrêts de montée et descente font partie de la signature',()=>{
- const fs=require('node:fs');
- const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
- const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
- assert.match(signature,/String\(l\.from\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
- assert.match(signature,/String\(l\.to\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
+test('doublons : les variantes typographiques fusionnent et les arrêts distincts restent séparés',()=>{
+ const base=H.assess({source:'A',sources:['A'],legs:[bus(at(8,0),at(8,30),STOP1,STOP2)]},{latestArrival:at(10,0)});
+ const trip=(source,from)=>({...base,source,sources:[source],legs:[{...base.legs[0],from}]});
+ const ranked=H.rank([trip('A','Gare d’Épagny'),trip('B',"Gare d'Epagny"),trip('C','Mairie')]);
+ assert.equal(ranked.total,2);
+ assert.ok([...ranked.picks.map(p=>p.journey),...ranked.others].some(j=>j.sources.includes('A')&&j.sources.includes('B')));
 });
 
 test('doublons : les marches distinctes ne partagent plus une clé unique',()=>{
