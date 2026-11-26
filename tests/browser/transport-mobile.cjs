@@ -147,11 +147,12 @@ async function run(){
    }
    if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('regionalfare')?regionalFareZip:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
    if(url.hostname==='data.geopf.fr'&&url.pathname==='/geocodage/search'){
-    const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
+    const q=url.searchParams.get('q')||'',match=q.match(/\\b(12|14|16|18)\\s+(.+?)(?:\\s+\\d{5})?(?:\\s|$)/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
      const point=regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
-     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':tripgoScenario&&number==='14'?'Annecy':'Grenoble'}}]}).catch(()=>{});
+     const city=number==='16'||number==='18'?'Crolles':tripgoScenario&&number==='14'?'Annecy':'Grenoble';
+     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',housenumber:number,street:'rue Exemple',city}}]}).catch(()=>{});
     }
     return json(route,{features:[]});
    }
