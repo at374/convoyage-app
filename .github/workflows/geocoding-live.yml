@@ -1,0 +1,42 @@
+name: Live IGN geocoding verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "feature/transports-aura-suisse"]
+    paths:
+      - 'geo.js'
+      - 'tests/geo-adresse-repli.test.cjs'
+      - '.github/workflows/geocoding-live.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Query official geocoder
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.parse, unicodedata, re
+          def norm(s):
+              s = unicodedata.normalize('NFKD', s.lower())
+              return re.sub(r'[^a-z0-9]+', ' ', ''.join(c for c in s if not unicodedata.combining(c))).strip()
+          url = 'https://data.geopf.fr/geocodage/search?' + urllib.parse.urlencode({'q': "94 avenue d'Aix-les-Bains Annecy", 'limit': 5})
+          with urllib.request.urlopen(url, timeout=30) as response:
+              data = json.load(response)
+          matches = []
+          for f in data['features']:
+              p = f['properties']
+              print(json.dumps({'properties': p, 'coordinates': f['geometry']['coordinates']}, ensure_ascii=False))
+              if p.get('type') == 'housenumber' and str(p.get('housenumber')) == '94' and 'aix' in norm(p.get('street', '')) and 'bains' in norm(p.get('street', '')) and 'annecy' in norm(p.get('city', '')):
+                  matches.append(f)
+          if not matches:
+              for query in ["94 avenue d'Aix-les-Bains 74600 Annecy", "94 avenue aix les bains Seynod", "94 avenue d'Aix-les-Bains 74600 Seynod"]:
+                  url = 'https://data.geopf.fr/geocodage/search?' + urllib.parse.urlencode({'q': query, 'limit': 10, 'type': 'housenumber'})
+                  print('Query:', query)
+                  with urllib.request.urlopen(url, timeout=20) as response:
+                      for f in json.load(response)['features']:
+                          p = f['properties']
+                          print(json.dumps({'properties': p, 'coordinates': f['geometry']['coordinates']}, ensure_ascii=False))
+                          if p.get('type') == 'housenumber' and str(p.get('housenumber')) == '94' and norm(p.get('street', '')) == 'avenue d aix les bains' and p.get('citycode') == '74010':
+                              matches.append(f)
+          assert matches, 'No verified exact address returned'
+          PY
