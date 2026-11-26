@@ -1,0 +1,27 @@
+name: Platform availability reconciliation
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'filtres.js'
+      - 'index.html'
+      - 'sw.js'
+      - 'tests/platform-availability-reconciliation.test.cjs'
+      - '.github/workflows/test-platform-availability-reconciliation.yml'
+  pull_request:
+    paths:
+      - 'filtres.js'
+      - 'index.html'
+      - 'sw.js'
+      - 'tests/platform-availability-reconciliation.test.cjs'
+      - '.github/workflows/test-platform-availability-reconciliation.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --check filtres.js
+      - run: node --test tests/platform-availability-reconciliation.test.cjs
