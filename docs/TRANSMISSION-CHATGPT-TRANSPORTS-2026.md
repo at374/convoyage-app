@@ -908,3 +908,11 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Un test d'intégration a été ajouté dans `tests/transport-mission-hub.test.cjs` : liaison Sibra Annecy → M Réso Pays Voironnais, coordonnées d'arrêts distinctes, horaires, recherche arrivée-seulement et recherche avant 06 h.
 - Commits : raccordement `3f75c0a1c67174e369c43c647ce883621af53f17` ; correction jour de service `3dc93cdf848ba23c6149c5df6d6c73ffe24b8bf6` ; recherche des deux conventions avant 06 h `33e094a0dd5f7381ed1c947c4f3ff3f4cd4fa550` ; test d'intégration `f180c61ce8eeac73bc515dcd952b6406503848a0` ; fixture calendrier `40971431797659bddd1f008e8de6fae1025ee6ae` ; types de ligne GTFS `a385ec975b4725fe7b0eaecf666f40876647d6e1` et `db77a089e82963f4ee66ad60d0877cff47c13f8b`.
 - Validation restante : exécution GitHub Actions du workflow diagnostic, contrôle réel des flux Sibra/M Réso et essai porte-à-porte sur appareil Android. Le statut CI du dernier commit n'a pas encore remonté de résultat dans l'API consultée ; aucune validation Android n'est revendiquée.
+
+
+## Axe de diagnostic réel Annecy → Voiron — 26/11/2026
+
+- Ajout de l'axe `annecy-voiron` dans `transport-coverage.js` avec les coordonnées GPS des gares Annecy et Voiron.
+- Il est inclus dans `AXES_COUVERTURE` et sera exécuté par le diagnostic réel serveur avec les autres axes ; le titre du workflow a été corrigé pour indiquer les 20 axes de couverture.
+- Cet axe doit vérifier les moteurs nationaux (notamment SNCF), les réseaux locaux concernés et le nouveau fournisseur inter-réseaux. Le résultat réel reste à obtenir : l'ajout d'un axe de test n'est pas une preuve qu'un itinéraire existe.
+- Commits : axe `06d1ff6f8488209813b1bc4090c22dd946bd8c73` ; titre workflow `195e77497779034f2d8dc1a8ff556cacc7b12a85`.
