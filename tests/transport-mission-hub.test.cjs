@@ -1194,7 +1194,7 @@ test('la fiche horaire survit à un doublon reçu pendant le calcul des marches'
   router:{route:async(a,b)=>{started();await gate;return router.route(a,b);}}
  });
  try{
-  const first=session.ingest('Aller','A',[{source:'A',legs:[ride]}]);
+  const first=session.ingest('Aller','A',[{source:'A',legs:[{...ride,gtfsRaw:{routeId:'autre-flux',from:'ancien-arrêt'}}]}]);
   await routing;
   await session.ingest('Aller','B',[{source:'B',legs:[
    {kind:'walk',mode:'Marche',fromPoint:HOME,toPoint:STOP1,departure:at(7,55),arrival:at(8,0)},
@@ -1204,7 +1204,7 @@ test('la fiche horaire survit à un doublon reçu pendant le calcul des marches'
   await first;
   const view=session.view('Aller');
   const [trip]=H.selectJourneyCards(view,null);
-  assert.deepEqual(trip?.legs.find(l=>l.line===ride.line)?.gtfsRaw,raw);
+  assert.deepEqual(H.scheduleSourceForLeg(trip.legs.find(l=>l.line===ride.line)),raw);
   assert.equal(trip.legs.find(l=>l.line===ride.line).terminus,'Gare centrale');
  }finally{release();session.dispose();}
 });

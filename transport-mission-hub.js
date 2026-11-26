@@ -899,13 +899,17 @@ function signature(j){
   Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
  ].join('|')).join(';');
 }
+function hasExactSchedule(raw){
+ return !!(raw?.networkUrls?.length&&raw.routeId&&raw.from&&raw.to&&raw.serviceDate);
+}
 function mergeRideDetails(target,source){
  const rides=source.legs.filter(leg=>!isFoot(leg));
  const byRide=new Map(rides.map(leg=>[signature({legs:[leg]}),leg]));
  for(const leg of target.legs){
   if(isFoot(leg))continue;
   const other=byRide.get(signature({legs:[leg]}));
-  if(!leg.gtfsRaw&&other?.gtfsRaw)leg.gtfsRaw=other.gtfsRaw;
+  if(other?.gtfsRaw&&(!leg.gtfsRaw||(!hasExactSchedule(leg.gtfsRaw)&&hasExactSchedule(other.gtfsRaw))))
+   leg.gtfsRaw=other.gtfsRaw;
   if(!leg.terminus&&other?.terminus)leg.terminus=other.terminus;
  }
 }
@@ -2650,7 +2654,7 @@ async function gtfsTablesForDaySchedule(raw){
 // bouton Y51 historique (sibra-planner.js::datedInterurbanRides), généralisée à tout réseau GTFS câblé.
 function scheduleSourceForLeg(l,useRaw=true){
  const raw=l.gtfsRaw;
- if(useRaw&&raw?.networkUrls?.length&&raw.routeId&&raw.from&&raw.to&&raw.serviceDate)return raw;
+ if(useRaw&&hasExactSchedule(raw))return raw;
  const date=parisDayParts(l.departure)?.day;
  const fromPoint=pt(l.fromPoint),toPoint=pt(l.toPoint);
  if(!date||!l.line)return null;
