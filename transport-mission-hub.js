@@ -833,7 +833,30 @@ function makeProviders(r,opts={}){
    // 30 trajets réels chacun via scripts/verifier-moteurs-regionaux.cjs), pas de resserrement nécessaire.
    ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
    ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
-   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]]
+   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]],
+   // Bretagne : 22 extraits GTFS terrestres validés individuellement sur les archives KORRIGO.
+   ['bretagne-star-rennes', "STAR Rennes", 'bretagne-star-rennes.zip', [47.939335,-1.946498,48.299796,-1.478292]],
+   ['bretagne-qub-quimper', "QUB Quimper", 'bretagne-qub-quimper.zip', [47.911367,-4.229707,48.151912,-3.869734]],
+   ['bretagne-tub-saint-brieuc', "TUB Saint-Brieuc", 'bretagne-tub-saint-brieuc.zip', [48.307588,-3.03629,48.666517,-2.631844]],
+   ['bretagne-mat-saint-malo', "MAT Saint-Malo", 'bretagne-mat-saint-malo.zip', [48.486236,-2.02638,48.705359,-1.795744]],
+   ['bretagne-kiceo-vannes', "Kicéo Vannes", 'bretagne-kiceo-vannes.zip', [47.490644,-2.952535,47.825011,-2.525686]],
+   ['bretagne-aleop-finistere', "BreizhGo en Finistère", 'bretagne-aleop-finistere.zip', [47.795987,-4.780532,48.723448,-3.55058]],
+   ['bretagne-bibus-brest', "Bibus Brest", 'bretagne-bibus-brest.zip', [48.341685,-4.622326,48.457162,-4.339396]],
+   ['bretagne-izilo-lorient', "Izilo Lorient", 'bretagne-izilo-lorient.zip', [47.627059,-3.526621,48.018682,-3.065159]],
+   ['bretagne-aleop-cotes-armor', "BreizhGo en Côtes d’Armor", 'bretagne-aleop-cotes-armor.zip', [48.18864,-3.561181,48.863939,-1.928488]],
+   ['bretagne-distribus-lamballe', "Distribus Lamballe", 'bretagne-distribus-lamballe.zip', [48.453294,-2.562996,48.636547,-2.436293]],
+   ['bretagne-tbk-quimperle', "TBK Quimperlé", 'bretagne-tbk-quimperle.zip', [47.76648,-3.805557,48.086078,-3.332212]],
+   ['bretagne-arbus-landerneau', "Ar Bus Landerneau", 'bretagne-arbus-landerneau.zip', [48.436129,-4.289596,48.466082,-4.228516]],
+   ['bretagne-guingamp-paimpol', "Guingamp-Paimpol Mobilité", 'bretagne-guingamp-paimpol.zip', [48.543272,-3.196483,48.821057,-2.967586]],
+   ['bretagne-coralie-concarneau', "Coralie Concarneau", 'bretagne-coralie-concarneau.zip', [47.788605,-3.973887,48.043617,-3.694708]],
+   ['bretagne-tudbus-douarnenez', "Tud’Bus Douarnenez", 'bretagne-tudbus-douarnenez.zip', [48.039771,-4.416537,48.100424,-4.257099]],
+   ['bretagne-auraybus', "Auray Bus", 'bretagne-auraybus.zip', [47.660061,-3.02625,47.689668,-2.959164]],
+   ['bretagne-pondibus-pontivy', "PondiBUS et MOOVI", 'bretagne-pondibus-pontivy.zip', [48.037738,-2.986288,48.087405,-2.886475]],
+   ['bretagne-aleop-ille-et-vilaine', "BreizhGo en Ille-et-Vilaine", 'bretagne-aleop-ille-et-vilaine.zip', [47.721656,-3.562317,48.649071,-1.125251]],
+   ['bretagne-tilt-lannion', "TILT Lannion", 'bretagne-tilt-lannion.zip', [48.577213,-3.834531,48.836352,-3.297218]],
+   ['bretagne-surf-fougeres', "SURF Fougères", 'bretagne-surf-fougeres.zip', [48.319667,-1.234321,48.37095,-1.147296]],
+   ['bretagne-riv-ploermel', "RIV Ploërmel", 'bretagne-riv-ploermel.zip', [47.864667,-2.563861,48.084417,-2.282444]],
+   ['bretagne-aleop-morbihan', "BreizhGo en Morbihan", 'bretagne-aleop-morbihan.zip', [47.478376,-3.606616,48.514088,-2.056498]],
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
