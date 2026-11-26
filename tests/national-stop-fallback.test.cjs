@@ -7,10 +7,11 @@ const task={
  to:{lat:45.1885,lon:5.7245},
  earliestDeparture:'2026-11-16T07:00:00+01:00'
 };
-function harness(results,opts={}){
+function harness(results,opts={},onSearch=()=>{}){
  const calls=[];
  const root={CPNationalGTFSJourneys:{loadAndSearch:async args=>{
   calls.push(args);
+  onSearch(args);
   return results[calls.length-1]||{journeys:[]};
  }}};
  const providers=hub.makeProviders(root,{nationalGTFSResources:{
@@ -35,10 +36,16 @@ test('national fallback is opt-out',async()=>{
  await h.provider.run(task);
  assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000]);
 });
-test('national fallback respects cancellation',async()=>{
+test('national fallback skips an already cancelled search',async()=>{
  const h=harness([{journeys:[]}]);
  const controller=new AbortController();
  controller.abort();
+ await h.provider.run(task,controller.signal);
+ assert.deepEqual(h.calls,[]);
+});
+test('national fallback does not widen after cancellation during the initial search',async()=>{
+ const controller=new AbortController();
+ const h=harness([{journeys:[]}],{},()=>controller.abort());
  await h.provider.run(task,controller.signal);
  assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000]);
 });
