@@ -2095,6 +2095,18 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const heading=document.createElement('h3');heading.textContent=label;
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
         section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+        const refreshDirection=document.createElement('button');
+        refreshDirection.type='button';refreshDirection.className='second cp-transport-refresh';
+        refreshDirection.textContent='🔄 Actualiser '+key;
+        refreshDirection.setAttribute('aria-label','Actualiser uniquement le trajet '+key);
+        refreshDirection.onclick=()=>{
+          if(!panel.isConnected)return;
+          bt.dataset.transportRefreshAt=String(Date.now());
+          bt.dataset.transportRefreshLabel=key;
+          panel.cpRefreshStarted=false;
+          startTransportHub(false,key);
+        };
+        section.appendChild(refreshDirection);
         // Un seul affichage des trajets : les cartes classées du hub. Les anciens blocs par moteur restent consultables, repliés.
         const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
         const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
@@ -2298,7 +2310,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Remise à « idle » juste après : un blocage étiqueté « idle » n'est PAS pendant un rendu.
         window.CPPh?.('transports:idle');
       };
-      const startTransportHub=(onlyJonction=false)=>{
+      const startTransportHub=(onlyJonction=false,onlyLabel=null)=>{
         window.CPPh?.('transports:ouverture');
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
@@ -2437,6 +2449,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
         }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',siteCloseMinutes:closeFor(origT.delivery_end),earliestDeparture:plancher(deliveryStartIso||deliveryDate),...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(plancher(deliveryStartIso)),windowEndMs:deliveryEndMs}:{})});
+        const allTasks=tasks.slice();
         if(onlyJonction){
           const junction=tasks.find(t=>t.label==='Jonction');
           if(!junction)return;
@@ -2445,18 +2458,30 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           const index=tasks.findIndex(t=>t.label==='Jonction');
           if(index>=0)tasks.splice(index,1);
         }
+        if(onlyLabel)tasks.splice(0,tasks.length,...tasks.filter(t=>t.label===onlyLabel));
         if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
-        const signature=JSON.stringify([Hub.VERSION,tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const commonSignature=JSON.stringify([Hub.VERSION,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const taskSignatures=Object.fromEntries(allTasks.map(({lazy,...task})=>[task.label,JSON.stringify([task,commonSignature])]));
+        const signature=JSON.stringify([commonSignature,allTasks.map(({lazy,...r})=>r)]);
         if((onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
         // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
         // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
         // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
         if(!onlyJonction)panel.cpRefreshStarted=true;
-        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?stored.views||{}:{};
+        const refreshLabel=refresh?(bt.dataset.transportRefreshLabel||null):null;
+        if(refreshLabel)delete bt.dataset.transportRefreshLabel;
+        const cachedViews=!onlyJonction&&stored?.views?Object.fromEntries(
+          Object.entries(stored.views).filter(([label])=>
+            label!==refreshLabel&&(
+              stored.partSignatures?.[label]===taskSignatures[label]||
+              (!stored.partSignatures&&stored.signature===signature)
+            )
+          )
+        ):{};
         const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
-        const resetLabels=onlyJonction?['Jonction']:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride);
+        const resetLabels=onlyLabel?[onlyLabel]:(onlyJonction?['Jonction']:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride));
         for(const label of resetLabels){delete labelState[label];delete pendingViews[label];}
         for(const [label,view] of Object.entries(cachedViews)){
           masquerRecherche(label);
@@ -2569,9 +2594,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               const savedAt=Date.now();
               search.views[label]={...view,savedAt};
               // Conserver les autres jours jusqu'à ce que leurs nouveaux résultats soient prêts.
-              const retained=stored?.signature===signature?stored.views:{};
+              const retained=stored?.views||{};
               const views={...retained,...search.views};
-              const entry={signature,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
+              const entry={signature,partSignatures:taskSignatures,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
               transportViewCache.set(memoryKey,entry);
               clearTimeout(transportSaveTimers.get(memoryKey));
               const persist=()=>{
