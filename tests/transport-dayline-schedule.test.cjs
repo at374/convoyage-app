@@ -152,3 +152,31 @@ test('le rendu rouvre les grilles par identité d’étape et non par position d
  assert.match(hubSrc,/\.cp-hub-dayline\[aria-expanded="true"\]/);
  assert.match(hubSrc,/expandedSchedules\.has\(button\.getAttribute\('data-ride-key'\)\)\)button\.click\(\)/);
 });
+
+const starZip=path.join(__dirname,'..','data','gtfs','start-thonon.zip');
+test('réel : le bus C de la fiche Thonon affiche tous ses départs et leur terminus',
+ {skip:!fs.existsSync(starZip)&&'archive Star’t absente'},async t=>{
+  const previous={fetch:globalThis.fetch,caches:globalThis.caches,
+   CPGTFSIndex:globalThis.CPGTFSIndex,CPGTFSLoader:globalThis.CPGTFSLoader};
+  t.after(()=>Object.assign(globalThis,previous));
+  globalThis.CPGTFSIndex=require('../transport-gtfs-index.js');
+  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
+  globalThis.caches=undefined;
+  globalThis.fetch=async url=>{
+   assert.match(String(url),/start-thonon\.zip$/);
+   return new Response(fs.readFileSync(starZip),{headers:{'content-type':'application/zip'}});
+  };
+  const hub=require('../transport-mission-hub.js');
+  const raw=hub.scheduleSourceForLeg({mode:'Bus',line:'B C (But)',provider:'tpg',
+   from:'Thonon-les-Bains, Les Arts',to:'Thonon-les-Bains, Serres Mun.',
+   departure:'2026-11-23T08:40:00+01:00'});
+  assert.equal(raw.routeId,'C');
+  assert.match(raw.sourceUrl,/www\.star-t\.fr/);
+  const rows=await hub.dayScheduleForLeg(raw);
+  assert.equal(rows.length,21);
+  assert.equal(hub.hmFromSeconds(rows[0].departureSeconds),'06:10');
+  assert.equal(hub.hmFromSeconds(rows.at(-1).departureSeconds),'19:26');
+  const ride=rows.find(row=>hub.hmFromSeconds(row.departureSeconds)==='08:40');
+  assert.equal(hub.hmFromSeconds(ride.arrivalSeconds),'08:57');
+  assert.match(ride.terminus,/^Saint Disdille campings$/i);
+ });

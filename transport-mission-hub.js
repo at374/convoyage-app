@@ -78,6 +78,7 @@ const BOATS=/ferry|bateau|boat|ship|cgn|navette lacustre|^bat$|^ms$/i;
 
 /* ---------- Normalisation par fournisseur ---------- */
 function leg(o){
+ o=normalizeThononBus(o);
  return {kind:o.kind||'transit',mode:o.mode||'',line:o.line||null,headsign:String(o.headsign||'').replace(/_/g,' ').replace(/^\s*direction\s*[:\-]?\s*/i,'').replace(/\s+/g,' ').trim()||null,provider:o.provider||null,terminus:String(o.terminus||'').trim()||null,
   from:o.from||'',to:o.to||'',fromPoint:pt(o.fromPoint),toPoint:pt(o.toPoint),
   departure:iso(o.departure),arrival:iso(o.arrival),
@@ -2642,7 +2643,7 @@ async function gtfsFeedForDaySchedule(raw){
   if(typeof loader?.loadResource!=='function')return null;
   entry={expiresAt:Infinity};
   entry.promise=loader.loadResource({format:'GTFS',url:raw.networkUrls[0],fallbackUrls:raw.networkUrls.slice(1)},
-   {fetcher:(url,init)=>gtfsCacheFetch(root,url,init),indexServiceDates:[raw.serviceDate],retainSourceTables:true});
+   {fetcher:(url,init)=>gtfsCacheFetch(root,url,init),indexServiceDates:[raw.serviceDate],retainSourceTables:true,maxFileBytes:80*1024*1024});
   dayScheduleTablesCache.set(key,entry);
   entry.promise.then(feed=>{
    if(feed)entry.expiresAt=Date.now()+GTFS_CACHE_TTL_MS;
@@ -2671,7 +2672,19 @@ function dayScheduleTables(feed){
 }
 // Tous les départs du jour de CETTE ligne entre les DEUX arrêts de CETTE étape — même mécanique que le
 // bouton Y51 historique (sibra-planner.js::datedInterurbanRides), généralisée à tout réseau GTFS câblé.
+// These two stops identify the Star't C service even when a journey provider
+// sends its mode prefix as part of the line name and misattributes the operator.
+const THONON_C_URL='https://www.star-t.fr/se-deplacer/lignes-et-horaires/ligne-bus-c-0';
+function thononCStops(l){
+ return /^(?:thonon les bains )?les arts$/.test(scheduleLabel(l.from))&&
+  /^(?:thonon(?: les bains)? )?serres mun(?:icipales)?$/.test(scheduleLabel(l.to));
+}
+function normalizeThononBus(l){
+ if(l.mode!=='Bus'||!thononCStops(l)||!/^b c(?: but)?$/.test(scheduleLabel(l.line)))return l;
+ return {...l,line:'C',provider:"Star't Thonon",terminus:'Saint-Disdille Campings'};
+}
 function scheduleSourceForLeg(l,useRaw=true){
+ l=normalizeThononBus(l);
  const raw=l.gtfsRaw;
  if(useRaw&&hasExactSchedule(raw))return raw;
  const date=parisDayParts(l.departure)?.day;
@@ -2681,6 +2694,13 @@ function scheduleSourceForLeg(l,useRaw=true){
  const national=/sncf|\bter\b/i.test(name)?'sncf':/flixbus/i.test(name)?'flixbus':/blablacar.*bus/i.test(name)?'blablacarBus':null;
  const resource=nationalResourceForTrip(root.CP_NATIONAL_GTFS_RESOURCES,national,fromPoint,toPoint)||
   root.CP_NATIONAL_GTFS_RESOURCES?.[national];
+ if(scheduleLabel(l.line)==='c'&&thononCStops(l)){
+  const network='Star’t Thonon';
+  return {network,networkUrls:[
+   'https://at374.github.io/convoyage-app/data/gtfs/start-thonon.zip',
+   'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e'
+  ],serviceDate:date,routeId:'C',from:'T_BDC2',to:'T_SerrM2',sourceUrl:THONON_C_URL};
+ }
  const voiron={lat:45.373,lon:5.589};
  const isVoiron31=String(l.line).trim()==='31'&&[fromPoint,toPoint].every(point=>point&&meters(point,voiron)<=5000);
  const provider=scheduleLabel(name);
@@ -2726,11 +2746,22 @@ async function dayScheduleForLeg(raw){
   const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
   rows=indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
    .filter(ride=>String(ride.routeId)===String(raw.routeId))
-   .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival)}));
+   .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival),terminus:ride.terminus||ride.headsign||null}));
  }else{
   const tables=dayScheduleTables(feed),pl=root.CPSibraPlanner;
   if(!tables||typeof pl?.datedInterurbanRides!=='function')return [];
   rows=dayScheduleFromTables(raw,tables,pl);
+  if(rows.length){
+   const terminals=new Map();
+   const tripIds=new Set(rows.map(row=>row.trip_id));
+   for(const stop of tables.stop_times){
+    if(!tripIds.has(stop.trip_id))continue;
+    const previous=terminals.get(stop.trip_id);
+    if(!previous||Number(stop.stop_sequence)>Number(previous.stop_sequence))terminals.set(stop.trip_id,stop);
+   }
+   const names=new Map(tables.stops.map(stop=>[stop.stop_id,stop.stop_name]));
+   rows=rows.map(row=>({...row,terminus:names.get(terminals.get(row.trip_id)?.stop_id)||null}));
+  }
  }
  const schedule=uniqueDayScheduleRows(rows);
  cache.set(key,schedule);
@@ -2770,7 +2801,7 @@ function dayScheduleFromTables(raw,tables,pl){
  return rows;
 }
 function uniqueDayScheduleRows(rows){
- return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
+ return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds+':'+(r.terminus||''),r])).values()]
   .sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
 }
 function hmFromSeconds(sec){
@@ -2835,6 +2866,7 @@ async function retryMissingWalks(journey,task,router,fareFor){
  return {...assess(route,task,fareFor),price:journey.price};
 }
 function card(doc,j,labels,expanded=false,task=null){
+ j={...j,legs:j.legs.map(normalizeThononBus)};
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
  const s=el(doc,'summary');
@@ -3004,7 +3036,7 @@ function card(doc,j,labels,expanded=false,task=null){
      dayBtn.disabled=true;dayRes.textContent='Chargement des horaires…';
      const showSource=()=>{
       dayRes.textContent='Grille complète indisponible dans la fiche. ';
-      const source=ticketLink(l.provider);
+      const source=raw?.sourceUrl?{url:raw.sourceUrl,label:raw.network}:ticketLink(l.provider);
       if(source){
        const link=el(doc,'a',null,'Consulter les horaires sur '+source.label);
        link.href=source.url;link.target='_blank';link.rel='noopener noreferrer';dayRes.appendChild(link);
@@ -3018,7 +3050,7 @@ function card(doc,j,labels,expanded=false,task=null){
       if(!rows.length){showSource();return;}
       dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+(raw?.serviceDate||parisDayParts(l.departure)?.day)+' :'));
       const ul=el(doc,'ul',null);
-      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)));
+      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)+(row.terminus?' · direction '+row.terminus:'')));
       dayRes.appendChild(ul);
       dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw?.network||'')+'). Circulation réelle non vérifiée.'));
      }).catch(showSource)
