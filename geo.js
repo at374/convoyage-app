@@ -184,11 +184,13 @@
       const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
       ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
       if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
+      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
+      if (numero && x.cp) essais.push({ q: [sansLieu.replace(/\b\d{5}\b/g, ''), x.v].filter(Boolean).join(' '), commune: false, sansCP: true });
       let meilleur = null;
       for (const es of essais) {
         // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
         // (data.geopf.fr/geocodage) — même moteur, mêmes paramètres et même format de réponse GeoJSON (iso-fonctionnel).
-        const r = await fetchFn('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(es.q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
+        const r = await fetchFn('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(es.q) + (x.cp && !es.sansCP ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
         if (!r || !r.ok) throw new Error('service adresses');
         const j = await r.json(), f = j && j.features && j.features[0];
         if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
@@ -196,10 +198,12 @@
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
+          if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
           if (precision === 'adresse' || !x.a) return { cle, trouve: true, point };
           if (!meilleur || (meilleur.precision === 'ville' && precision === 'rue')) meilleur = point;
         }
       }
+      if (numero) return { cle, trouve: false };
       if (meilleur) return { cle, trouve: true, point: meilleur };
       if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
     }
