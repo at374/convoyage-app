@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['levib_vierzon',['Le Vib’ Vierzon','le-vib-vierzon']],
  ['agglobus_bourges',['Agglobus (Bourges)','agglobus-bourges']],
  ['maelis',['Maelis Montluçon','maelis-montlucon']],
  ['mobivie',['MobiVie Vichy','mobivie-vichy']],
@@ -1338,6 +1339,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.22]],
  // 20/11/2026 : réseaux urbains présents dans data/gtfs mais absents de ce moteur (audit de couverture).
  // CTS Strasbourg, STAR Rennes, TBM Bordeaux et TAO Orléans ont depuis été ajoutés plus bas (horizon réduit).
+ ['levib_vierzon','Le Vib’ Vierzon','levib-vierzon-gtfs-rt.zip',[47.19,2.03,47.25,2.12]],
  ['agglobus_bourges',"Agglobus (Bourges)",'agglobus-bourges.zip',[47.035,2.321,47.134,2.459]],
  ['ametis_amiens',"Ametis (Amiens Métropole)",'ametis-amiens.zip',[49.846,2.235,49.939,2.391]],
  ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
