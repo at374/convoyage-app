@@ -13,6 +13,8 @@ test('DriiveMe rotation batches stop at the end and cannot skip departments', ()
 });
 
 test('DriiveMe only marks unavailable missions after a complete successful national cycle', () => {
+  assert.match(source, /cur0 === 0 \? new Date\(\)\.toISOString\(\) : \(cyclePrecedent\?\.cycle_started_at \|\| null\)/);
+  assert.match(source, /!cyclePrecedent\?\.cycle_started_at \|\| !!cyclePrecedent\.failed/);
   assert.match(source, /if \(curseurSuivant === 0 && !connexion\)/);
   assert.match(source, /if \(!cycleFailed && depsOk === aLire\.length\)/);
   assert.match(source, /await marquerMissionsAbsentes\(SUPABASE_URL, SERVICE_KEY, USER_ID, cycleStartedAt\)/);
