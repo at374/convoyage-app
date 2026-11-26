@@ -187,7 +187,8 @@ const AXES_COUVERTURE=[
  // 14/11/2026 : axe intra-Lyon, car TCL est non fédéré (usage local uniquement) : aucun autre axe n'a ses deux
  // extrémités dans la zone couverte (Part-Dieu/Bellecour/Perrache), donc TCL n'était jamais exercé en réel.
  {id:'lyon-intra',name:'Lyon Part-Dieu → Bellecour (TCL)',from:{lat:45.7606,lon:4.8594,name:'Lyon Part-Dieu'},to:{lat:45.7578,lon:4.8322,name:'Lyon Bellecour'},expect:['tcl']},
- {id:'voiron-voreppe',name:'Voiron → Voreppe (M réso Voironnais)',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.2950,lon:5.6380,name:'Voreppe'},expect:['mreso-voironnais']}
+ {id:'voiron-voreppe',name:'Voiron → Voreppe (M réso Voironnais)',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.2950,lon:5.6380,name:'Voreppe'},expect:['mreso-voironnais']},
+ {id:'annecy-voiron',name:'Annecy → Voiron (correspondances inter-réseaux)',from:{lat:45.9017,lon:6.1219,name:'Annecy gare'},to:{lat:45.3643,lon:5.5916,name:'Voiron gare'},expect:['sibra','cars-38','ter','mreso-voironnais']},
 ];
 function load(storage){try{return JSON.parse(storage?.getItem(STORE)||'{}')||{};}catch(_){return {};}}
 function save(storage,data){try{storage?.setItem(STORE,JSON.stringify(data));}catch(_){}}
