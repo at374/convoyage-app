@@ -203,7 +203,8 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes("RAYON_ARRIVEE_M = 400"));
  assert.ok(app.includes("arriveeHiflow(original)"));
- assert.ok(app.includes("navigator.geolocation.watchPosition(suiviTraiter"));
+ assert.ok(app.includes("navigator.geolocation.getCurrentPosition(pos =>"));
+ assert.ok(!app.includes("navigator.geolocation.watchPosition(suiviTraiter"));
  assert.ok(app.includes("MARGE_ARRIVEE_MIN * 60000"));
  assert.ok(app.includes("arriveeGps(key)"));
  assert.ok(app.includes("new CustomEvent('cp-arrivee'"));
@@ -267,13 +268,15 @@ test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision 
  assert.ok(!block.includes('navigator.geolocation.watchPosition'));
 });
 
-test('suivi GPS : le passage en arrière-plan ne détruit plus le watchPosition',()=>{
+test('suivi GPS : retour au premier plan relance une acquisition ponctuelle sans watcher permanent',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  const block=app.slice(app.indexOf('function suiviMaj()'),app.indexOf('// Préparation à l\'avance (application ouverte)'));
  assert.ok(block.includes('const actif = !suiviRefus && navigator.geolocation'));
  assert.ok(!block.includes('!document.hidden && navigator.geolocation'));
  assert.ok(block.includes('if (!document.hidden)'));
  assert.ok(!block.includes('document.hidden && suiviWatch !== null'));
+ assert.ok(block.includes('suiviMaj();'));
+ assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
 });
 
 test('suivi arrivée : événements Google Maps / Waze lus via l’APK, validés par la position',()=>{
