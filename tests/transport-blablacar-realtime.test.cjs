@@ -5,7 +5,7 @@ const options={from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when:'2
 const journey=()=>({legs:[
  {mode:'wa_wal',departure:'2026-10-31T09:10:00.000Z',arrival:'2026-10-31T09:15:00.000Z'},
  {mode:'pt_pub_bus',provider:'BlaBlaCar Bus',serviceShortName:'51981',fromStopCode:'NCY',toStopCode:'XGE',departure:'2026-10-31T09:15:00.000Z',arrival:'2026-10-31T10:40:00.000Z'},
- {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:46:34.000Z'}
+ {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:44:34.000Z'}
  ]}),clock=Date.parse(fixture.testNow),copy=()=>JSON.parse(JSON.stringify(fixture.response));
 const feed=data=>rt.parse(data||copy(),{now:clock});
 const current=(data,leg=journey().legs[1])=>rt.assess(feed(data),leg,{now:clock});
