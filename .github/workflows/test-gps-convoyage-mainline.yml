@@ -1,0 +1,24 @@
+name: GPS convoyage mainline
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'tests/gps-convoyage-integration.test.cjs'
+      - '.github/workflows/test-gps-convoyage-mainline.yml'
+  push:
+    branches: [fix/gps-convoyage-mainline-20261126]
+    paths:
+      - 'app.js'
+      - 'tests/gps-convoyage-integration.test.cjs'
+      - '.github/workflows/test-gps-convoyage-mainline.yml'
+jobs:
+  gps-mainline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app.js
+      - run: node --test tests/gps-convoyage-integration.test.cjs

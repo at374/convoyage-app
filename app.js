@@ -19,6 +19,8 @@
   const transportViewCache = new Map();
   const transportSearches = new Map();
   const transportSaveTimers = new Map();
+  // Pré-calcul automatique Retour/Jonction avant livraison estimée.
+  const transportPrefetchTimers = new Map();
   const transportSelectedDays = new Map();
   const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v1:' + api.session.user_id : '';
   function saveTransportViews(key, missionKey, entry) {
@@ -808,10 +810,116 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       return now >= p - 3600000 && now <= limite && !!d && d.precision !== 'departement';
     });
   }
+  // Suivi du convoyage : départ constaté au point GPS de prise en charge,
+  // puis un relevé persistant toutes les 10 minutes jusqu'à la livraison.
+  const SUIVI_CONVOYAGE_KEY = 'cp_suivi_convoyage_v1';
+  const SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000;
+  // L'itinéraire voiture vers la livraison est réestimé toutes les 5 min,
+  // indépendamment des relevés GPS persistés toutes les 10 min : le seuil
+  // « arrivée dans 15 min » ne dépend donc pas uniquement d'un relevé sur deux.
+  const SUIVI_CONVOYAGE_ETA_INTERVALLE_MS = 5 * 60000;
+  const suiviConvoyageEtaEnCours = new Set();
+  let suiviConvoyageEtaTimer = null;
+  function suiviConvoyageEtaMaj() {
+    clearTimeout(suiviConvoyageEtaTimer); suiviConvoyageEtaTimer = null;
+    if (suiviRefus || document.hidden) return;
+    const missions = missionsASuivre(), store = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
+    const now = Date.now();
+    for (const {m,t} of missions) {
+      const state = store[t.key], last = state?.lastPosition;
+      if (state?.status !== 'en_route' || !last) continue;
+      const lat = Number(last.lat), lng = Number(last.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+      // Recalcule l'ETA avec la dernière position connue sans réveiller le GPS.
+      suiviConvoyageEstimerArrivee(m,t,{lat,lng},now,state);
+    }
+    ecrireLocal(SUIVI_CONVOYAGE_KEY,store);
+    if (missions.length) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS);
+  }
+  function suiviConvoyageEnregistrer(m, t, pos, ts) {
+    const accuracy = Number(pos.coords.accuracy);
+    if (!Number.isFinite(accuracy) || accuracy > 100) return;
+    const here = {lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude)};
+    const origin = G.coordonnees(m, 'origin'), destination = G.coordonnees(m, 'destination');
+    if (!transportAddressPoint(origin) || !transportAddressPoint(destination)) return;
+    const distance = (a,b) => G.volOiseauKm(a,b) * 1000;
+    const store = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
+    let state = store[t.key];
+    if (!state) {
+      if (distance(here, origin) > 300) return;
+      state = {status:'prise_en_charge',pickupDetectedAt:new Date(ts).toISOString(),origin:{lat:origin.lat,lng:origin.lng},destination:{lat:destination.lat,lng:destination.lng},samples:[]};
+      store[t.key] = state; ecrireLocal(SUIVI_CONVOYAGE_KEY, store); return;
+    }
+    if (state.status === 'prise_en_charge') {
+      const away = distance(here, origin), speed = Number(pos.coords.speed);
+      if (away < 500 || (Number.isFinite(speed) && speed < 1.5 && away < 800)) return;
+      state.status = 'en_route'; state.departedAt = new Date(ts).toISOString(); state.lastSampleAt = 0;
+    }
+    if (state.status !== 'en_route') return;
+    // Le suivi de position reste à 10 min, mais l'ETA est actualisée à 5 min
+    // pour déclencher le préchargement au plus près du seuil de 15 min.
+    suiviConvoyageEstimerArrivee(m,t,here,ts,state);
+    store[t.key] = state;
+    ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
+    if (ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return;
+    const sample = {at:new Date(ts).toISOString(),lat:here.lat,lng:here.lng,accuracy,speed:Number.isFinite(Number(pos.coords.speed))?Number(pos.coords.speed):null};
+    state.samples = (Array.isArray(state.samples)?state.samples:[]).concat(sample).slice(-36);
+    state.lastSampleAt = ts; state.lastPosition = sample; store[t.key] = state;
+    const keys = Object.keys(store); while (keys.length > 40) delete store[keys.shift()];
+    ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
+    // L'estimation a déjà été tentée une fois au début de cette acquisition GPS.
+    // Ne pas rappeler l'API une seconde fois après l'enregistrement de l'échantillon.
+  }
+  async function suiviConvoyageEstimerArrivee(m,t,here,ts,state) {
+    if (suiviConvoyageEtaEnCours.has(t.key) || state.approcheDeclencheeAt) return;
+    const lastAttempt = Date.parse(state.etaAttemptAt || state.etaCheckedAt || '');
+    if (Number.isFinite(lastAttempt) && ts - lastAttempt < SUIVI_CONVOYAGE_ETA_INTERVALLE_MS) return;
+    // Persister le dernier essai même en cas d'erreur réseau pour éviter de solliciter
+    // l'API à chaque position GPS fournie par Android.
+    if (state.status !== 'en_route') return;
+    state.etaAttemptAt = new Date(ts).toISOString();
+    const routes = window.CPRoutes, auth = window.CPAuthenticatedApi, session = auth?.connecte ? auth.session : null;
+    let config = window.CP_CONFIG?.anonKey ? window.CP_CONFIG : window.CP_CONFIG_ACTIVE?.anonKey ? window.CP_CONFIG_ACTIVE : null;
+    try { if (!config && window.CPNatif?.configuration) config = JSON.parse(window.CPNatif.configuration() || '{}'); } catch (_) {}
+    try { if (!config) config = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_config') || 'null'); } catch (_) {}
+    const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
+    if (!routes?.estimate || !session?.access_token || !config?.url || !config?.anonKey) return;
+    suiviConvoyageEtaEnCours.add(t.key);
+    try {
+      const destination = G.coordonnees(m,'destination');
+      const route = await routes.estimate({endpoint,accessToken:session.access_token,refreshToken:session.refresh_token,expiresAt:session.expires_at,supabaseUrl:config.url,supabaseApiKey:config.anonKey,origin:here,destination:{lat:Number(destination.lat),lng:Number(destination.lng)},mode:'voiture'});
+      const minutes = Number(route?.durationMinutes); if (!Number.isFinite(minutes) || minutes < 0) return;
+      const saved = Object.assign({},lireLocal(SUIVI_CONVOYAGE_KEY,{})), current = saved[t.key];
+      if (!current || current.status !== 'en_route' || current.approcheDeclencheeAt) return;
+      current.etaMinutes = minutes; current.etaCheckedAt = new Date(ts).toISOString();
+      current.etaArrivalAt = new Date(ts + minutes * 60000).toISOString();
+      let approcheEvent = null;
+      if (minutes <= 15) {
+        current.etaDepartureAt = new Date(ts + (minutes + MARGE_ARRIVEE_MIN) * 60000).toISOString();
+        current.approcheDeclencheeAt = new Date(ts).toISOString();
+        transportReturnPlans.set(t.key,current.etaDepartureAt);
+        if (transportCacheKey()) saveTransportViews(transportCacheKey()+':plans',t.key,current.etaDepartureAt);
+        const clePreparation = t.key + '|' + String(t.pickup).slice(0,10);
+        preparees.delete(clePreparation);
+        const preparationsEnCache = lireLocal(PREPARATION_TRANSPORTS_KEY,{});
+        delete preparationsEnCache[clePreparation];
+        ecrireLocal(PREPARATION_TRANSPORTS_KEY,preparationsEnCache);
+        approcheEvent = {key:t.key,etaMinutes:minutes,at:current.approcheDeclencheeAt,estimatedArrival:current.etaArrivalAt,transportDeparture:current.etaDepartureAt};
+      }
+      saved[t.key] = current; ecrireLocal(SUIVI_CONVOYAGE_KEY,saved);
+      if (approcheEvent) {
+        document.dispatchEvent(new CustomEvent('cp-livraison-approche',{detail:approcheEvent}));
+        setTimeout(() => { if (preparationEnCours) setTimeout(preparerTransports,5000); else preparerTransports(); }, 1000);
+      }
+    } catch (_) { /* indisponibilité du calcul routier : le suivi GPS continue */ }
+    finally { suiviConvoyageEtaEnCours.delete(t.key); }
+  }
   function suiviTraiter(pos) {
     const acc = Number(pos.coords.accuracy); if (Number.isFinite(acc) && acc > 250) return;
-    const vit = pos.coords.speed; if (typeof vit === 'number' && vit > 3) return;   // en roulement (> ~11 km/h) : pas une arrivée
+    const vit = pos.coords.speed; // le suivi du convoyage doit aussi enregistrer les positions en roulant
     const here = { lat: pos.coords.latitude, lng: pos.coords.longitude }, ts = Number(pos.timestamp) || Date.now();
+    for (const {m,t} of missionsASuivre()) suiviConvoyageEnregistrer(m,t,pos,ts);
+    if (typeof vit === 'number' && vit > 3) return; // en roulement : pas de détection d'arrivée, mais le convoyage reste suivi
     for (const { m, t } of missionsASuivre()) {
       const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
       const dist = G.volOiseauKm(here, d) * 1000;
@@ -880,14 +988,49 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = null;
     const missions = missionsASuivre();
-    const actif = !suiviRefus && !document.hidden && !!navigator.geolocation && missions.length > 0;
+    if (!suiviRefus && !document.hidden && missions.length) { if (!suiviConvoyageEtaTimer) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS); }
+    else { clearTimeout(suiviConvoyageEtaTimer); suiviConvoyageEtaTimer = null; }
+    const natif = window.CPNatif && typeof window.CPNatif.demarrerSuiviGps === 'function';
+    const actif = !suiviRefus && !document.hidden && (natif || !!navigator.geolocation) && missions.length > 0;
     // Toujours reprogrammer le prochain contrôle : une mission peut être synchronisée après le démarrage de l'application.
-    if (!suiviRefus && !document.hidden && navigator.geolocation) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
+    if (!suiviRefus && !document.hidden && (natif || navigator.geolocation)) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
     for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
+    // Android : le service natif continue écran éteint ; les points sont mis en file locale puis traités au retour dans l'application.
+    if (natif) {
+      try {
+        if (missions.length && !suiviRefus) {
+          const cible = missions.slice().sort((a, b) => Date.parse(a.t.pickup || '') - Date.parse(b.t.pickup || ''))[0];
+          const origine = G.coordonnees(cible.m, 'origin');
+          const dest = G.coordonnees(cible.m, 'destination');
+          if (dest && Number.isFinite(Number(dest.lat)) && Number.isFinite(Number(dest.lng))) {
+            const rayon = dest.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
+            const plat = origine && Number.isFinite(Number(origine.lat)) ? Number(origine.lat) : NaN;
+            const plng = origine && Number.isFinite(Number(origine.lng)) ? Number(origine.lng) : NaN;
+            window.CPNatif.demarrerSuiviGps(plat, plng, Number(dest.lat), Number(dest.lng), cible.t.key, rayon);
+          }
+        } else window.CPNatif.arreterSuiviGps();
+        const raw = window.CPNatif.prendrePointsSuiviGps();
+        const points = JSON.parse(raw || '[]');
+        if (Array.isArray(points)) for (const p of points) {
+          const lat = Number(p.lat), lng = Number(p.lng), accuracy = Number(p.accuracy), timestamp = Number(p.timestamp);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(timestamp)) continue;
+          suiviTraiter({ timestamp, coords: { latitude: lat, longitude: lng, accuracy: Number.isFinite(accuracy) ? accuracy : 9999, speed: null } });
+        }
+        const arrivRaw = window.CPNatif.prendreArriveesSuiviGps();
+        const arriv = JSON.parse(arrivRaw || '[]');
+        if (Array.isArray(arriv)) for (const ev of arriv) {
+          const cible = missions.find(x => x.t.key === ev.missionKey);
+          const ts = Number(ev.timestamp);
+          if (cible && Number.isFinite(ts) && !arriveeGps(cible.t.key)) suiviArrivee(cible.m, cible.t, ts);
+        }
+      } catch (_) { }
+      if (!actif) suiviDedans.clear();
+      return;
+    }
     if (!actif) { suiviDedans.clear(); return; }
-    // Une seule acquisition GPS basse consommation, puis extinction du capteur jusqu'au prochain cycle.
+    // Web : une seule acquisition basse consommation, puis extinction du capteur jusqu'au prochain cycle.
     if (!suiviLectureEnCours) {
       suiviLectureEnCours = true;
       navigator.geolocation.getCurrentPosition(pos => {
@@ -1971,6 +2114,18 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const heading=document.createElement('h3');heading.textContent=label;
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
         section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+        const refreshDirection=document.createElement('button');
+        refreshDirection.type='button';refreshDirection.className='second cp-transport-refresh';
+        refreshDirection.textContent='🔄 Actualiser '+key;
+        refreshDirection.setAttribute('aria-label','Actualiser uniquement le trajet '+key);
+        refreshDirection.onclick=()=>{
+          if(!panel.isConnected)return;
+          bt.dataset.transportRefreshAt=String(Date.now());
+          bt.dataset.transportRefreshLabel=key;
+          panel.cpRefreshStarted=false;
+          startTransportHub(false,key);
+        };
+        section.appendChild(refreshDirection);
         // Un seul affichage des trajets : les cartes classées du hub. Les anciens blocs par moteur restent consultables, repliés.
         const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
         const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
@@ -2174,7 +2329,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Remise à « idle » juste après : un blocage étiqueté « idle » n'est PAS pendant un rendu.
         window.CPPh?.('transports:idle');
       };
-      const startTransportHub=(onlyJonction=false)=>{
+      const startTransportHub=(onlyJonction=false,onlyLabel=null)=>{
         window.CPPh?.('transports:ouverture');
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
@@ -2313,6 +2468,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
         }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',siteCloseMinutes:closeFor(origT.delivery_end),earliestDeparture:plancher(deliveryStartIso||deliveryDate),...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(plancher(deliveryStartIso)),windowEndMs:deliveryEndMs}:{})});
+        const allTasks=tasks.slice();
         if(onlyJonction){
           const junction=tasks.find(t=>t.label==='Jonction');
           if(!junction)return;
@@ -2321,18 +2477,30 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           const index=tasks.findIndex(t=>t.label==='Jonction');
           if(index>=0)tasks.splice(index,1);
         }
+        if(onlyLabel)tasks.splice(0,tasks.length,...tasks.filter(t=>t.label===onlyLabel));
         if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
-        const signature=JSON.stringify([Hub.VERSION,tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
-        if((onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
+        const commonSignature=JSON.stringify([Hub.VERSION,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const taskSignatures=Object.fromEntries(allTasks.map(({lazy,...task})=>[task.label,JSON.stringify([task,commonSignature])]));
+        const signature=JSON.stringify([commonSignature,allTasks.map(({lazy,...r})=>r)]);
+        if(!refresh&&(onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
         // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
         // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
         // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
         if(!onlyJonction)panel.cpRefreshStarted=true;
-        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?stored.views||{}:{};
+        const refreshLabel=refresh?(bt.dataset.transportRefreshLabel||null):null;
+        if(refreshLabel)delete bt.dataset.transportRefreshLabel;
+        const cachedViews=!onlyJonction&&stored?.views&&(!refresh||!!refreshLabel)?Object.fromEntries(
+          Object.entries(stored.views).filter(([label])=>
+            label!==refreshLabel&&(
+              stored.partSignatures?.[label]===taskSignatures[label]||
+              (!stored.partSignatures&&stored.signature===signature)
+            )
+          )
+        ):{};
         const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
-        const resetLabels=onlyJonction?['Jonction']:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride);
+        const resetLabels=onlyJonction?['Jonction']:(onlyLabel?[onlyLabel]:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride));
         for(const label of resetLabels){delete labelState[label];delete pendingViews[label];}
         for(const [label,view] of Object.entries(cachedViews)){
           masquerRecherche(label);
@@ -2445,9 +2613,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               const savedAt=Date.now();
               search.views[label]={...view,savedAt};
               // Conserver les autres jours jusqu'à ce que leurs nouveaux résultats soient prêts.
-              const retained=stored?.signature===signature?stored.views:{};
+              const retained=stored?.views||{};
               const views={...retained,...search.views};
-              const entry={signature,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
+              const entry={signature,partSignatures:taskSignatures,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
               transportViewCache.set(memoryKey,entry);
               clearTimeout(transportSaveTimers.get(memoryKey));
               const persist=()=>{
@@ -3512,6 +3680,46 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const b3 = $('btnAnnRetire'); if (b3) b3.onclick = () => { const o = lireLocal('cp_annul', {}) || {}; delete o[cle]; ecrireLocal('cp_annul', o); for (const x of etat.missions) if (x.kind === 'acceptee' && x.platform + '|' + x.external_id === cle && x._statutOrig !== undefined) { x.status = x._statutOrig; delete x._statutOrig; x.annulee_par_moi = false; } sauve('Annulation retirée'); };
     }
     const transportDetailButton = $('btnTransportsMission');
+    // Le moteur de recherche de la fiche connaît déjà les tâches Retour et Jonction.
+    // On le lance une seule fois à T-15 min de la livraison planifiée, puis on masque
+    // seulement son panneau : les moteurs continuent et enregistrent les vues dans le cache.
+    if (transportDetailButton && m.kind === 'acceptee' && m.status !== 'annulee' && m.status !== 'terminee') {
+      const prefetchKey = String(m.platform) + '|' + String(m.external_id);
+      const oldTimer = transportPrefetchTimers.get(prefetchKey);
+      if (oldTimer) clearInterval(oldTimer);
+      const tickPrefetch = () => {
+        // La fiche peut être refermée : le pré-calcul doit continuer tant que
+        // l'application et le bouton de la mission existent encore dans le DOM.
+        if (!transportDetailButton.isConnected || $('btnTransportsMission') !== transportDetailButton) {
+          clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
+        }
+        if (transportDetailButton.dataset.cpPrefetchStarted === 'true') {
+          clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
+        }
+        const arrivalKnown = arriveeGps(missionTiming(m).key);
+        if (!arrivalKnown) {
+          let finish = null;
+          try { finish = RT.fin(missionForPlanning(m)); } catch (_) {}
+          if (!finish || !Number.isFinite(finish.t)) return;
+          const remaining = finish.t - Date.now();
+          if (remaining > 15 * 60000 || remaining < 0) return;
+        }
+        transportDetailButton.dataset.cpPrefetchStarted = 'true';
+        clearInterval(timer); transportPrefetchTimers.delete(prefetchKey);
+        // Le clic réutilise exactement les moteurs, filtres, signatures et caches de la fiche.
+        try {
+          if (!$('cpTransportMissionDetails')) transportDetailButton.click();
+          const prefetchPanel = $('cpTransportMissionDetails');
+          if (prefetchPanel && prefetchPanel.isConnected) {
+            prefetchPanel.dataset.cpPrefetched = 'true';
+            prefetchPanel.style.display = 'none';
+          }
+        } catch (_) { delete transportDetailButton.dataset.cpPrefetchStarted; }
+      };
+      const timer = setInterval(tickPrefetch, 30000);
+      transportPrefetchTimers.set(prefetchKey, timer);
+      tickPrefetch();
+    }
     pointsMission(m, () => {
       if ($('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) return;
       if ($('gpsO')) $('gpsO').innerHTML = mentionGps(m, 'origin');

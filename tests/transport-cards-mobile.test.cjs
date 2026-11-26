@@ -200,7 +200,8 @@ test('recherche transport : progression et actualisation accessibles avant les c
 test('navigation entre missions : réutilisation de la recherche active et remplacement du résultat enregistré',()=>{
  assert.match(app,/existingSearch\.attach\(panel,displayUpdate\)/);
  assert.match(app,/if\(!this\.pending\.size\)this\.dispose\(\)/);
- assert.match(app,/!onlyJonction&&!refresh&&stored\?\.signature===signature/);
+ assert.ok(app.includes('const cachedViews=!onlyJonction&&stored?.views&&(!refresh||!!refreshLabel)?Object.fromEntries'));
+ assert.match(app,/label!==refreshLabel/);
  assert.match(app,/search\.views\[label\]=\{\.\.\.view,savedAt\}/);
  assert.match(app,/02 · Jonction · Mission suivante/);
 });
