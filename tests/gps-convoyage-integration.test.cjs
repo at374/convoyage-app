@@ -17,7 +17,7 @@ test('GPS convoyage : ETA routière toutes les 5 minutes et déclenchement à 15
   assert.match(app, /routes\.estimate\(/);
   assert.match(app, /minutes <= 15/);
   assert.match(app, /cp-livraison-approche/);
-  assert.match(app, /etaDepartureAt/);
+  assert.match(app, /etaDepartureAt/);\n  assert.match(app, /function suiviConvoyageEtaMaj\(\)/);\n  assert.match(app, /setTimeout\(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS\)/);\n  assert.match(app, /Recalcule l'ETA avec la dernière position connue sans réveiller le GPS/);
 });
 
 test('Pont Android : service natif démarré, points et arrivées récupérés, arrêt explicite', () => {
