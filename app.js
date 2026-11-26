@@ -3689,14 +3689,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (!transportDetailButton.isConnected || $('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) {
           clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
         }
-        if (transportDetailButton.dataset.cpPrefetchStarted === 'true' || arriveeGps(missionTiming(m).key)) {
+        if (transportDetailButton.dataset.cpPrefetchStarted === 'true') {
           clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
         }
-        let finish = null;
-        try { finish = RT.fin(missionForPlanning(m)); } catch (_) {}
-        if (!finish || !Number.isFinite(finish.t)) return;
-        const remaining = finish.t - Date.now();
-        if (remaining > 15 * 60000 || remaining < 0) return;
+        const arrivalKnown = arriveeGps(missionTiming(m).key);
+        if (!arrivalKnown) {
+          let finish = null;
+          try { finish = RT.fin(missionForPlanning(m)); } catch (_) {}
+          if (!finish || !Number.isFinite(finish.t)) return;
+          const remaining = finish.t - Date.now();
+          if (remaining > 15 * 60000 || remaining < 0) return;
+        }
         transportDetailButton.dataset.cpPrefetchStarted = 'true';
         clearInterval(timer); transportPrefetchTimers.delete(prefetchKey);
         // Le clic réutilise exactement les moteurs, filtres, signatures et caches de la fiche.
