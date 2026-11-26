@@ -984,16 +984,16 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
  const date='20261127';
  const makeFeed=(id,network,side)=>{
   const files={
-   'agency.txt':'agency_id,agency_name,agency_timezone\\nA,'+network+',Europe/Paris',
+   'agency.txt':'agency_id,agency_name,agency_timezone\nA,'+network+',Europe/Paris',
    'stops.txt':side==='first'
-    ?'stop_id,stop_name,stop_lat,stop_lon\\nA,Annecy Gare,45.9000,6.1200\\nX,Arrêt correspondance,45.5000,5.7000'
-    :'stop_id,stop_name,stop_lat,stop_lon\\nX,Arrêt correspondance,45.5005,5.7005\\nB,Voiron Gare,45.3600,5.5900',
-   'routes.txt':'route_id,agency_id,route_short_name\\nR,A,'+network,
-   'trips.txt':'trip_id,route_id,service_id\\nT,R,S',
+    ?'stop_id,stop_name,stop_lat,stop_lon\nA,Annecy Gare,45.9000,6.1200\nX,Arrêt correspondance,45.5000,5.7000'
+    :'stop_id,stop_name,stop_lat,stop_lon\nX,Arrêt correspondance,45.5005,5.7005\nB,Voiron Gare,45.3600,5.5900',
+   'routes.txt':'route_id,agency_id,route_short_name\nR,A,'+network,
+   'trips.txt':'trip_id,route_id,service_id\nT,R,S',
    'stop_times.txt':side==='first'
-    ?'trip_id,stop_id,stop_sequence,arrival_time,departure_time\\nT,A,1,09:00:00,09:00:00\\nT,X,2,10:00:00,10:00:00'
-    :'trip_id,stop_id,stop_sequence,arrival_time,departure_time\\nT,X,1,10:10:00,10:10:00\\nT,B,2,11:00:00,11:00:00',
-   'calendar_dates.txt':'service_id,date,exception_type\\nS,'+date+',1'
+    ?'trip_id,stop_id,stop_sequence,arrival_time,departure_time\nT,A,1,09:00:00,09:00:00\nT,X,2,10:00:00,10:00:00'
+    :'trip_id,stop_id,stop_sequence,arrival_time,departure_time\nT,X,1,10:10:00,10:10:00\nT,B,2,11:00:00,11:00:00',
+   'calendar_dates.txt':'service_id,date,exception_type\nS,'+date+',1'
   };
   return {files,index:indexer.buildIndex(files),indexServiceDates:['2026-11-27'],
    source:{datasetId:id,resourceId:id,network}};
