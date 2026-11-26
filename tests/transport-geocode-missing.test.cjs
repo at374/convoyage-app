@@ -52,3 +52,13 @@ test('un GPS incomplet ne bloque pas la recherche automatique des adresses',()=>
  assert.match(app,/const c0 = G\.coordonnees\(m, cote\); if \(c0 && c0\.precision === 'gps'\) continue;/);
  assert.doesNotMatch(app,/const c0 = m\[cote\]; if \(c0 && Number\.isFinite\(Number\(c0\.lat\)\)/);
 });
+
+test('les points trouvés depuis la fiche transport sont persistés dans le cache local',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const i=app.indexOf('const startTransportHub=');
+ const end=app.indexOf('const gp=gps=>',i);
+ const bloc=app.slice(i,end);
+ assert.match(bloc,/gpsMem\.pts\[r\.cle\]=r\.point/);
+ assert.match(bloc,/ecrireLocal\('cp_gps',gpsMem\)/);
+ assert.match(bloc,/delete gpsMem\.rate\[r\.cle\]/);
+});
