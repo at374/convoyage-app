@@ -8,6 +8,9 @@ on:
     paths:
       - 'data/gtfs/**'
       - 'transport-mission-hub.js'
+      - 'app.js'
+      - 'index.html'
+      - 'sw.js'
       - 'scripts/build_regional_gtfs.py'
       - 'tools/carte-transports/**'
   workflow_run:
