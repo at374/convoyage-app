@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['agglobus_bourges',['Agglobus (Bourges)','agglobus-bourges']],
  ['maelis',['Maelis Montluçon','maelis-montlucon']],
  ['mobivie',['MobiVie Vichy','mobivie-vichy']],
  ['t2c',['T2C (Clermont Auvergne Métropole)','t2c-clermont']],
