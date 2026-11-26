@@ -24,10 +24,16 @@ assert out, 'No matching realtime resources found'
 def normalize(value):
     return ''.join(c for c in unicodedata.normalize('NFKD',str(value or '').lower()) if not unicodedata.combining(c))
 def priority(row):
-    region=normalize(row.get('region'))
-    if 'auvergne' in region or 'rhone-alpes' in region or region.strip()=='84':
+    region_value=row.get('region')
+    region=normalize(region_value)
+    codes=set()
+    if isinstance(region_value,dict):
+        codes={str(region_value.get(k,'')) for k in ('id','code','insee_code','region_code')}
+    else:
+        codes={str(region_value or '')}
+    if 'auvergne' in region or 'rhone-alpes' in region or '84' in codes:
         return 0
-    if any(x in region for x in ('bourgogne','franche-comte','provence','occitanie','nouvelle-aquitaine','centre-val de loire')) or region.strip() in ('27','93','76','75','24'):
+    if any(x in region for x in ('bourgogne','franche-comte','provence','occitanie','nouvelle-aquitaine','centre-val de loire')) or codes.intersection({'27','93','76','75','24'}):
         return 1
     return 2
 for row in out:
