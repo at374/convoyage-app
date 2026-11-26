@@ -1529,7 +1529,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=divia-skipped-stops-20261126');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=realtime-window-20261126');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1647,14 +1647,16 @@ function makeProviders(r,opts={}){
      const live=LOCAL_REALTIME_NETWORKS.has(id)&&!LOCAL_REALTIME_NETWORKS.get(id)[2]&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
       ?await loadLocalRealtime(r,id):null;
      if(signal?.aborted)return [];
-     const skippedStops=new Map();
+     const skippedStops=new Map(),retimedTrips=new Set();
      for(const [tripId,trip] of live||[]){
       if(!trip||(trip.date&&trip.date!==date.replaceAll('-','')))continue;
       const stops=new Set([...trip.stops].filter(([,stop])=>stop?.skipped).map(([stopId])=>stopId));
       if(stops.size)skippedStops.set(tripId,stops);
+      if(!trip.cancelled&&[...trip.stops.values()].some(stop=>Number.isFinite(w.arriveBy?stop?.arrival:stop?.departure)))
+       retimedTrips.add(tripId);
      }
      let rows=null,_viaWorker=false,_feedInfo=null,localFeed=null,workerCandidates=null;
-     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,skippedStops,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
+     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,skippedStops,retimedTrips,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
      if(rows===null){
       _viaWorker=false;
       let promise=cache.get(id+'|'+date);
@@ -1705,19 +1707,25 @@ function makeProviders(r,opts={}){
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
      // from a few vehicles can hide later distinct departures.
-     const best=new Map(),directMeters=meters(pt(task.from),pt(task.to));
+     const best=new Map(),directMeters=meters(pt(task.from),pt(task.to)),cutoff=sec(clock);
      for(const x of rows){
       const skipped=skippedStops.get(x.tripId);
       if(skipped?.has(x.from)||skipped?.has(x.to))continue;
-      if(!(w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
+      const delta=w.arriveBy?cutoff-sec(x.arrival):sec(x.departure)-cutoff;
+      if(!(delta>=0||(delta>=-1800&&retimedTrips.has(x.tripId))))continue;
       const key=String(x.tripId||'')+'|'+date;
       const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
       if(!key||!Number.isFinite(access)||!Number.isFinite(egress))continue;
-      const score=access+egress,previous=best.get(key);
-      // Même règle que walkDetour : le filtre accès+sortie contre la marche directe élimine déjà le bruit
-      // (sur un réseau dense comme TCL, des dizaines de variantes d'arrêt pour le même véhicule).
+      const score=access+egress;
       if(directMeters>0&&score>=directMeters)continue;
-      if(!previous||score<previous.score)best.set(key,{x,score});
+      const previous=best.get(key);
+      if(previous&&previous.score<=score)continue;
+      const scheduled={...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
+       departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)};
+      if(!scheduled.departure||!scheduled.arrival)continue;
+      const timed=live?applyLocalRealtime(scheduled,live,now):scheduled;
+      if(!timed||(timed.realtime?(w.arriveBy?ms(timed.arrival)>when:ms(timed.departure)<when):delta<0))continue;
+      best.set(key,{x:timed,score});
      }
      // 20/11/2026 : demande de Laurent — garder TOUS les départs du jour qui répondent à la mission, pas
      // seulement les meilleurs (ex. Y51 Albertville→Annecy : 25 départs officiels, l'ancien plafond de 30
@@ -1731,11 +1739,7 @@ function makeProviders(r,opts={}){
      // 21/11/2026 (demande Laurent) : networkId/networkUrls/serviceDate conservés sur chaque ligne —
      // nécessaires pour le bouton « Tous les horaires » (dayScheduleForLeg) qui refait une requête GTFS
      // complète sur CE réseau précis, pour CETTE ligne et CES arrêts, sans le filtre « après maintenant ».
-     const filtered=[...best.values()].map(({x})=>({...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
-       departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
-      .filter(x=>x.departure&&x.arrival)
-      .map(x=>live?applyLocalRealtime(x,live,now):x)
-      .filter(x=>x&&(!x.realtime||(w.arriveBy?ms(x.arrival)<=when:ms(x.departure)>=when)))
+     const filtered=[...best.values()].map(({x})=>x)
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      // 22/11/2026 (Laurent : Y51 a bien des départs l'après-midi dans le flux officiel — 12h15, 12h30, 13h30…
