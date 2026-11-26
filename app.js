@@ -2558,7 +2558,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
         let gtfsTaskSignature = null;
         const runGTFS = () => {
-        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && !prefetchKeepsHubAlive())) return;
+        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && panel.dataset?.cpPrefetched !== 'true')) return;
         const point = gps => transportAddressPoint(gps) ?
           {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
         const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
@@ -2587,7 +2587,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         runGTFS();
       }
       if (next) pointsMission(next, () => {
-        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && !prefetchKeepsHubAlive()) || $('btnTransportsMission') !== bt) return;
+        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && panel.dataset?.cpPrefetched !== 'true') || $('btnTransportsMission') !== bt) return;
         bt.cpRefreshGTFS?.();
         bt.cpRefreshRegional?.();
         bt.cpRefreshHub?.();
