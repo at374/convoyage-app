@@ -82,16 +82,18 @@ test('correspondance : marche réelle recalculée, trop courte signalée',async(
 test('correspondance : seuil de sécurité de 5 minutes, 4 min 59 refusées et 5 min acceptées',async()=>{
  const S3={lat:45.9500,lon:6.1200};
  const task={label:'Jonction',from:STOP1,to:STOP2,earliestDeparture:at(7,50),latestArrival:at(10,0)};
- const make=(minutes,seconds=0)=>({source:'t',sources:['t'],legs:[
-  bus(at(8,0),at(8,20),STOP1,S3,{toName:'Gare'}),
-  bus(at(8,20+minutes,seconds),at(8,40+minutes,seconds),S3,STOP2,{fromName:'Gare'})
- ]});
- const shortTask=make(4,59);
- const short=H.assess(await H.completeWalks(shortTask,task,fakeRouter()),task);
+ const make=(minutes,seconds=0)=>{
+  const departure=new Date(Date.parse(at(8,20))+minutes*60000+seconds*1000).toISOString();
+  const arrival=new Date(Date.parse(departure)+20*60000).toISOString();
+  return {source:'t',sources:['t'],legs:[
+   bus(at(8,0),at(8,20),STOP1,S3,{toName:'Gare'}),
+   bus(departure,arrival,S3,STOP2,{fromName:'Gare'})
+  ]};
+ };
+ const short=H.assess(await H.completeWalks(make(4,59),task,fakeRouter()),task);
  assert.equal(short.feasible,false,'4 min 59 ne doit pas être déclaré réalisable');
  assert.match(short.statusDetail,/correspondance trop courte/);
- const exactTask=make(5,0);
- const exact=H.assess(await H.completeWalks(exactTask,task,fakeRouter()),task);
+ const exact=H.assess(await H.completeWalks(make(5,0),task,fakeRouter()),task);
  assert.equal(exact.feasible,true,'5 minutes pleines sont acceptées lorsque les arrêts sont identiques');
 });
 test('trajet à pied : proposé ≤ 3 km de marche réelle, refusé si le chemin réel dépasse le seuil',async()=>{
