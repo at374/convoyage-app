@@ -3833,6 +3833,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   $('feuille').onclick = ev => { if (ev.target === $('feuille')) { stopGTFSTransports(); $('feuille').hidden = true; } };
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { stopGTFSTransports(); $('feuille').hidden = true; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') charger(true); });
+  window.addEventListener('online', () => { if (document.visibilityState === 'visible') charger(true); });
   setInterval(() => { if (document.visibilityState === 'visible') charger(true); }, 60000);
 
   if (location.hash === '#alertes') etat.onglet = 'alertes';
