@@ -766,6 +766,13 @@ function makeProviders(r,opts={}){
    ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.48,5.75,45.72,6.04]],
    ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
    ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.69,4.74,45.89,6.36]],
+   // Six réseaux AURA du manifeste national, non encore déclarés dans le moteur de recherche mission.
+   ['ondea_grand_lac', "Ondéa Aix-les-Bains", 'ondea-grand-lac.zip', [45.6,5.75,45.85,6.05]],
+   ['sibra_annecy', "Sibra", 'sibra-annecy.zip', [45.7,5.9,46.1,6.5]],
+   ['mreso_grenoble', "M Réso — Métropole grenobloise", 'mreso-grenoble.zip', [45,5.5,45.45,6]],
+   ['mreso_gresivaudan', "M Réso — Grésivaudan", 'mreso-gresivaudan.zip', [45.15,5.7,45.5,6.15]],
+   ['mreso_voironnais', "M Réso — Pays Voironnais", 'mreso-voironnais.zip', [45.25469,5.48328,45.53061,5.71009]],
+   ['start_thonon', "Star't Thonon", 'start-thonon.zip', [46.25,6.3,46.45,6.65]],
    ['cars_savoie','Cars Région Savoie','cars-region-savoie.zip',[45.05,5.62,45.80,7.19]],
    ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
    ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
