@@ -262,6 +262,10 @@ test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision 
  const block=app.slice(start,end);
  assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000'));
  assert.ok(block.includes('SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_DEPART_MS = 2 * 60000'));
+ assert.ok(block.includes("state?.status === 'prise_en_charge'"));
+ assert.ok(block.includes("const radius = enRoute ? 2000 : 500"));
+
  assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
  assert.ok(block.includes('enableHighAccuracy: params.near'));
  assert.ok(block.includes('maximumAge: params.near ? 0 : 2 * 60000'));
