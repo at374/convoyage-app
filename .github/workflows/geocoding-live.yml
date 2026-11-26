@@ -7,6 +7,8 @@ on:
       - 'geo.js'
       - 'tests/geo-adresse-repli.test.cjs'
       - 'tests/platform-address-normalization.test.cjs'
+      - 'tests/transport-geocode-missing.test.cjs'
+      - 'app.js'
       - 'server/hiflow-sync-deploy/hiflow-vendor/sync-core.js'
       - 'server/driiveme-sync-deploy/driiveme-vendor/sync-core.js'
       - '.github/workflows/geocoding-live.yml'
