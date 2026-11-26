@@ -300,7 +300,7 @@ async function completeWalks(j,task,router){
  if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
  const call=async(a,b)=>{
   if(!router||!a||!b)return null;
-  try{const r=await router.route(a,b);return r&&r.status==='calculated'&&
+  try{const r=await router.route(a,b);return r&&r.status==='calculated'&&r.endpointsMatched===true&&
    finite(r.durationSeconds)&&r.durationSeconds>=0&&finite(r.distanceMeters)&&r.distanceMeters>=0?r:null;}catch(_){return null;}
  };
  // Ne jamais qualifier de « réalisable » une marche moteur sans durée, distance ou horaires cohérents.
@@ -368,7 +368,7 @@ function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEnt
    geometry:s.g||null,steps:s.s||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
   misses++;
   const r=Promise.resolve(router.route(round(a),round(b))).then(x=>{
-   if(x&&x.status==='calculated'){
+   if(x&&x.status==='calculated'&&x.endpointsMatched===true){
     // géométrie allégée (≤ 40 points) pour le stockage
     const g=Array.isArray(x.geometry)?x.geometry.filter((_,i,arr)=>i%Math.max(1,Math.ceil(arr.length/40))===0||i===arr.length-1).map(round):null;
     saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g,s:Array.isArray(x.steps)?x.steps.slice(0,25):undefined};persist();
