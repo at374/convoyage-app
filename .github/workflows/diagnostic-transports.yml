@@ -17,6 +17,7 @@ on:
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-loader.js'
       - 'tests/transport-mission-hub.test.cjs'
+      - 'tests/transport-gtfs-index.test.cjs'
       - 'tests/transport-gtfs-federation.test.cjs'
       - 'transport-fare-grids.js'
       - 'transport-coverage.js'
