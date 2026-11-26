@@ -5,6 +5,7 @@ with urllib.request.urlopen(URL, timeout=60) as response:
     datasets = json.load(response)
 assert isinstance(datasets,list), 'Unexpected catalogue schema'
 out = []
+seen = set()
 for ds in datasets:
     for resource in ds.get('resources',[]):
         fmt = str(resource.get('format','')).lower().replace('_','-')
@@ -13,7 +14,11 @@ for ds in datasets:
         url = resource.get('url')
         if not isinstance(url,str) or not url.startswith('https://'):
             continue
-        out.append({'dataset':ds.get('slug'),'title':ds.get('title'),'format':fmt,'url':url,'status':'discovered_not_validated'})
+        key = (fmt, url)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({'dataset':ds.get('slug'),'title':ds.get('title'),'territory':ds.get('territory'),'region':ds.get('region'),'resource_id':resource.get('id'),'format':fmt,'url':url,'status':'discovered_not_validated'})
 assert out, 'No matching realtime resources found'
 pathlib.Path('realtime-candidates.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
 print('Public realtime candidates:',len(out))
