@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['jybus',['J’y bus Rumilly','jybus-rumilly']],
  ['tac',['TAC Annemasse','tac-annemasse']],
  ['divia_dijon',['Divia Mobilités (Dijon)','divia-dijon']],
  ['cotebus_beaune',["Côt'Bus (Beaune)",'beaune-cote-et-bus',true]],
@@ -1351,7 +1352,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['zou_express_nord','ZOU ! Express (Alpes du Sud)','zou-express-nord.zip',[44.0,5.0,45.2,7.2]],
  ['zou_proximite_nord','ZOU ! Proximité (Hautes-Alpes, Vaucluse nord)','zou-proximite-nord.zip',[44.0,5.0,45.0,7.0]],
  ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.535,4.688,46.527,6.09]],
- ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
+ ['jybus','J’y bus Rumilly','jybus-rumilly-gtfs-rt.zip',[45.80,5.85,45.93,6.05]],
  ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
  // 15/11/2026 : autres réseaux de l'agrégat officiel Oùra (extraits par la tâche serveur, emprises relevées).
  ['rubis', "Rubis Bourg-en-Bresse", 'rubis-bourg.zip', [46.15,5.05,46.52,5.41]],
@@ -1564,6 +1565,8 @@ function makeProviders(r,opts={}){
   base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
   deployedBase=null;
   try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
+  const branchArchive=file=>file==='jybus-rumilly-gtfs-rt.zip'
+   ?'https://raw.githubusercontent.com/at374/convoyage-app/feature/native-gps-bridge/data/gtfs/'+file:null;
   // Les réseaux déjà lus restent en mémoire d'une recherche à l'autre (10 au maximum) : la 2e recherche et les actualisations de 5 min sont instantanées.
   const cache=r.__cpHubFeedCache||(r.__cpHubFeedCache=new Map());
   if(!cache.__w){const o=cache.set.bind(cache);cache.set=(k,v)=>{o(k,v);while(cache.size>10)cache.delete(cache.keys().next().value);return cache;};cache.__w=true;}
@@ -1594,7 +1597,7 @@ function makeProviders(r,opts={}){
     disabledReason:'trajet hors zone du réseau local ou horaires manquants',
     // Préparation à l'avance : seulement le téléchargement (gardé sur le téléphone), sans lecture du fichier, pour ne jamais figer l'écran.
     prefetch:async()=>{
-     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+     const urls=[...new Set([deployedBase?deployedBase+file:null,branchArchive(file),base+file,
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      for(const u of urls){try{const x=await fetcher(u);if(x&&x.ok){await x.arrayBuffer();return true;}}catch(_){}}
      return false;
@@ -1605,7 +1608,7 @@ function makeProviders(r,opts={}){
      // Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site passe en premier (c'est elle
      // que les tâches hebdomadaires de la branche publiée rafraîchissent) ; sinon la branche Transports, puis la
      // branche principale et le site déployé en secours.
-     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+     const urls=[...new Set([deployedBase?deployedBase+file:null,branchArchive(file),base+file,
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
      // 21/11/2026 : bug Y51/Albertville réel — l'adresse de livraison exacte et le domicile sont tous deux
@@ -1727,7 +1730,7 @@ function makeProviders(r,opts={}){
   if(r.CPGTFSFederation?.crossNetworkTrips&&r.CPGTFSTime?.datedTrips&&r.CPGTFSIndex?.nearbyTransferTrips){
    const sncfFeed=['sncf_ter','SNCF (TER, TGV)','national-sncf-aura.zip',[44.0,3.6,46.7,7.4]];
    const area=b=>(b[2]-b[0])*(b[3]-b[1]);
-   const urlsFor=file=>[...new Set([deployedBase?deployedBase+file:null,base+file,
+   const urlsFor=file=>[...new Set([deployedBase?deployedBase+file:null,branchArchive(file),base+file,
      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
    const feedFor=(id,name,file,date)=>{
     const key='x|'+id+'|'+date;let promise=cache.get(key);
