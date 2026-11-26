@@ -31,3 +31,9 @@ test('pré-calcul transport : lance retour et jonction à quinze minutes de la l
   assert.match(src, /prefetchPanel\.style\.display = 'none'/);
   assert.match(src, /existing\.dataset\.cpPrefetched === 'true'/);
 });
+
+test('pré-calcul transport : une arrivée GPS déjà confirmée déclenche immédiatement le cache', () => {
+  const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+  assert.match(src, /const arrivalKnown = arriveeGps\(missionTiming\(m\)\.key\)/);
+  assert.match(src, /if \(!arrivalKnown\) \{/);
+});
