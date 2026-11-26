@@ -2463,7 +2463,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const commonSignature=JSON.stringify([Hub.VERSION,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         const taskSignatures=Object.fromEntries(allTasks.map(({lazy,...task})=>[task.label,JSON.stringify([task,commonSignature])]));
         const signature=JSON.stringify([commonSignature,allTasks.map(({lazy,...r})=>r)]);
-        if((onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
+        if(!refresh&&(onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
         // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
         // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
         // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
