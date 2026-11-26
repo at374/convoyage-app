@@ -851,7 +851,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   async function suiviConvoyageEstimerArrivee(m,t,here,ts,state) {
     if (suiviConvoyageEtaEnCours.has(t.key) || state.approcheDeclencheeAt) return;
-    const lastAttempt = Date.parse(state.etaAttemptAt || state.etaCheckedAt || state.departedAt || '');
+    const lastAttempt = Date.parse(state.etaAttemptAt || state.etaCheckedAt || '');
     if (Number.isFinite(lastAttempt) && ts - lastAttempt < SUIVI_CONVOYAGE_ETA_INTERVALLE_MS) return;
     // Persister le dernier essai même en cas d'erreur réseau pour éviter de solliciter
     // l'API à chaque position GPS fournie par Android.
