@@ -2955,6 +2955,8 @@ function card(doc,j,labels,expanded=false,task=null){
    {
     const dayBtn=el(doc,'button','cp-hub-dayline','🕒 Tous les horaires '+(l.line||l.mode)+' du '+dayText(l.departure||raw?.serviceDate));
     dayBtn.type='button';
+    dayBtn.setAttribute('data-ride-key',signature({legs:[l]}));
+    dayBtn.setAttribute('aria-expanded','false');
     const dayRes=el(doc,'div','cp-hub-dayline-result');dayRes.setAttribute('aria-live','polite');
     let dayOpen=false;
     dayBtn.addEventListener('click',e=>{
@@ -2962,8 +2964,9 @@ function card(doc,j,labels,expanded=false,task=null){
      if(dayBtn.disabled)return;
      // 21/11/2026 : deuxième clic doit replier (le clic ne faisait que relancer la même requête sans jamais
      // vider dayRes, donc le bouton semblait ne « rien faire » au second clic — signalé par Laurent).
-     if(dayOpen){dayOpen=false;dayRes.textContent='';dayRes.replaceChildren();return;}
+     if(dayOpen){dayOpen=false;dayBtn.setAttribute('aria-expanded','false');dayRes.replaceChildren();return;}
      dayOpen=true;
+     dayBtn.setAttribute('aria-expanded','true');
      dayBtn.disabled=true;dayRes.textContent='Chargement des horaires…';
      const showSource=()=>{
       dayRes.textContent='Grille complète indisponible dans la fiche. ';
@@ -3126,8 +3129,10 @@ function render(host,v){
  {const fp=viewFingerprint(v);if(host.__cpFp===fp&&host.childNodes.length)return;host.__cpFp=fp;}
  // Préserver les cartes ouvertes lors des arrivées progressives des moteurs.
  // Sans cela, chaque résultat réseau referme les détails et recrée les SVG.
- const opened=new Set(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
-   .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
+ const opened=new Map(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
+  .filter(node=>node.hasAttribute('data-journey-key'))
+  .map(node=>[node.getAttribute('data-journey-key'),new Set(Array.from(
+   node.querySelectorAll('.cp-hub-dayline[aria-expanded="true"]'),button=>button.getAttribute('data-ride-key')))]));
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const next=nextDepartureAfterMiss(v);
  const timeline=selectJourneyCards(v,next).map(journey=>({journey,labels:null}))
@@ -3164,6 +3169,11 @@ function render(host,v){
   // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.
   if(key)node.setAttribute('data-journey-key',key);
   parent.appendChild(node);
+  const expandedSchedules=opened.get(key);
+  if(expandedSchedules?.size){
+   for(const button of node.querySelectorAll('.cp-hub-dayline'))
+    if(expandedSchedules.has(button.getAttribute('data-ride-key')))button.click();
+  }
  };
  // Ouvrir automatiquement la première carte une seule fois par fiche.
  // Si le convoyeur la referme, une mise à jour réseau ne doit pas la rouvrir.

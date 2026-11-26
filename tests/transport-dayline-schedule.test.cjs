@@ -113,3 +113,9 @@ test('Sibra : la fiche sans identifiants GTFS retrouve les 20 horaires entre Mai
   [globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner]=previous;
  }
 });
+
+test('le rendu rouvre les grilles par identité d’étape et non par position dans la carte',()=>{
+ assert.match(hubSrc,/data-ride-key',signature\(\{legs:\[l\]\}\)/);
+ assert.match(hubSrc,/\.cp-hub-dayline\[aria-expanded="true"\]/);
+ assert.match(hubSrc,/expandedSchedules\.has\(button\.getAttribute\('data-ride-key'\)\)\)button\.click\(\)/);
+});
