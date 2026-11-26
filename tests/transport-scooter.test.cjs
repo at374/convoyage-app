@@ -230,6 +230,17 @@ test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en r
  assert.ok(app.includes("vit > 3"));
 });
 
+test('préparation transports : un même flux GTFS est préchargé une seule fois par cycle',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('async function preparerTransports()');
+ const end=app.indexOf('setTimeout(preparerTransports',start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes('const prefetches = new Map()'));
+ assert.ok(block.includes('if (!prefetches.has(k)) prefetches.set(k'));
+ assert.ok(block.includes('await prefetches.get(k)'));
+ assert.ok(block.includes('/^(local_|national_)/.test(k)'));
+});
+
 test('suivi GPS : le passage en arrière-plan ne détruit plus le watchPosition',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  const block=app.slice(app.indexOf('function suiviMaj()'),app.indexOf('// Préparation à l\'avance (application ouverte)'));
