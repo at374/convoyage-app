@@ -42,3 +42,20 @@ test('Voiron : la rue du courriel remplace le centre fourni par la plateforme',a
  try{assert.deepEqual(G.coordonnees(mission,'origin'),{lat:45.381682,lng:5.579257,precision:'rue'});}
  finally{delete G.POINTS[r.cle];}
 });
+
+
+test('Annecy : apostrophe échappée et code postal erroné ne masquent pas le numéro 94',async()=>{
+ const m={to_city:'Annecy',to_department:'74',destination_address:"94 avenue d\\'aix les bains, 74000 Annecy"};
+ assert.equal(G.adresseDe(m,'destination').a,"94 avenue d'aix les bains, 74000 Annecy");
+ const urls=[];
+ const r=await G.chercherPoint(m,'destination',async u=>{
+  urls.push(decodeURIComponent(u));
+  const exact=!u.includes('&postcode=');
+  return {ok:true,json:async()=>({features:[{geometry:{coordinates:exact?[6.10477,45.88807]:[6.12846,45.89962]},properties:{score:0.9,type:exact?'housenumber':'municipality',housenumber:exact?'94':undefined}}]})};
+ });
+ assert.equal(r.trouve,true);
+ assert.equal(r.point.precision,'adresse');
+ assert.equal(r.point.lat,45.88807);
+ assert.ok(urls.every(u=>!u.includes('\\')));
+ assert.ok(urls.some(u=>!u.includes('&postcode=')));
+});
