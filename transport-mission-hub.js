@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['tac',['TAC Annemasse','tac-annemasse']],
  ['divia_dijon',['Divia Mobilités (Dijon)','divia-dijon']],
  ['cotebus_beaune',["Côt'Bus (Beaune)",'beaune-cote-et-bus',true]],
  ['grandole_dole',['Grandole Mobilités (Dole)','tgd-dole']],
