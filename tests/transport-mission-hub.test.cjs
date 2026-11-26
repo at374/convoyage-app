@@ -837,12 +837,17 @@ test('22 réseaux terrestres Bretagne du manifeste sont raccordés au moteur des
  }
 });
 
-test('10 réseaux PACA, Occitanie et Nouvelle-Aquitaine du manifeste sont raccordés aux fiches mission',async()=>{
+test('28 réseaux PACA, Occitanie, Nouvelle-Aquitaine et Pays de la Loire du manifeste sont raccordés aux fiches mission',async()=>{
  const fs=require('node:fs'),path=require('node:path');
  const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','gtfs','manifest.json'),'utf8'));
  const ids=['zou-proximite-paca','zou-express-paca','lignes-azur-nice','mistral-toulon',
   'mistral-telepherique-faron','lio-interurbain-occitanie','tisseo-toulouse','tam-montpellier',
-  'tango-nimes','cars-region-nouvelle-aquitaine'];
+  'tango-nimes','cars-region-nouvelle-aquitaine',
+  'pdl-irigo-angers','pdl-brevibus','pdl-tul-laval','pdl-naolib-nantes','pdl-choletbus',
+  'pdl-oleane-les-sables','pdl-illygo','pdl-sovetours','pdl-yceo-saint-nazaire',
+  'pdl-impulsyon-la-roche','pdl-aleop-sarthe','pdl-aleop-vendee','pdl-aleop-ler',
+  'pdl-aleop-mayenne','pdl-aleop-loire-atlantique','pdl-aleop-maine-et-loire',
+  'pdl-reso-sable','pdl-heoh-clisson'];
  const loaded=[];
  const root={
   CPGTFSLoader:{loadResource:async resource=>{loaded.push(resource.url);return {files:{},index:{}};}},
