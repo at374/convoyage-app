@@ -1,0 +1,43 @@
+name: Validate neighbouring AURA GTFS corridors
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/validate-aura-neighbours.yml'
+      - 'scripts/build_national_gtfs_aura.py'
+permissions:
+  contents: read
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        operator: [sncf, flixbus, blablacarBus]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download and validate official archive
+        env:
+          OPERATOR: ${{ matrix.operator }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$OPERATOR" in
+            sncf) url='https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip' ;;
+            flixbus) url='https://gtfs.gis.flix.tech/gtfs_generic_eu.zip' ;;
+            blablacarBus) url='https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o' ;;
+          esac
+          curl --fail --location --retry 2 --max-time 300 --max-filesize 536870912 "$url" -o /tmp/source.zip
+          python -m zipfile -t /tmp/source.zip
+          for corridor in lyon-dijon bourg-besancon grenoble-gap clermont-bourges clermont-millau; do
+            python scripts/build_national_gtfs_aura.py --input /tmp/source.zip --operator "$OPERATOR" --region "$corridor" --source-url "$url" --out /tmp/validated
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gtfs-aura-neighbours-${{ matrix.operator }}
+          path: /tmp/validated/
+          if-no-files-found: error
+          retention-days: 7
