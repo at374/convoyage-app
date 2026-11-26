@@ -1833,6 +1833,16 @@ function makeProviders(r,opts={}){
     // 35 s au premier chargement. Une fois téléchargé, le flux est mis en cache 12 h (cp-gtfs-zips, cf.
     // cacheFetch plus haut et dans le worker) : la patience n'est à demander qu'une fois par demi-journée.
     timeoutMs:budget,
+    // Préchargement anticipé des flux nationaux (SNCF, FlixBus, BlaBlaCar Bus).
+    // gtfsCacheFetch stocke le ZIP dans CacheStorage cp-gtfs-zips (TTL 12 h) :
+    // le worker de recherche réutilise donc exactement le même téléchargement.
+    prefetch:async()=>{
+     const urls=[...new Set([resource.url,...(Array.isArray(resource.fallbackUrls)?resource.fallbackUrls:[])].filter(u=>/^https:\/\//i.test(u||'')))];
+     for(const url of urls){
+      try{const response=await fetcher(url);if(response?.ok){await response.arrayBuffer();return true;}}catch(_){}
+     }
+     return false;
+    },
     run:async(task,signal)=>{
      if(!coversTrip(task)||signal?.aborted)return [];
      const window=queryWindow(task),when=ms(window.when);
