@@ -72,3 +72,16 @@ test('DriiveMe : une destination partielle conserve le GPS du dropoff',()=>{
   assert.equal(rows[0].destination.lat,45.39);
   assert.equal(rows[0].destination.lng,5.57);
 });
+
+test('la fiche mission lit aussi les adresses pickup et dropoff imbriquées',()=>{
+  const fs=require('node:fs');
+  const path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const start=app.indexOf('  function adresse(m, cote) {');
+  const end=app.indexOf('  // V78 : rentabilité',start);
+  assert.ok(start>=0 && end>start,'fonction adresse de la fiche mission présente');
+  const source=app.slice(start,end);
+  assert.match(source,/lieu\.address \|\| lieu\.street/);
+  assert.match(source,/m\.pickup \|\| m\.pickup_location/);
+  assert.match(source,/m\.dropoff \|\| m\.delivery \|\| m\.dropoff_location/);
+});
