@@ -479,8 +479,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   }
   function adresse(m, cote) {
     const pre = cote === 'origin' ? 'from' : 'to';
+    const lieu = cote === 'origin'
+      ? (m.pickup || m.pickup_location || m.origin || {})
+      : (m.dropoff || m.delivery || m.dropoff_location || m.destination || {});
     const a = m[cote + '_address'] || m[pre + '_address'] || (cote === 'origin' ? m.pickup_address : (m.delivery_address || m.dropoff_address)) ||
-      (m[cote] && (m[cote].address || m[cote].street)) ||
+      (m[cote] && (m[cote].address || m[cote].street)) || lieu.address || lieu.street ||
       (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
     // V88 : ville connue → affichée ; l'adresse exacte d'une mission acceptée arrive quand « Mes trajets » Hiflow est ouvert sur l'ordinateur.
