@@ -152,6 +152,8 @@ async function gtfsRows(axis,when){
  for(const a of report.axes)for(const [name,count] of Object.entries(a.partialMissingByOperator))report.totals.partialMissingByOperator[name]=(report.totals.partialMissingByOperator[name]||0)+count;
  report.totals.fareLegsByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.fareLegsByOperator))report.totals.fareLegsByOperator[name]=(report.totals.fareLegsByOperator[name]||0)+count;
+ report.totals.missingFareByOperator={};
+ for(const a of report.axes)for(const [name,count] of Object.entries(a.missingFareByOperator))report.totals.missingFareByOperator[name]=(report.totals.missingFareByOperator[name]||0)+count;
  report.totals.pricedPct=report.totals.trips?Math.round(report.totals.priced*1000/report.totals.trips)/10:0;
  report.totals.walkedPct=report.totals.trips?Math.round(report.totals.walked*1000/report.totals.trips)/10:0;
  console.log('BILAN_GLOBAL '+JSON.stringify(report.totals));
