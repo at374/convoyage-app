@@ -154,15 +154,20 @@
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
-  const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
-    // Les intégrations de plateformes n'emploient pas toutes les mêmes noms : certaines donnent
-    // origin/destination_address, d'autres from/to_address ou pickup/delivery_address.
-    const champs = cote === 'origin' ? [m.origin_address, m.from_address, m.pickup_address, m.pickup?.address, p.address, p.street] :
-      [m.destination_address, m.to_address, m.delivery_address, m.dropoff_address, m.dropoff?.address, p.address, p.street];
-    const a = String(champs.find(v => typeof v === 'string' && v.trim()) || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim();
-    const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
-  const aAdresseRue = (m, cote) => /\b(?:rue|avenue|av\.?|boulevard|bd\.?|route|rte\.?|chemin|ch\.?|impasse|all[ée]e|place|quai|cours|passage|sentier|voie|zone|zi|za)\b/i.test(adresseDe(m, cote).a);
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  const adresseDe = (m, cote) => {
+    const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
+    const v = String(m[pre + '_city'] || p.city || '').trim(), d = m[pre + '_department'] || '';
+    const mail = m.mail_info?.[cote === 'origin' ? 'depart' : 'arrivee']?.adresse;
+    const candidates = [m[cote + '_address'], p.address, p.street, m[pre + '_address'], mail]
+      .filter(value => typeof value === 'string')
+      .map(value => value.replace(/\\+(?=['’])/g, '').replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').trim())
+      .filter(Boolean);
+    const city = norm(v);
+    const a = candidates.find(value => !city || norm(value).replace(/\b(?:\d{5}|\d{2})\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() !== city) || '';
+    const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
+    return { a, v, cp, d };
+  };
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v2', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
@@ -179,15 +184,63 @@
       const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
       ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
       if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
+      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
+      if (numero && x.cp) essais.push({ q: [sansLieu.replace(/\b\d{5}\b/g, ''), x.v].filter(Boolean).join(' '), commune: false, sansCP: true });
+      if (numero) {
+        const mots = norm(sansLieu.replace(/\b\d{5}\b/g, '')).replace(/\bd\s+(?=\w)/g, '').trim();
+        const q = [mots, x.v].filter(Boolean).join(' ');
+        if (!essais.some(e => e.q === q && e.sansCP)) essais.push({q, commune:false, sansCP:true});
+      }
+      let meilleur = null;
       for (const es of essais) {
-        const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(es.q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
+        // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
+        // (data.geopf.fr/geocodage) — même moteur, mêmes paramètres et même format de réponse GeoJSON (iso-fonctionnel).
+        const r = await fetchFn('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(es.q) + (x.cp && !es.sansCP ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
         if (!r || !r.ok) throw new Error('service adresses');
         const j = await r.json(), f = j && j.features && j.features[0];
         if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
           const t = f.properties.type, [lng, lat] = f.geometry.coordinates;
-          if (Number.isFinite(lat) && Number.isFinite(lng)) return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+          const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
+          const point = { lat, lng, precision };
+          if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
+          if (numero && f.properties.street) {
+            const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
+            const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]);
+            const trouvee = motsVoie(f.properties.street);
+            if (demandee && trouvee && demandee !== trouvee && !demandee.startsWith(trouvee+' ')) continue;
+          }
+          if (precision === 'adresse' || !x.a) return { cle, trouve: true, point };
+          if (!meilleur || (meilleur.precision === 'ville' && precision === 'rue')) meilleur = point;
         }
       }
+      if (numero) {
+        const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
+        const rue = sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0].trim();
+        const communeOK = p => [p.city,p.municipality,p.oldcity].some(v => v && norm(v) === norm(x.v));
+        const voieOK = v => !!v && motsVoie(v) === motsVoie(rue);
+        const base = 'https://data.geopf.fr/geocodage/search?limit=5&q=';
+        const rv = await fetchFn(base + encodeURIComponent([motsVoie(rue),x.v].join(' ')) + '&type=street');
+        if (rv && rv.ok) {
+          const jv = await rv.json();
+          for (const v of (jv.features || [])) {
+            const p = v.properties || {}, nom = p.name || p.street;
+            if (p.type !== 'street' || !voieOK(nom) || !communeOK(p)) continue;
+            const num = numero[0].match(/^\d{1,4}\s*(?:bis|ter)?/i)[0].trim();
+            const rn = await fetchFn(base + encodeURIComponent([num,nom,p.postcode,p.city].filter(Boolean).join(' ')) + '&type=housenumber');
+            if (!rn || !rn.ok) continue;
+            const jn = await rn.json();
+            for (const f of (jn.features || [])) {
+              const a = f.properties || {};
+              if (a.type !== 'housenumber' || a.score < 0.5 || norm(a.housenumber || '').replace(/\s/g,'') !== norm(num).replace(/\s/g,'') || !voieOK(a.street) || !communeOK(a)) continue;
+              const [lng,lat] = f.geometry?.coordinates || [];
+              if (Number.isFinite(lat) && Number.isFinite(lng)) return {cle,trouve:true,point:{lat,lng,precision:'adresse'}};
+            }
+          }
+        }
+      }
+      if (numero) return { cle, trouve: false };
+      if (meilleur) return { cle, trouve: true, point: meilleur };
       if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
     }
     if (!x.v) return { cle, trouve: false };
@@ -198,9 +251,45 @@
     const e = (pays && l.find(z => String(z.country_code).toUpperCase() === pays)) || (!pays && l[0]) || null;
     return e ? { cle, trouve: true, point: { lat: e.latitude, lng: e.longitude, precision: 'ville' } } : { cle, trouve: false };
   }
+  // Vrai si le point (lat,lng) est (à 400 m près) le centre de la commune de la mission alors qu'une adresse de rue est indiquée.
+  function centreCommune(m, cote, lat, lng) {
+    const x = adresseDe(m, cote); if (!x.a || x.a.length < 4) return false;
+    const pre = cote === 'origin' ? 'from' : 'to', v = trouverVille(m[pre + '_city'] || (m[cote] && m[cote].city), departementMission(m, cote));
+    if (!v || !Number.isFinite(v.lat) || !Number.isFinite(v.lng)) return false;
+    const R = 6371, rad = z => z * Math.PI / 180, dLat = rad(lat - v.lat), dLng = rad(lng - v.lng);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(v.lat)) * Math.cos(rad(lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h))) < 0.4;
+  }
+  // Demande de Laurent (18/11/2026) : toute mission « Aéroport de Genève – Secteur France » ou à Ferney-Voltaire utilise
+  // le point GPS du parking des loueurs (P21) donné par lui : 46.237722, 6.117667. Prioritaire sur tout autre point.
+  // Même point GPS (parking P21) pour prendre en charge et pour livrer. L'entrée des retours (46.232278, 6.110413) n'est pas utilisée.
+  const GENEVE_SECTEUR_FRANCE = { lat: 46.237722, lng: 6.117667 };
+  const estSecteurFranceGeneve = (m, cote) => {
+    const p = (m && m[cote]) || {}, pre = cote === 'origin' ? 'from' : 'to';
+    const t = norm([m && m[cote + '_address'], p.address, p.street, p.name, p.label, m && m[pre + '_city'], p.city, m && m[pre + '_name']].filter(x => typeof x === 'string').join(' '));
+    return /ferney[\s-]*voltaire/.test(t) || (/secteur\s+france/.test(t) && /geneve/.test(t));
+  };
   function coordonnees(m, cote) {
+    if (estSecteurFranceGeneve(m, cote)) return { lat: GENEVE_SECTEUR_FRANCE.lat, lng: GENEVE_SECTEUR_FRANCE.lng, precision: 'gps' };
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
-    if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
+    if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
+      // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
+      // GPS fourni par la plateforme mais qui n'est que le centre de la commune (adresse de rue connue ailleurs dans la commune) :
+      // un point d'adresse trouvé par le service officiel est alors préféré.
+      const cache = POINTS[cleAdresse(m, cote)];
+      if (cache && ((cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng)) || (['adresse','rue'].includes(cache.precision) && volOiseauKm(cache, { lat: Number(p.lat), lng: Number(p.lng) }) * 1000 > (cache.precision==='adresse'?150:400)))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
+      // 23/11/2026 (Laurent : arrivée GPS jamais détectée à une livraison Albertville) : certaines plateformes (Hiflow)
+      // donnent pour « destination » le centre de la commune, même quand une adresse de rue précise est fournie à côté
+      // (deux missions avec des rues différentes à Albertville partageaient exactement le même point). Faute d'un
+      // meilleur point mis en cache (adresse/rue), ce centre-ville était jusqu'ici étiqueté « gps » (point exact) :
+      // le suivi d'arrivée appliquait alors le rayon serré (300 m) autour d'un point qui peut être à plus de 300 m
+      // de la vraie adresse, et l'arrivée n'était jamais détectée. On le requalifie en « ville » (rayon large,
+      // 800 m) quand il n'a rien de plus qu'un centre de commune, sans toucher aux coordonnées elles-mêmes.
+      if (!(cache && (cache.precision === 'adresse' || cache.precision === 'rue')) && centreCommune(m, cote, Number(p.lat), Number(p.lng))) {
+        return { lat: Number(p.lat), lng: Number(p.lng), precision: 'ville' };
+      }
+      return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
+    }
     const pt = POINTS[cleAdresse(m, cote)]; if (pt) return { lat: pt.lat, lng: pt.lng, precision: pt.precision };
     const dep = departementMission(m, cote);
     const v = trouverVille(m[pre + '_city'] || (p && p.city), dep); if (v) return { lat: v.lat, lng: v.lng, precision: 'ville' };
@@ -284,7 +373,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, cleAdresse, aAdresseRue, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
+  const api = { POINTS, adresseDe, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, estSecteurFranceGeneve, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
