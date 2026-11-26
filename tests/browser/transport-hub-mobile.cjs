@@ -1,5 +1,5 @@
 /* Hub transports — vraie application (index.html + app.js) dans Chromium, format Pixel 7.
- * Réponses fournisseurs : enregistrements réels du dépôt (TripGo 31/10/2026, SNCF GTFS 02/11/2026).
+ * Réponses fournisseurs : SNCF et GTFS officiels/synthétiques contrôlés.
  * Valhalla est simulé par une réponse piétonne géométriquement valide (pas d'accès réseau dans le test).
  * Aucun compte, aucune mission réelle, aucune écriture serveur.
  */
@@ -27,7 +27,6 @@ function gtfsZip(){
 }
 const root=path.resolve(__dirname,'../..');
 const output=path.resolve(process.env.TRANSPORT_BROWSER_OUTPUT||path.join(root,'tmp/transport-hub-browser'));
-const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
 const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
 const missions=[{id:'hub-1',external_id:'HUB-1',platform:'DriiveMe',kind:'acceptee',status:'acceptee',
  from_city:'Grenoble',to_city:'Annecy',from_department:'38',to_department:'74',
@@ -42,7 +41,7 @@ function valhalla(q){const [a,b]=q.locations;const mid={lat:(a.lat+b.lat)/2+0.00
  return {trip:{status:0,units:'kilometers',summary:{time:t,length:km,has_ferry:false},legs:[{summary:{time:t,length:km,has_ferry:false},shape:encode([a,mid,b]),maneuvers:[{travel_mode:'pedestrian',travel_type:'foot'}]}]}};}
 async function run(){
  await fs.mkdir(output,{recursive:true});
- const errors=[],hits={tripgo:0,swiss:0,valhalla:0,sncf:0,mobilites:0},writes=[];
+ const errors=[],hits={swiss:0,valhalla:0,sncf:0,mobilites:0},writes=[];
  const server=http.createServer(async(req,res)=>{try{const name=decodeURIComponent(new URL(req.url,'http://x').pathname);
   const file=path.resolve(root,'.'+(name==='/'?'/index.html':name));if(!file.startsWith(root+path.sep))throw 0;
   res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/json');
@@ -56,7 +55,7 @@ async function run(){
    for(const [k,v] of Object.entries({cp_session:{access_token:'browser-test-only',user_id:'hub-fixture',expires_at:Date.now()+86400000},
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],
     cp_pause:{choix:'non'},cp_notif:{on:false,son:false},cp_marche_max_km:3}))localStorage.setItem(k,JSON.stringify(v));
-   localStorage.setItem('cp_tripgo_key','a'.repeat(32));localStorage.removeItem('cp_gps');
+   localStorage.removeItem('cp_gps');
    window.CP_GTFS_AGENDA_RESOURCES=[{id:'tarif-test',network:'Réseau tarif test',format:'GTFS',url:'https://gtfs-fixture.invalid/feed.zip',bounds:[45,5.5,46.2,6.5],timeZone:'Europe/Paris'}];
   },{missions,settings});
   await context.route('**/*',async route=>{
@@ -78,11 +77,6 @@ async function run(){
     if(/\b12\b/.test(q))return json(route,{features:[{geometry:{coordinates:[5.7143,45.1914]},properties:{score:1,type:'housenumber',city:'Grenoble'}}]});
     if(/\b14\b/.test(q))return json(route,{features:[{geometry:{coordinates:[6.1218,45.9019]},properties:{score:1,type:'housenumber',city:'Annecy'}}]});
     return json(route,{features:[]});
-   }
-   if(url.hostname==='api.tripgo.com'){hits.tripgo++;
-    assert.equal(req.headers()['x-tripgo-key'],'a'.repeat(32));
-    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
-    return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'hors requête enregistrée'});
    }
    if(url.hostname==='gtfs-fixture.invalid'){hits.gtfs=(hits.gtfs||0)+1;return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:gtfsZip()});}
    if(url.hostname==='transport.opendata.ch'){hits.swiss++;return json(route,{connections:[]});}
@@ -109,7 +103,6 @@ async function run(){
   var elapsed=Date.now()-t0;
   const text=await retour.evaluate(n=>n.textContent);
   assert.ok(elapsed<30000,'résultats du retour en moins de 30 s : '+elapsed+' ms');
-  assert.match(text,/FlixBus 1789/,'TripGo réel intégré');
   // Un seul affichage : cartes du hub d'abord, anciens blocs par moteur repliés en dessous.
   const order=await page.locator('[data-transport-direction="Retour"]').evaluate(sec=>{const hub=sec.querySelector('[data-transport-hub]'),src=sec.querySelector('details.cp-transport-sources');
    return {hubFirst:!!hub&&!!src&&!!(hub.compareDocumentPosition(src)&Node.DOCUMENT_POSITION_FOLLOWING),closed:!!src&&!src.open};});
@@ -122,7 +115,7 @@ async function run(){
   assert.match(withFare,/1,60 €/,'prix GTFS affiché');assert.match(withFare,/tarif publié dans le GTFS officiel/);
   assert.match(await retour.innerText(),/Moins cher/,'le trajet au prix connu est classé « Moins cher »');
   assert.match(text,/🚶/,'marches affichées');
-  assert.ok(hits.tripgo>=1,'TripGo appelé automatiquement');assert.ok(hits.sncf>=1,'SNCF consulté automatiquement');
+  assert.ok(hits.sncf>=1,'SNCF consulté automatiquement');
   assert.ok(hits.valhalla>=1,'marches réelles demandées');
   assert.equal(hits.swiss,0,'aucune requête suisse pour Grenoble–Annecy (hors zone)');
   // Ouvrir la carte « Plus rapide » ou la première : étapes, tracé, sources.
