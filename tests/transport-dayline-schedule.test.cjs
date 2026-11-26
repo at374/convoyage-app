@@ -180,3 +180,24 @@ test('réel : le bus C de la fiche Thonon affiche tous ses départs et leur term
   assert.equal(hub.hmFromSeconds(ride.arrivalSeconds),'08:57');
   assert.match(ride.terminus,/^Saint Disdille campings$/i);
  });
+
+test('BlaBlaCar Bus regroupe les départs du même parcours dont les identifiants diffèrent',async t=>{
+ const previous={CPGTFSIndex:globalThis.CPGTFSIndex,CPGTFSLoader:globalThis.CPGTFSLoader};
+ t.after(()=>Object.assign(globalThis,previous));
+ const primary={agency_id:'0',route_short_name:'BlaBlaCar Bus',route_long_name:'Lyon > Aéroport > Grenoble'};
+ const routeById=new Map([
+  ['first',primary],['second',{...primary}],
+  ['other-pattern',{...primary,route_long_name:'Lyon > Aéroport > Chambéry'}],
+  ['other-agency',{...primary,agency_id:'1'}]
+ ]);
+ globalThis.CPGTFSLoader={loadResource:async()=>({files:{},index:{routeById}})};
+ globalThis.CPGTFSIndex={directTrips:()=>[...routeById.keys()].map((routeId,i)=>({
+  routeId,tripId:routeId,departure:(10+i)+':00:00',arrival:(10+i)+':30:00',
+  terminus:'Grenoble'
+ }))};
+ const hub=require('../transport-mission-hub.js');
+ const rows=await hub.dayScheduleForLeg({networkUrls:['https://local.test/coaches.zip'],
+  routeId:'first',from:'XYL',to:'LYS',serviceDate:'2026-11-26'});
+ assert.deepEqual(rows.map(row=>[hub.hmFromSeconds(row.departureSeconds),row.terminus]),
+  [['10:00','Grenoble'],['11:00','Grenoble']]);
+});
