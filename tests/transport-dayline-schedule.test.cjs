@@ -181,7 +181,7 @@ test('réel : le bus C de la fiche Thonon affiche tous ses départs et leur term
   assert.match(ride.terminus,/^Saint Disdille campings$/i);
  });
 
-test('BlaBlaCar Bus regroupe les départs du même parcours dont les identifiants diffèrent',async t=>{
+test('BlaBlaCar Bus regroupe tous les départs du segment même si les itinéraires complets diffèrent',async t=>{
  const previous={CPGTFSIndex:globalThis.CPGTFSIndex,CPGTFSLoader:globalThis.CPGTFSLoader};
  t.after(()=>Object.assign(globalThis,previous));
  const primary={agency_id:'0',route_short_name:'BlaBlaCar Bus',route_long_name:'Lyon > Aéroport > Grenoble'};
@@ -199,5 +199,5 @@ test('BlaBlaCar Bus regroupe les départs du même parcours dont les identifiant
  const rows=await hub.dayScheduleForLeg({networkUrls:['https://local.test/coaches.zip'],
   routeId:'first',from:'XYL',to:'LYS',serviceDate:'2026-11-26'});
  assert.deepEqual(rows.map(row=>[hub.hmFromSeconds(row.departureSeconds),row.terminus]),
-  [['10:00','Grenoble'],['11:00','Grenoble']]);
+  [['10:00','Grenoble'],['11:00','Grenoble'],['12:00','Grenoble']]);
 });

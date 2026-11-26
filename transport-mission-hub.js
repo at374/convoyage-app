@@ -2745,14 +2745,16 @@ async function dayScheduleForLeg(raw){
  if(indexed){
   const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
   const route=feed.index.routeById?.get(String(raw.routeId));
-  // BlaBlaCar Bus assigns distinct route IDs to departures with the same itinerary.
-  const coachPattern=scheduleLabel(route?.route_short_name)==='blablacar bus'&&route.route_long_name;
+  // BlaBlaCar Bus assigns a distinct route ID to each coach, even between the
+  // same two stops. The full route description may differ because of stops
+  // before/after this segment; keep all departures on this operator's line.
+  const coachAgency=scheduleLabel(route?.route_short_name)==='blablacar bus'?route.agency_id:null;
   rows=indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
    .filter(ride=>{
     if(String(ride.routeId)===String(raw.routeId))return true;
-    const candidate=coachPattern&&feed.index.routeById.get(String(ride.routeId));
-    return candidate&&candidate.agency_id===route.agency_id&&
-     candidate.route_short_name===route.route_short_name&&candidate.route_long_name===coachPattern;
+    const candidate=coachAgency!==null&&feed.index.routeById.get(String(ride.routeId));
+    return candidate&&candidate.agency_id===coachAgency&&
+     scheduleLabel(candidate.route_short_name)==='blablacar bus';
    })
    .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival),terminus:ride.terminus||ride.headsign||null}));
  }else{
