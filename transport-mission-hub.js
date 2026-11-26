@@ -244,6 +244,7 @@ function bookingNote(nets){
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
  ['divia_dijon',['Divia Mobilités (Dijon)','divia-dijon']],
+ ['cotebus_beaune',["Côt'Bus (Beaune)",'beaune-cote-et-bus',true]],
  ['grandole_dole',['Grandole Mobilités (Dole)','tgd-dole']],
  ['moova_vesoul',['Moova (Vesoul)','moova-vesoul']]
 ]);
@@ -1616,7 +1617,7 @@ function makeProviders(r,opts={}){
      const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
      const now=Date.now();
-     const live=LOCAL_REALTIME_NETWORKS.has(id)&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
+     const live=LOCAL_REALTIME_NETWORKS.has(id)&&!LOCAL_REALTIME_NETWORKS.get(id)[2]&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000
       ?await loadLocalRealtime(r,id):null;
      if(signal?.aborted)return [];
      const skippedStops=new Map();
@@ -1879,7 +1880,7 @@ function makeProviders(r,opts={}){
      const now=Date.now();
      const live=new Map();
      if(rows.length&&date===parisDayParts(now)?.day&&Math.abs(when-now)<10800000){
-      const ids=new Set(rows.flatMap(row=>(row.legs||[]).map(realtimeNetworkId)).filter(Boolean));
+      const ids=new Set(rows.flatMap(row=>(row.legs||[]).map(realtimeNetworkId)).filter(id=>id&&!LOCAL_REALTIME_NETWORKS.get(id)[2]));
       await Promise.all([...ids].map(async id=>{
        const feed=await loadLocalRealtime(r,id);
        if(feed)live.set(id,feed);
@@ -2860,6 +2861,15 @@ async function localRealtimeDaySchedule(raw,schedule){
    row.departureSeconds=inServiceSeconds(update.departure);
    row.arrivalSeconds=inServiceSeconds(update.arrival);
    row.status='Temps réel';
+  }else if(networkId==='cotebus_beaune'){
+   // Beaune peut publier une estimation d’arrivée sans fournir le départ.
+   const trip=live.get(row.trip_id);
+   const estimate=trip?.stops.get(raw.to)?.arrival;
+   if(trip&&!trip.cancelled&&(!trip.date||trip.date===raw.serviceDate.replaceAll('-',''))&&
+      Number.isFinite(estimate)&&estimate>Math.max(now,departure)&&Math.abs(estimate-arrival)<=1800000){
+    row.arrivalSeconds=inServiceSeconds(estimate);
+    row.status='Départ théorique · arrivée estimée';
+   }
   }
  }
  return rows.sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
