@@ -138,12 +138,11 @@ def main():
         raise SystemExit('Regional slice exceeds 12 MiB; split by corridor before publishing')
     with zipfile.ZipFile(io.BytesIO(data)) as check:
         validate(check)
-        if complete_trips:
-            last_day = last_service_date(check)
-            today = datetime.now(ZoneInfo('Europe/Paris')).date()
-            if last_day is None or last_day < today + timedelta(days=30):
-                raise SystemExit(f'{args.region} GTFS has fewer than 30 days of timetable validity')
-            info['lastServiceDate'] = last_day.isoformat()
+        last_day = last_service_date(check)
+        today = datetime.now(ZoneInfo('Europe/Paris')).date()
+        if last_day is None or last_day < today + timedelta(days=30):
+            raise SystemExit(f'{args.region} GTFS has fewer than 30 days of timetable validity')
+        info['lastServiceDate'] = last_day.isoformat()
     os.makedirs(args.out, exist_ok=True)
     name = 'national-' + args.operator + '-' + args.region + '.zip'
     target = os.path.join(args.out, name)
