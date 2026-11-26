@@ -983,6 +983,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const liste = (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null && m.status !== 'annulee' && m.status !== 'terminee')
         .map(m => ({ m, t: missionTiming(m) })).filter(x => Number.isFinite(Date.parse(x.t.pickup || ''))).sort((a, b) => Date.parse(a.t.pickup) - Date.parse(b.t.pickup));
       const P = Hub.makeProviders(window, {});
+      // Un flux GTFS peut servir à l'aller, au retour et à la jonction : ne le télécharger/lire
+      // qu'une fois pendant ce cycle de préparation, même si plusieurs tâches le couvrent.
+      const prefetches = new Map();
       const pt = g => { const c = g && Number.isFinite(Number(g.lat)) && Number.isFinite(Number(g.lng)) ? g : null; return c ? { lat: Number(c.lat), lon: Number(c.lng) } : null; };
       for (let i = 0; i < liste.length; i++) {
         const { m, t } = liste[i], debut = Date.parse(t.pickup);
@@ -1006,7 +1009,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             if (document.hidden) return;
             try {
               if (prov.prefetch && prov.enabled(tache)) {
-                const ok = await prov.prefetch();
+                if (!prefetches.has(k)) prefetches.set(k, Promise.resolve().then(() => prov.prefetch()));
+                const ok = await prefetches.get(k);
                 if (ok !== true) prechargementComplet = false;
               }
             } catch (_) { prechargementComplet = false; }
