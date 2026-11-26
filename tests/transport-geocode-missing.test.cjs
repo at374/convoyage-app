@@ -46,3 +46,9 @@ test('fiche mission : le géocodage des points manquants précède la recherche 
  assert.match(app,/streetNeedsLookup = G\.aAdresseRue/,
   'le cache de la liste doit pouvoir remplacer un ancien centre-ville par le point de rue');
 });
+
+test('un GPS incomplet ne bloque pas la recherche automatique des adresses',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.match(app,/const c0 = G\.coordonnees\(m, cote\); if \(c0 && c0\.precision === 'gps'\) continue;/);
+ assert.doesNotMatch(app,/const c0 = m\[cote\]; if \(c0 && Number\.isFinite\(Number\(c0\.lat\)\)/);
+});
