@@ -1,0 +1,29 @@
+{
+  "operator": "sncf",
+  "file": "national-sncf-bordeaux-nantes.zip",
+  "sha256": "47109fe2a1cb3c715e034550cc42b0c6bb6c23ba1776e9e83643676bac6ffe24",
+  "bytes": 664378,
+  "bounds": [
+    44.65,
+    -2.0,
+    47.44,
+    0.55
+  ],
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "scope": "Static GTFS slice for bordeaux-nantes; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 86,
+    "trips": 6726,
+    "stops": 1005,
+    "fares": false,
+    "bounds": [
+      44.65,
+      -2.0,
+      47.44,
+      0.55
+    ],
+    "lastServiceDate": "2027-04-30"
+  }
+}

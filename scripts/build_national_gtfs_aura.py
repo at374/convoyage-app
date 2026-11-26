@@ -22,6 +22,7 @@ REGIONS = {
     'paris-marseille': (43.10, 2.15, 49.05, 5.85),
     'marseille-toulouse': (43.05, 1.25, 44.25, 5.65),
     'toulouse-bordeaux': (43.45, -0.85, 45.02, 1.7),
+    'bordeaux-nantes': (44.65, -2.0, 47.44, 0.55),
 }
 OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
 MAX_OUTPUT = 12 * 1024 * 1024
@@ -71,7 +72,7 @@ def main():
     p.add_argument('--source-url', required=True, help='Provenance URL of the official archive')
     args = p.parse_args()
     bounds = REGIONS[args.region]
-    complete_trips = args.region in ('paris-marseille', 'marseille-toulouse', 'toulouse-bordeaux')
+    complete_trips = args.region in ('paris-marseille', 'marseille-toulouse', 'toulouse-bordeaux', 'bordeaux-nantes')
     filter_spec = {'bounds': bounds, 'keep_complete_trips': complete_trips}
     if not args.source_url.startswith('https://'):
         p.error('Official HTTPS provenance URL required')
