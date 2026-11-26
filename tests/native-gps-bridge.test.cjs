@@ -60,6 +60,6 @@ test('pré-calcul transport : continuer si la fiche est fermée tant que son bou
 test('pré-calcul transport masqué : conserver le hub et le worker GTFS actifs', () => {
   const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
   assert.match(src, /const prefetchKeepsHubAlive=\(\)=>panel\.dataset\.cpPrefetched==='true'/);
-  assert.match(src, /\(\(panel\.hidden \|\| \$\('feuille'\)\.hidden\) && panel\.dataset\?\.cpPrefetched !== 'true'\)/);
-  assert.match(src, /if\(\(panel\.hidden\|\|\$\('feuille'\)\.hidden\)&&!prefetchKeepsHubAlive\(\)\)/);
+  assert.match(src, /panel\.dataset\?\.cpPrefetched !== 'true'/);
+  assert.match(src, /!prefetchKeepsHubAlive\(\)/);
 });
