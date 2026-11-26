@@ -159,7 +159,7 @@ async function gtfsRows(axis,when){
  console.log('BILAN_GLOBAL '+JSON.stringify(report.totals));
  report.router=router.stats?router.stats():null;
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
- const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; moteurs nationaux et régionaux hors TripGo.`,'',
+ const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; moteurs nationaux et régionaux raccordés.`,'',
   `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables, ${report.totals.scheduled} en horaire programmé (officiel, marches et marge vérifiées, sans temps réel).**`,'',
   'Exemples de lignes sans tarif (3 par opérateur et par axe) :','',
   ...report.axes.flatMap(a=>Object.entries(a.missingFareSamples).map(([operator,samples])=>
