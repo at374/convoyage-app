@@ -978,7 +978,7 @@ test('le navigateur charge la fédération GTFS après index/loader et avant le 
 });
 
 
-test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironnais',async()=>{
+test('fédération GTFS : fixture Sibra Annecy vers M Réso Voironnais via makeProviders',async()=>{
  const indexer=require('../transport-gtfs-index.js');
  const federation=require('../transport-gtfs-federation.js');
  const date='20261127';
@@ -1023,7 +1023,7 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
  const rows=await provider.run(task);
  assert.deepEqual(loaded.map(x=>x.id).sort(),['mreso_voironnais','sibra_annecy']);
  assert.deepEqual(loaded[0].dates,['2026-11-27']);
- assert.equal(rows.length,1,'une correspondance horaire réelle est construite');
+ assert.equal(rows.length,1,'une correspondance horaire issue des deux flux de test est construite');
  assert.equal(rows[0].legs.length,2);
  assert.equal(rows[0].legs[0].provider,'Sibra');
  assert.equal(rows[0].legs[1].provider,'M Réso — Pays Voironnais');
