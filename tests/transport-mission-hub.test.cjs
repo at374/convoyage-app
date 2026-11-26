@@ -836,3 +836,30 @@ test('22 réseaux terrestres Bretagne du manifeste sont raccordés au moteur des
    id+' ne doit pas s’activer hors zone');
  }
 });
+
+test('10 réseaux PACA, Occitanie et Nouvelle-Aquitaine du manifeste sont raccordés aux fiches mission',async()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','gtfs','manifest.json'),'utf8'));
+ const ids=['zou-proximite-paca','zou-express-paca','lignes-azur-nice','mistral-toulon',
+  'mistral-telepherique-faron','lio-interurbain-occitanie','tisseo-toulouse','tam-montpellier',
+  'tango-nimes','cars-region-nouvelle-aquitaine'];
+ const loaded=[];
+ const root={
+  CPGTFSLoader:{loadResource:async resource=>{loaded.push(resource.url);return {files:{},index:{}};}},
+  CPGTFSIndex:{nearbyDirectTrips:()=>[]}
+ };
+ const providers=H.makeProviders(root);
+ for(const id of ids){
+  const entry=manifest.networks[id];
+  assert.ok(entry&&entry.file&&Array.isArray(entry.bounds),id+' doit exister dans le manifeste');
+  const provider=providers['local_'+id];
+  assert.ok(provider,id+' doit être enregistré dans le moteur mission');
+  const [a,b,c,d]=entry.bounds,point={lat:(a+c)/2,lon:(b+d)/2};
+  const task={from:point,to:point,latestArrival:at(10,0,'2026-11-27')};
+  assert.equal(provider.enabled(task),true,id+' doit être activable dans sa zone');
+  await provider.run(task);
+  assert.ok(loaded.at(-1).endsWith('/'+entry.file),id+' doit charger le ZIP officiel extrait');
+  assert.equal(provider.enabled({...task,from:{lat:0,lon:0},to:{lat:0,lon:0}}),false,
+   id+' doit être désactivé hors emprise');
+ }
+});
