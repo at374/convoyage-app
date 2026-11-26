@@ -63,3 +63,11 @@ test('pré-calcul transport masqué : conserver le hub et le worker GTFS actifs'
   assert.match(src, /panel\.dataset\?\.cpPrefetched !== 'true'/);
   assert.match(src, /!prefetchKeepsHubAlive\(\)/);
 });
+
+test('cache transports : signatures et invalidation indépendantes par Aller, Jonction et Retour', () => {
+  const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+  assert.match(src, /const taskSignatures=Object\.fromEntries\(tasks\.map/);
+  assert.match(src, /stored\.partSignatures\?\.\[label\]===taskSignatures\[label\]/);
+  assert.match(src, /partSignatures:taskSignatures/);
+  assert.match(src, /const cachedViews=!onlyJonction&&!refresh&&stored\?\.views/);
+});
