@@ -894,6 +894,19 @@ test('le GTFS régional évite un téléchargement hors zone et accepte une gare
  assert.equal(calls,1);
 });
 
+test('les flux GTFS nationaux sont préchargés dans le cache partagé avant le calcul',async()=>{
+ const requested=[];
+ const resource={url:'https://example.org/data/gtfs/sncf-aura.zip',fallbackUrls:['https://example.org/backup/sncf-aura.zip'],bounds:[44,3.6,47.5,7.8]};
+ const providers=H.makeProviders({CPNationalGTFSJourneys:{loadAndSearch:async()=>({journeys:[]})}},{
+  nationalGTFSResources:{sncf:resource},
+  fetcher:async url=>{requested.push(url);return new Response(new Uint8Array([1,2,3]));}
+ });
+ const provider=providers.national_sncf;
+ assert.equal(typeof provider.prefetch,'function');
+ assert.equal(await provider.prefetch(),true);
+ assert.deepEqual(requested,[resource.url]);
+});
+
 test('jonction à 11 h : un bus d’approche trop tôt ne masque pas le train de 11 h 22',async()=>{
  const from={lat:45.6635,lon:6.3895},station={lat:45.672977,lon:6.383167};
  const to={lat:45.364034,lon:5.594959};

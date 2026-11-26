@@ -203,7 +203,8 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes("RAYON_ARRIVEE_M = 400"));
  assert.ok(app.includes("arriveeHiflow(original)"));
- assert.ok(app.includes("navigator.geolocation.watchPosition(suiviTraiter"));
+ assert.ok(app.includes("navigator.geolocation.getCurrentPosition(pos =>"));
+ assert.ok(!app.includes("navigator.geolocation.watchPosition(suiviTraiter"));
  assert.ok(app.includes("MARGE_ARRIVEE_MIN * 60000"));
  assert.ok(app.includes("arriveeGps(key)"));
  assert.ok(app.includes("new CustomEvent('cp-arrivee'"));
@@ -213,10 +214,118 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
  assert.ok(app.includes("const startIso=first?plancher(firstStart)"));
 });
 
+test('suivi convoyage : départ GPS, relevé toutes les 10 min et seuil routier de 15 min',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(app.includes("const SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000"));
+ assert.ok(app.includes("state.status = 'en_route'"));
+ assert.ok(app.includes('suiviConvoyageEnregistrer(m,t,pos,ts)'));
+ assert.ok(app.includes('routes.estimate('));
+ assert.ok(app.includes('minutes <= 15'));
+ assert.ok(app.includes("new CustomEvent('cp-livraison-approche'"));
+ assert.ok(app.includes("'cp_suivi_convoyage_v1'"));
+});
+
 test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en roulant',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes('suiviReprise ||'));
  assert.ok(app.includes("vit > 3"));
+});
+
+test('préparation transports : un même flux GTFS est préchargé une seule fois par cycle',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('async function preparerTransports()');
+ const end=app.indexOf('setTimeout(preparerTransports',start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes('const prefetches = new Map()'));
+ assert.ok(block.includes('if (!prefetches.has(k)) prefetches.set(k'));
+ assert.ok(block.includes('await prefetches.get(k)'));
+ assert.ok(block.includes('/^(local_|national_)/.test(k)'));
+});
+
+test('suivi convoyage : ETA recalculée toutes les 5 min sans accélérer les relevés GPS de 10 min',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('function suiviConvoyageEnregistrer');
+ const end=app.indexOf('function suiviTraiter',start);
+ const block=app.slice(start,end);
+ assert.ok(app.includes('SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000'));
+ assert.ok(app.includes('SUIVI_CONVOYAGE_ETA_INTERVALLE_MS = 5 * 60000'));
+ assert.ok(block.indexOf('suiviConvoyageEstimerArrivee(m,t,here,ts,state)') < block.indexOf('if (ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return'));
+ assert.ok(block.includes('state.etaAttemptAt = new Date(ts).toISOString()'));
+ const recordStart=app.indexOf('function suiviConvoyageEnregistrer');
+ const recordEnd=app.indexOf('async function suiviConvoyageEstimerArrivee',recordStart);
+ const recordBlock=app.slice(recordStart,recordEnd);
+ assert.equal((recordBlock.match(/suiviConvoyageEstimerArrivee\(m,t,here,ts,state\)/g)||[]).length,1);
+ assert.ok(block.includes('state.etaAttemptAt || state.etaCheckedAt ||'));
+ assert.ok(!block.includes('state.etaCheckedAt || state.departedAt'));
+});
+
+test('géocodage GPS : temporise les adresses sans résultat pour éviter les requêtes à chaque réveil GPS',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('const transportPointRequests = new Map()');
+ const end=app.indexOf('function adrNet',start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes('const transportPointRetryAt = new Map()'));
+ assert.ok(block.includes('TRANSPORT_POINT_RETRY_MS = 5 * 60000'));
+ assert.ok(block.includes('Date.now() < (transportPointRetryAt.get(cle) || 0)'));
+ assert.ok(block.includes('transportPointRetryAt.set(cle, Date.now() + TRANSPORT_POINT_RETRY_MS)'));
+ assert.ok(block.includes('transportPointRetryAt.delete(cle)'));
+});
+
+test('préchargement transports : cache persistant 12 h, invalidé par la signature de mission et seulement après succès complet',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('async function preparerTransports()');
+ const end=app.indexOf('setTimeout(preparerTransports',start);
+ const block=app.slice(start,end);
+ assert.ok(app.includes("PREPARATION_TRANSPORTS_KEY = 'cp_transport_prefetch_v1'"));
+ assert.ok(app.includes('PREPARATION_TRANSPORTS_TTL_MS = 12 * 3600000'));
+ assert.ok(block.includes('cached?.signature === signature'));
+ assert.ok(block.includes('preparees.get(cle) === signature'));
+ assert.ok(block.includes('const signature = JSON.stringify([Hub.VERSION ||'));
+ assert.ok(block.includes('if (!fournisseurEligible) prechargementComplet = false'));
+ assert.ok(block.includes('if (prechargementComplet) {'));
+ assert.ok(block.includes('ecrireLocal(PREPARATION_TRANSPORTS_KEY, cachePreparations)'));
+ const eta=app.slice(app.indexOf('async function suiviConvoyageEstimerArrivee'),app.indexOf('function suiviTraiter'));
+ assert.ok(eta.includes('delete preparationsEnCache[clePreparation]'));
+});
+
+test('suivi GPS navigateur : aucune nouvelle acquisition lorsque la page est masquée',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('function suiviMaj()');
+ const end=app.indexOf("if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange'",start);
+ const block=app.slice(start,end);
+ assert.ok(block.indexOf('if (document.hidden) return;') > block.indexOf('function suiviMaj()'));
+ assert.ok(block.indexOf('if (document.hidden) return;') < block.indexOf('const missions = missionsASuivre()'));
+});
+
+test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision limitée à l’approche',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('const SUIVI_GPS_INTERVALLE_ROUTE_MS');
+ const end=app.indexOf("if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange'",start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ZONE_MS = 5 * 60000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_APPROCHE_MS = 2 * 60000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_DEPART_MS = 2 * 60000'));
+ assert.ok(block.includes("state?.status === 'prise_en_charge'"));
+ assert.ok(block.includes('meters <= 500'));
+ assert.ok(block.includes('meters <= 2000'));
+ assert.ok(block.includes('inApproachZone'));
+
+ assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
+ assert.ok(block.includes('enableHighAccuracy: params.near'));
+ assert.ok(block.includes('maximumAge: params.near ? 0 : 2 * 60000'));
+ assert.ok(!block.includes('navigator.geolocation.watchPosition'));
+});
+
+test('suivi GPS : retour au premier plan relance une acquisition ponctuelle sans watcher permanent',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const block=app.slice(app.indexOf('function suiviMaj()'),app.indexOf('// Préparation à l\'avance (application ouverte)'));
+ assert.ok(block.includes('const actif = !suiviRefus && navigator.geolocation'));
+ assert.ok(!block.includes('!document.hidden && navigator.geolocation'));
+ assert.ok(block.includes('if (!document.hidden)'));
+ assert.ok(!block.includes('document.hidden && suiviWatch !== null'));
+ assert.ok(block.includes('suiviMaj();'));
+ assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
 });
 
 test('suivi arrivée : événements Google Maps / Waze lus via l’APK, validés par la position',()=>{
@@ -242,7 +351,7 @@ test('fluidité : recherches des jours non affichés différées, pas de redessi
  assert.ok(src.includes('host.__cpFp===fp'));
  assert.ok(app.includes('t.lazy=transportDays[t.label]!==activeDay'));
  assert.ok(app.includes('startDayLabels(day)'));
- assert.ok(app.includes('Date.now()-dernierDefilement<250'));
+ assert.ok(app.includes('performance.now()-dernierDefilement<250'));
  assert.ok(app.includes('tasks.map(({lazy,...r})=>r)'));
 });
 test('classement : meilleur compromis = arrive le plus tôt, propositions triées par départ',()=>{

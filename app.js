@@ -498,11 +498,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
   const transportPointRequests = new Map();
+  // Évite de relancer le géocodage d'une adresse sans résultat à chaque réveil GPS.
+  // Une nouvelle tentative est autorisée après 5 min ; un point trouvé reste en cache local.
+  const transportPointRetryAt = new Map();
+  const TRANSPORT_POINT_RETRY_MS = 5 * 60000;
   async function pointsMission(m, onPoint) {
     let n = 0;
     await Promise.all(['origin', 'destination'].map(async cote => {
       const cle = G.cleAdresse(m, cote);
-      if (!cle || G.POINTS[cle]) return;
+      if (!cle || G.POINTS[cle] || Date.now() < (transportPointRetryAt.get(cle) || 0)) return;
       try {
         if (!transportPointRequests.has(cle)) {
           const request = Promise.resolve().then(() => G.chercherPoint(m, cote, u => fetch(u)))
@@ -511,11 +515,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         }
         const r = await transportPointRequests.get(cle);
         if (r && r.trouve) {
+          transportPointRetryAt.delete(cle);
           G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++;
           ecrireLocal('cp_gps', gpsMem);
           if (onPoint) onPoint(cote);
-        }
-      } catch (_) { /* One missing address cannot block the other endpoint. */ }
+        } else transportPointRetryAt.set(cle, Date.now() + TRANSPORT_POINT_RETRY_MS);
+      } catch (_) {
+        transportPointRetryAt.set(cle, Date.now() + TRANSPORT_POINT_RETRY_MS);
+        /* One missing address cannot block the other endpoint. */
+      }
     }));
     return n > 0;
   }
@@ -796,7 +804,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   // Suivi d'arrivée à la livraison (missions acceptées de l'agenda) : le GPS n'est lu que pendant la fenêtre de la mission et tant que l'application est ouverte.
   // Arrivée = présence de 60 s dans 300 m de l'adresse de livraison (800 m si seule la ville est connue). Les transports retour / jonction partent alors de arrivée + 15 min.
-  let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false; const suiviDedans = new Map();
+  let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false, suiviAcquisitionEnCours = false, suiviDernierePosition = null; const suiviDedans = new Map();
   function missionsASuivre(quand) {
     const now = Number.isFinite(quand) ? quand : Date.now();
     return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
@@ -807,10 +815,99 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       return now >= p - 3600000 && now <= limite && !!d && d.precision !== 'departement';
     });
   }
+  // Suivi du convoyage : départ constaté au point GPS de prise en charge,
+  // puis un relevé persistant toutes les 10 minutes jusqu'à la livraison.
+  const SUIVI_CONVOYAGE_KEY = 'cp_suivi_convoyage_v1';
+  const SUIVI_CONVOYAGE_INTERVALLE_MS = 10 * 60000;
+  // L'itinéraire voiture vers la livraison est réestimé toutes les 5 min,
+  // indépendamment des relevés GPS persistés toutes les 10 min : le seuil
+  // « arrivée dans 15 min » ne dépend donc pas uniquement d'un relevé sur deux.
+  const SUIVI_CONVOYAGE_ETA_INTERVALLE_MS = 5 * 60000;
+  const suiviConvoyageEtaEnCours = new Set();
+  function suiviConvoyageEnregistrer(m, t, pos, ts) {
+    const accuracy = Number(pos.coords.accuracy);
+    if (!Number.isFinite(accuracy) || accuracy > 100) return;
+    const here = {lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude)};
+    const origin = G.coordonnees(m, 'origin'), destination = G.coordonnees(m, 'destination');
+    if (!transportAddressPoint(origin) || !transportAddressPoint(destination)) return;
+    const distance = (a,b) => G.volOiseauKm(a,b) * 1000;
+    const store = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
+    let state = store[t.key];
+    if (!state) {
+      if (distance(here, origin) > 300) return;
+      state = {status:'prise_en_charge',pickupDetectedAt:new Date(ts).toISOString(),origin:{lat:origin.lat,lng:origin.lng},destination:{lat:destination.lat,lng:destination.lng},samples:[]};
+      store[t.key] = state; ecrireLocal(SUIVI_CONVOYAGE_KEY, store); return;
+    }
+    if (state.status === 'prise_en_charge') {
+      const away = distance(here, origin), speed = Number(pos.coords.speed);
+      if (away < 500 || (Number.isFinite(speed) && speed < 1.5 && away < 800)) return;
+      state.status = 'en_route'; state.departedAt = new Date(ts).toISOString(); state.lastSampleAt = 0;
+    }
+    if (state.status !== 'en_route') return;
+    // Le suivi de position reste à 10 min, mais l'ETA est actualisée à 5 min
+    // pour déclencher le préchargement au plus près du seuil de 15 min.
+    suiviConvoyageEstimerArrivee(m,t,here,ts,state);
+    store[t.key] = state;
+    ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
+    if (ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return;
+    const sample = {at:new Date(ts).toISOString(),lat:here.lat,lng:here.lng,accuracy,speed:Number.isFinite(Number(pos.coords.speed))?Number(pos.coords.speed):null};
+    state.samples = (Array.isArray(state.samples)?state.samples:[]).concat(sample).slice(-36);
+    state.lastSampleAt = ts; state.lastPosition = sample; store[t.key] = state;
+    const keys = Object.keys(store); while (keys.length > 40) delete store[keys.shift()];
+    ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
+    // L'estimation a déjà été tentée une fois au début de cette acquisition GPS.
+    // Ne pas rappeler l'API une seconde fois après l'enregistrement de l'échantillon.
+  }
+  async function suiviConvoyageEstimerArrivee(m,t,here,ts,state) {
+    if (suiviConvoyageEtaEnCours.has(t.key) || state.approcheDeclencheeAt) return;
+    const lastAttempt = Date.parse(state.etaAttemptAt || state.etaCheckedAt || '');
+    if (Number.isFinite(lastAttempt) && ts - lastAttempt < SUIVI_CONVOYAGE_ETA_INTERVALLE_MS) return;
+    // Persister le dernier essai même en cas d'erreur réseau pour éviter de solliciter
+    // l'API à chaque position GPS fournie par Android.
+    if (state.status !== 'en_route') return;
+    state.etaAttemptAt = new Date(ts).toISOString();
+    const routes = window.CPRoutes, auth = window.CPAuthenticatedApi, session = auth?.connecte ? auth.session : null;
+    let config = window.CP_CONFIG?.anonKey ? window.CP_CONFIG : window.CP_CONFIG_ACTIVE?.anonKey ? window.CP_CONFIG_ACTIVE : null;
+    try { if (!config && window.CPNatif?.configuration) config = JSON.parse(window.CPNatif.configuration() || '{}'); } catch (_) {}
+    try { if (!config) config = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_config') || 'null'); } catch (_) {}
+    const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
+    if (!routes?.estimate || !session?.access_token || !config?.url || !config?.anonKey) return;
+    suiviConvoyageEtaEnCours.add(t.key);
+    try {
+      const destination = G.coordonnees(m,'destination');
+      const route = await routes.estimate({endpoint,accessToken:session.access_token,refreshToken:session.refresh_token,expiresAt:session.expires_at,supabaseUrl:config.url,supabaseApiKey:config.anonKey,origin:here,destination:{lat:Number(destination.lat),lng:Number(destination.lng)},mode:'voiture'});
+      const minutes = Number(route?.durationMinutes); if (!Number.isFinite(minutes) || minutes < 0) return;
+      const saved = Object.assign({},lireLocal(SUIVI_CONVOYAGE_KEY,{})), current = saved[t.key];
+      if (!current || current.status !== 'en_route' || current.approcheDeclencheeAt) return;
+      current.etaMinutes = minutes; current.etaCheckedAt = new Date(ts).toISOString();
+      current.etaArrivalAt = new Date(ts + minutes * 60000).toISOString();
+      let approcheEvent = null;
+      if (minutes <= 15) {
+        current.etaDepartureAt = new Date(ts + (minutes + MARGE_ARRIVEE_MIN) * 60000).toISOString();
+        current.approcheDeclencheeAt = new Date(ts).toISOString();
+        transportReturnPlans.set(t.key,current.etaDepartureAt);
+        if (transportCacheKey()) saveTransportViews(transportCacheKey()+':plans',t.key,current.etaDepartureAt);
+        const clePreparation = t.key + '|' + String(t.pickup).slice(0,10);
+        preparees.delete(clePreparation);
+        const preparationsEnCache = lireLocal(PREPARATION_TRANSPORTS_KEY,{});
+        delete preparationsEnCache[clePreparation];
+        ecrireLocal(PREPARATION_TRANSPORTS_KEY,preparationsEnCache);
+        approcheEvent = {key:t.key,etaMinutes:minutes,at:current.approcheDeclencheeAt,estimatedArrival:current.etaArrivalAt,transportDeparture:current.etaDepartureAt};
+      }
+      saved[t.key] = current; ecrireLocal(SUIVI_CONVOYAGE_KEY,saved);
+      if (approcheEvent) {
+        document.dispatchEvent(new CustomEvent('cp-livraison-approche',{detail:approcheEvent}));
+        setTimeout(() => { if (preparationEnCours) setTimeout(preparerTransports,5000); else preparerTransports(); }, 1000);
+      }
+    } catch (_) { /* indisponibilité du calcul routier : le suivi GPS continue */ }
+    finally { suiviConvoyageEtaEnCours.delete(t.key); }
+  }
   function suiviTraiter(pos) {
     const acc = Number(pos.coords.accuracy); if (Number.isFinite(acc) && acc > 250) return;
-    const vit = pos.coords.speed; if (typeof vit === 'number' && vit > 3) return;   // en roulement (> ~11 km/h) : pas une arrivée
+    const vit = pos.coords.speed; // le suivi du convoyage doit aussi enregistrer les positions en roulant
     const here = { lat: pos.coords.latitude, lng: pos.coords.longitude }, ts = Number(pos.timestamp) || Date.now();
+    for (const {m,t} of missionsASuivre()) suiviConvoyageEnregistrer(m,t,pos,ts);
+    if (typeof vit === 'number' && vit > 3) return; // en roulement : pas de détection d'arrivée, mais le convoyage reste suivi
     for (const { m, t } of missionsASuivre()) {
       const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
       const dist = G.volOiseauKm(here, d) * 1000;
@@ -876,23 +973,77 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     document.dispatchEvent(new CustomEvent('cp-arrivee', { detail: { key: t.key } }));
     suiviMaj();
   }
-  function suiviMaj() {
-    clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
-    const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
-    // Le GPS fourni par la plateforme est parfois le centre de la ville (2 km de l'adresse réelle) : on cherche le point officiel de l'adresse de livraison avant de comparer.
-    for (const { m } of missionsASuivre()) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
-    suiviNavigation(); suiviSecours();
-    if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
-    if (suiviWatch !== null) return;
-    suiviWatch = navigator.geolocation.watchPosition(suiviTraiter, e => {
-      if (e && e.code === 1) { suiviRefus = true; if (suiviWatch !== null) navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
-    }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 60000 });
+  // Acquisition ponctuelle et adaptative : pas de watch GPS haute précision en continu.
+  // Cadence adaptative et sobre : 10 min sur route, 5 min dans la zone de 2 km,
+  // 2 min après prise en charge / à moins de 500 m ; haute précision uniquement dans ces 500 m.
+  const SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000;
+  const SUIVI_GPS_INTERVALLE_ZONE_MS = 5 * 60000;
+  const SUIVI_GPS_INTERVALLE_DEPART_MS = 2 * 60000;
+  const SUIVI_GPS_INTERVALLE_APPROCHE_MS = 2 * 60000;
+  function suiviParametresAcquisition() {
+    const pos = suiviDernierePosition;
+    if (!pos) return {near:false,interval:SUIVI_GPS_INTERVALLE_ROUTE_MS};
+    const store = lireLocal(SUIVI_CONVOYAGE_KEY,{});
+    let near = false, inApproachZone = false, departureWatch = false;
+    for (const {m,t} of missionsASuivre()) {
+      const state = store[t.key];
+      if (state?.status === 'prise_en_charge') { departureWatch = true; continue; }
+      const enRoute = state?.status === 'en_route';
+      const target = enRoute ? G.coordonnees(m,'destination') : G.coordonnees(m,'origin');
+      if (!target || !Number.isFinite(Number(target.lat)) || !Number.isFinite(Number(target.lng))) continue;
+      const meters = G.volOiseauKm({lat:pos.coords.latitude,lng:pos.coords.longitude},target)*1000;
+      if (meters <= 500) { near = true; break; }
+      if (enRoute && meters <= 2000) inApproachZone = true;
+    }
+    if (near) return {near:true,interval:SUIVI_GPS_INTERVALLE_APPROCHE_MS};
+    if (departureWatch) return {near:false,interval:SUIVI_GPS_INTERVALLE_DEPART_MS};
+    if (inApproachZone) return {near:false,interval:SUIVI_GPS_INTERVALLE_ZONE_MS};
+    return {near:false,interval:SUIVI_GPS_INTERVALLE_ROUTE_MS};
   }
-  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) { suiviReprise = true; setTimeout(() => { suiviReprise = false; }, 20000); suiviMaj(); } });
+  function suiviProgrammerProchaineAcquisition(delay) {
+    clearTimeout(suiviTimer);
+    suiviTimer = setTimeout(suiviMaj,delay);
+  }
+  function suiviMaj() {
+    clearTimeout(suiviTimer); suiviTimer = null;
+    // Le navigateur ne garantit pas les timers en arrière-plan : ne pas lancer de nouvelle
+    // acquisition GPS lorsque l'onglet est masqué. La reprise se fait sur visibilitychange.
+    if (document.hidden) return;
+    const missions = missionsASuivre();
+    const actif = !suiviRefus && navigator.geolocation && missions.length > 0;
+    for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
+    suiviNavigation(); suiviSecours();
+    if (!actif) { suiviAcquisitionEnCours = false; suiviWatch = null; suiviDedans.clear(); return; }
+    if (suiviAcquisitionEnCours) return;
+    suiviAcquisitionEnCours = true;
+    const params = suiviParametresAcquisition();
+    navigator.geolocation.getCurrentPosition(pos => {
+      suiviAcquisitionEnCours = false; suiviWatch = null; suiviDernierePosition = pos;
+      suiviTraiter(pos);
+      suiviProgrammerProchaineAcquisition(suiviParametresAcquisition().interval);
+    }, e => {
+      suiviAcquisitionEnCours = false; suiviWatch = null;
+      if (e && e.code === 1) { suiviRefus = true; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
+      else suiviProgrammerProchaineAcquisition(params.near ? 2 * 60000 : SUIVI_GPS_INTERVALLE_ROUTE_MS);
+    }, { enableHighAccuracy: params.near, maximumAge: params.near ? 0 : 2 * 60000, timeout: params.near ? 15000 : 20000 });
+  }
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => {
+    // Aucun watcher haute précision ne reste actif en arrière-plan. Au retour, une
+    // acquisition ponctuelle relance le suivi ; un service Android natif sera requis
+    // pour les relevés garantis écran éteint, avec cadence basse consommation.
+    if (!document.hidden) {
+      suiviReprise = true;
+      setTimeout(() => { suiviReprise = false; }, 20000);
+      suiviMaj();
+    }
+  });
   if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
   // Préparation à l'avance (application ouverte) : de 12 h à 0 h avant la prise en charge d'une mission ACCEPTÉE de l'agenda, les fichiers d'horaires utiles
   // (aller, jonction, retour) sont téléchargés d'avance (sans être lus, pour ne pas figer l'écran) et gardés sur le téléphone : « Visualisation des transports » démarre sans attente réseau.
-  const preparees = new Set(); let preparationEnCours = false;
+  const preparees = new Map();
+  const PREPARATION_TRANSPORTS_KEY = 'cp_transport_prefetch_v1';
+  const PREPARATION_TRANSPORTS_TTL_MS = 12 * 3600000;
+  let preparationEnCours = false;
   async function preparerTransports() {
     if (preparationEnCours || document.hidden) return;
     const Hub = window.CPTransportHub; if (!Hub || !Hub.makeProviders) return;
@@ -904,28 +1055,64 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const liste = (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null && m.status !== 'annulee' && m.status !== 'terminee')
         .map(m => ({ m, t: missionTiming(m) })).filter(x => Number.isFinite(Date.parse(x.t.pickup || ''))).sort((a, b) => Date.parse(a.t.pickup) - Date.parse(b.t.pickup));
       const P = Hub.makeProviders(window, {});
+      // Un flux GTFS peut servir à l'aller, au retour et à la jonction : ne le télécharger/lire
+      // qu'une fois pendant ce cycle de préparation, même si plusieurs tâches le couvrent.
+      const prefetches = new Map();
       const pt = g => { const c = g && Number.isFinite(Number(g.lat)) && Number.isFinite(Number(g.lng)) ? g : null; return c ? { lat: Number(c.lat), lon: Number(c.lng) } : null; };
       for (let i = 0; i < liste.length; i++) {
         const { m, t } = liste[i], debut = Date.parse(t.pickup);
-        if (debut - now > 12 * 3600000 || debut - now < -6 * 3600000) continue;
+        const suiviConvoyage = lireLocal(SUIVI_CONVOYAGE_KEY,{})[t.key];
+        if (debut - now > 12 * 3600000 || (debut - now < -6 * 3600000 && suiviConvoyage?.status !== 'en_route')) continue;
         const cle = t.key + '|' + String(t.pickup).slice(0, 10);
-        if (preparees.has(cle)) continue;
-        preparees.add(cle);
         const suivante = liste[i + 1] ? liste[i + 1].m : null;
         try { await pointsMission(m); if (suivante) await pointsMission(suivante); } catch (_) { }
-        const fin = t.planned || t.deadline;
+        const fin = suiviConvoyage?.etaDepartureAt || t.planned || t.deadline;
         const o = pt(G.coordonnees(m, 'origin')), d = pt(G.coordonnees(m, 'destination'));
         const taches = [];
         if (home && o) taches.push({ label: 'Aller', from: home, to: o, latestArrival: t.pickup, marginMinutes: 15 });
         if (home && d && fin) taches.push({ label: 'Retour', from: d, to: home, earliestDeparture: fin });
         if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 15 }); }
+        if (!taches.length) continue;
+        // Cache persistant du préchauffage : à la réouverture de l'application, ne pas
+        // re-télécharger les mêmes archives si missions, points, horaires et fournisseurs n'ont pas changé.
+        const fournisseurs = Object.keys(P).filter(k => /^(local_|national_)/.test(k)).sort();
+        const signature = JSON.stringify([Hub.VERSION || '', t.key, t.pickup, t.planned || t.deadline || null,
+          suivante ? [suivante.platform, suivante.external_id, suivante.pickup_start || null] : null,
+          home, taches.map(x => [x.label, x.from, x.to, x.earliestDeparture || null, x.latestArrival || null, x.marginMinutes || 0]),
+          fournisseurs]);
+        if (preparees.get(cle) === signature) continue;
+        const cachePreparations = lireLocal(PREPARATION_TRANSPORTS_KEY, {});
+        const cached = cachePreparations[cle];
+        if (cached?.signature === signature && Number.isFinite(cached.savedAt) &&
+            now - cached.savedAt >= 0 && now - cached.savedAt < PREPARATION_TRANSPORTS_TTL_MS) {
+          preparees.set(cle, signature);
+          continue;
+        }
+        let prechargementComplet = true;
         for (const tache of taches) {
+          let fournisseurEligible = false;
           for (const [k, prov] of Object.entries(P)) {
-            if (!/^local_/.test(k)) continue;
-            if (document.hidden) { preparees.delete(cle); return; }
-            try { if (prov.prefetch && prov.enabled(tache)) await prov.prefetch(); } catch (_) { }
+            if (!/^(local_|national_)/.test(k)) continue;
+            if (document.hidden) return;
+            try {
+              if (prov.prefetch && prov.enabled(tache)) {
+                fournisseurEligible = true;
+                if (!prefetches.has(k)) prefetches.set(k, Promise.resolve().then(() => prov.prefetch()));
+                const ok = await prefetches.get(k);
+                if (ok !== true) prechargementComplet = false;
+              }
+            } catch (_) { prechargementComplet = false; }
             await new Promise(r => setTimeout(r, 50));   // laisse l'écran respirer
           }
+          if (!fournisseurEligible) prechargementComplet = false;
+        }
+        // Ne pas mémoriser une préparation partielle ou sans fournisseur éligible.
+        if (prechargementComplet) {
+          preparees.set(cle, signature);
+          cachePreparations[cle] = { signature, savedAt: now };
+          const clesCache = Object.keys(cachePreparations);
+          while (clesCache.length > 50) delete cachePreparations[clesCache.shift()];
+          ecrireLocal(PREPARATION_TRANSPORTS_KEY, cachePreparations);
         }
       }
     } finally { preparationEnCours = false; }
@@ -1889,7 +2076,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           return true;
         };
         const surArrivee = ev => { if (!panel.isConnected) { document.removeEventListener('cp-arrivee', surArrivee); return; } if (ev.detail && ev.detail.key === transportPlanKey) { document.removeEventListener('cp-arrivee', surArrivee); suivreHorloge(); } };
-        if (typeof document.addEventListener === 'function') document.addEventListener('cp-arrivee', surArrivee);
+        if (typeof document.addEventListener === 'function') {
+          document.addEventListener('cp-arrivee', surArrivee);
+          const surApprocheLivraison = ev => {
+            if (!panel.isConnected) { document.removeEventListener('cp-livraison-approche',surApprocheLivraison); return; }
+            if (ev.detail && ev.detail.key === transportPlanKey) suivreHorloge();
+          };
+          document.addEventListener('cp-livraison-approche',surApprocheLivraison);
+          panel.addEventListener('DOMNodeRemoved',()=>document.removeEventListener('cp-livraison-approche',surApprocheLivraison),{once:true});
+        }
         // Mission en cours (de 2 h avant la prise en charge jusqu'à 6 h après la livraison prévue) ou arrivée détectée : le parcours est actualisé toutes les 5 min (trajet aller, jonction, retour).
         // 22/11/2026 (Laurent : « Y51 après 13h01 s'affiche puis se fige puis disparaît ») : ce rafraîchissement
         // relance un rendu complet de la fiche (detail()) PUIS toute la recherche transport (clic simulé sur
