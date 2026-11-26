@@ -60,7 +60,7 @@ test('configured client can verify an operator observation through the actual lo
  const j={legs:[
   {mode:'wa_wal',departure:'2026-10-31T09:10:00.000Z',arrival:'2026-10-31T09:15:00.000Z'},
   {mode:'pt_pub_bus',provider:'BlaBlaCar Bus',serviceShortName:'51981',fromStopCode:'NCY',toStopCode:'XGE',departure:'2026-10-31T09:15:00.000Z',arrival:'2026-10-31T10:40:00.000Z'},
-  {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:46:34.000Z'}
+  {mode:'wa_wal',departure:'2026-10-31T10:40:00.000Z',arrival:'2026-10-31T10:44:34.000Z'}
  ]},result=await client.check(j,task);
  assert.equal(result.transportEndpoint,endpoint);assert.equal(result.serviceConfirmed,true);assert.equal(result.transportConfirmed,false);assert.equal(result.doorArrival,'2026-10-31T10:46:34.000Z');
  for(const invalid of ['http://external.example'+PATH,'https://relay.example/other','https://key@relay.example'+PATH,'https://relay.example'+PATH+'?key=secret'])assert.throws(()=>rt.createClient({endpoint:invalid}),/Relais/);
