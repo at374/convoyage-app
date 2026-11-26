@@ -77,3 +77,29 @@ test('fenêtre impossible : téléchargement national évité et aucun trajet',a
  assert.equal(result.counts.routes,0);
  assert.equal(result.counts.trips,0);
 });
+
+
+test('recherche arrivée avant 14:45 : conserve aussi les départs matinaux du même jour',()=>{
+ const indexer=require('../transport-gtfs-index.js');
+ const original=indexer.nearbyDirectTrips;
+ const index={};let observed=null;
+ const rows=[
+  {tripId:'early-0620',departure:'06:20:00',arrival:'08:05:00',accessDistanceMeters:350,egressDistanceMeters:420,
+   originStop:{name:'Annecy',lat:45.90,lon:6.12},destinationStop:{name:'Voiron',lat:45.36,lon:5.59},line:'TER 1'},
+  {tripId:'morning-0810',departure:'08:10:00',arrival:'10:05:00',accessDistanceMeters:300,egressDistanceMeters:380,
+   originStop:{name:'Annecy',lat:45.90,lon:6.12},destinationStop:{name:'Voiron',lat:45.36,lon:5.59},line:'TER 2'},
+  {tripId:'late-1430',departure:'14:30:00',arrival:'15:10:00',accessDistanceMeters:300,egressDistanceMeters:380,
+   originStop:{name:'Annecy',lat:45.90,lon:6.12},destinationStop:{name:'Voiron',lat:45.36,lon:5.59},line:'TER 3'}
+ ];
+ indexer.nearbyDirectTrips=(files,idx,date,from,to,radius)=>{
+  observed={date,radius,from,to};return rows;
+ };
+ try{
+  const result=journeys.search({operator:'sncf',files:{},index,date:'2026-11-30',
+   from:{lat:45.90,lon:6.12},to:{lat:45.36,lon:5.59},radiusMeters:3000,maxResults:20,
+   latestArrival:'14:45:00',includeTransfers:false});
+  assert.ok(observed,'le moteur a bien interrogé l’index');
+  assert.deepEqual(result.map(x=>x.tripId),['early-0620','morning-0810'],
+   'les départs du matin restent dans les candidats et une arrivée après la limite est exclue');
+ }finally{indexer.nearbyDirectTrips=original;}
+});
