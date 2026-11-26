@@ -13,7 +13,9 @@
     const base = { platform: l.platform, ageMin: age };
     if (age == null) return { ...base, couleur: 'rouge', texte: 'jamais lue' + (l.message ? ' — ' + l.message : '') };
     if (repos) return { ...base, couleur: age > 180 ? 'rouge' : 'orange', texte: 'en pause jusqu’à ' + heure(repos) + ' (la plateforme limite les lectures) — dernière lecture il y a ' + duree(age) };
-    if (!l.ok) return { ...base, couleur: age <= o ? 'orange' : 'rouge', texte: (l.message || 'dernière lecture échouée') + ' — dernière lecture réussie il y a ' + duree(age) };
+    // Delivery Car can still be reported ok=true by an older Android build; the explicit partial marker takes precedence until a complete scan is confirmed.
+    const balayageDeliveryCarPartiel = l.platform === 'DeliveryCar' && /Dernier balayage Delivery Car.*partiel/i.test(String(l.message || ''));
+    if (!l.ok || balayageDeliveryCarPartiel) return { ...base, couleur: age <= o ? 'orange' : 'rouge', texte: (l.message || 'dernière lecture échouée') + ' — dernière lecture réussie il y a ' + duree(age) };
     if (age <= v) return { ...base, couleur: 'vert', texte: 'lue il y a ' + duree(age) };
     return { ...base, couleur: age <= o ? 'orange' : 'rouge', texte: 'pas lue depuis ' + duree(age) };
   }
