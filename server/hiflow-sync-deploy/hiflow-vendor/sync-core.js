@@ -40,7 +40,10 @@
     const p = nested.find(x => x && typeof x === 'object') || null;
     if (!p) return null;
     const normalized = { ...p };
-    if (!normalized.postal_code && normalized.zip) normalized.postal_code = normalized.zip;
+    const postalKeys = cote === 'origin'
+      ? ['pickup_postal_code', 'from_postal_code']
+      : ['delivery_postal_code', 'dropoff_postal_code', 'to_postal_code'];
+    if (!normalized.postal_code) normalized.postal_code = normalized.zip || postalKeys.map(k => (d && d[k]) || (m && m[k])).find(Boolean) || null;
     return place(normalized);
   }
   function vehicle(v) {
