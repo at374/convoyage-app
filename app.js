@@ -2365,13 +2365,19 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           if(index>=0)tasks.splice(index,1);
         }
         if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
-        const signature=JSON.stringify([Hub.VERSION,tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const commonSignature=JSON.stringify([Hub.VERSION,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        const taskSignatures=Object.fromEntries(tasks.map(({lazy,...task})=>[task.label,JSON.stringify([task,commonSignature])]));
+        const signature=JSON.stringify([commonSignature,tasks.map(({lazy,...r})=>r)]);
         if((onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
-        // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
-        // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
-        // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
+        // Le cache est indépendant par partie : un changement d'horaire ou d'adresse
+        // invalide uniquement Aller, Jonction ou Retour dont la tâche a changé.
         if(!onlyJonction)panel.cpRefreshStarted=true;
-        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?stored.views||{}:{};
+        const cachedViews=!onlyJonction&&!refresh&&stored?.views?Object.fromEntries(
+          Object.entries(stored.views).filter(([label])=>
+            stored.partSignatures?.[label]===taskSignatures[label]||
+            (!stored.partSignatures&&stored.signature===signature)
+          )
+        ):{};
         const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
@@ -2490,7 +2496,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               // Conserver les autres jours jusqu'à ce que leurs nouveaux résultats soient prêts.
               const retained=stored?.signature===signature?stored.views:{};
               const views={...retained,...search.views};
-              const entry={signature,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
+              const entry={signature,partSignatures:taskSignatures,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
               transportViewCache.set(memoryKey,entry);
               clearTimeout(transportSaveTimers.get(memoryKey));
               const persist=()=>{
