@@ -12,8 +12,9 @@ test('DriiveMe : pickup_address et delivery_address deviennent les adresses cano
     external_id:'dm-1',from:'Annecy',to:'Voiron',
     pickup_address:'12 rue Royale, 74000 Annecy',
     delivery_address:'Rue Louis Armand, 38500 Voiron',
-    pickup:{zip:'74000',city:'Annecy',lat:45.9,lng:6.1},
-    delivery:{zip:'38500',city:'Voiron',lat:45.36,lng:5.59}
+    pickup:{city:'Annecy',lat:45.9,lng:6.1},
+    delivery:{city:'Voiron',lat:45.36,lng:5.59},
+    pickup_postal_code:'74000',delivery_postal_code:'38500'
   });
   assert.equal(rows.length,1);
   assert.equal(rows[0].origin_address,'12 rue Royale, 74000 Annecy');
