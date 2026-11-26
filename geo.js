@@ -214,6 +214,31 @@
           if (!meilleur || (meilleur.precision === 'ville' && precision === 'rue')) meilleur = point;
         }
       }
+      if (numero) {
+        const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
+        const rue = sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0].trim();
+        const communeOK = p => [p.city,p.municipality,p.oldcity].some(v => v && norm(v) === norm(x.v));
+        const voieOK = v => !!v && motsVoie(v) === motsVoie(rue);
+        const base = 'https://data.geopf.fr/geocodage/search?limit=5&q=';
+        const rv = await fetchFn(base + encodeURIComponent([motsVoie(rue),x.v].join(' ')) + '&type=street');
+        if (rv && rv.ok) {
+          const jv = await rv.json();
+          for (const v of (jv.features || [])) {
+            const p = v.properties || {}, nom = p.name || p.street;
+            if (p.type !== 'street' || !voieOK(nom) || !communeOK(p)) continue;
+            const num = numero[0].match(/^\d{1,4}\s*(?:bis|ter)?/i)[0].trim();
+            const rn = await fetchFn(base + encodeURIComponent([num,nom,p.postcode,p.city].filter(Boolean).join(' ')) + '&type=housenumber');
+            if (!rn || !rn.ok) continue;
+            const jn = await rn.json();
+            for (const f of (jn.features || [])) {
+              const a = f.properties || {};
+              if (a.type !== 'housenumber' || a.score < 0.5 || norm(a.housenumber || '').replace(/\s/g,'') !== norm(num).replace(/\s/g,'') || !voieOK(a.street) || !communeOK(a)) continue;
+              const [lng,lat] = f.geometry?.coordinates || [];
+              if (Number.isFinite(lat) && Number.isFinite(lng)) return {cle,trouve:true,point:{lat,lng,precision:'adresse'}};
+            }
+          }
+        }
+      }
       if (numero) return { cle, trouve: false };
       if (meilleur) return { cle, trouve: true, point: meilleur };
       if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
