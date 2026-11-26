@@ -17,7 +17,7 @@
   }
   function deliveryCarNonRevue(mission, source) {
     if (mission?.platform !== 'DeliveryCar' || mission.kind !== 'disponible' ||
-        !String(source?.message || '').startsWith('Dernier balayage Delivery Car')) return false;
+        !/Dernier balayage Delivery Car.*(?:·|\\u00b7) complet(?: ·|$)/.test(String(source?.message || ''))) return false;
     const start = Date.parse(source.lu_le || ''), seen = Date.parse(mission.last_seen_at || '');
     return Number.isFinite(start) && (!Number.isFinite(seen) || seen < start);
   }
