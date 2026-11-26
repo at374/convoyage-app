@@ -202,7 +202,7 @@ test('navigation entre missions : réutilisation de la recherche active et rempl
  assert.match(app,/if\(!this\.pending\.size\)this\.dispose\(\)/);
  assert.match(app,/!onlyJonction&&!refresh&&stored\?\.views/);
  assert.match(app,/stored\.partSignatures\?\.\[label\]===taskSignatures\[label\]/);
- assert.match(app,/if\(refresh\)\s*\{?[^\n]*\}?/);
+ assert.doesNotMatch(app,/!onlyJonction&&!refresh&&stored\?\.signature===signature/);
  assert.match(app,/search\.views\[label\]=\{\.\.\.view,savedAt\}/);
  assert.match(app,/02 · Jonction · Mission suivante/);
 });
