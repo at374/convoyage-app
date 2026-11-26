@@ -77,7 +77,7 @@ async function run(){
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
   // Les anciens blocs par moteur sont désormais repliés sous « Détail par moteur » : ce test vérifie leur contenu, il les ouvre.
-  await context.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;}))
+  await context.addInitScript(()=>{new MutationObserver(()=>{if(!window.keepTransportSourcesCollapsed)document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;});})
    .observe(document,{childList:true,subtree:true});});
   await context.addInitScript(({missions,settings})=>{
    const project='https://backend.invalid',user_id='browser-fixture';
@@ -323,6 +323,17 @@ async function run(){
   await (await lateSibra).finished();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await page.locator('#cpTransportMissionDetails').textContent(),pendingText,'Late responses cannot rewrite a closed panel');
+  holdRegional=false;
+  await page.evaluate(()=>{window.keepTransportSourcesCollapsed=true;});
+  const firstMission=page.locator('.mission[data-i="'+current.index+'"]');
+  await page.locator('.mission').filter({hasText:'Crolles'}).and(page.locator('.mission:not([data-i="'+current.index+'"])')).first().click();
+  await page.locator('#fermer').click();
+  await firstMission.click();
+  await page.locator('#btnTransportsMission').click();
+  const reopened=page.locator('#cpTransportMissionDetails');
+  await reopened.getByText(/Recherche enregistrée le/).first().waitFor({timeout:45000});
+  assert.equal(await reopened.locator('#cpTransportSettings').evaluate(node=>node.open),false);
+  await page.evaluate(()=>{window.keepTransportSourcesCollapsed=false;});
   // Second mission scenario replays a recorded subset of the published SNCF files.
   // No external routing response substitutes for its station search.
   holdRegional=false;railScenario=true;
