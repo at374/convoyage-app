@@ -111,13 +111,26 @@ jobs:
           args=()
           if [ "$OPERATOR" != all ]; then args+=(--operator "$OPERATOR"); fi
           python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --region toulouse-bordeaux --out data/gtfs "${args[@]}" | tee national-toulouse-bordeaux-report.json
+      - name: Actualiser Bordeaux–Nantes sur la branche publiée
+        id: bordeaux_nantes
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          OPERATOR: ${{ inputs.operator || 'all' }}
+        run: |
+          set -o pipefail
+          args=()
+          if [ "$OPERATOR" != all ]; then args+=(--operator "$OPERATOR"); fi
+          python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --region bordeaux-nantes --out data/gtfs "${args[@]}" | tee national-bordeaux-nantes-report.json
       - name: Publier les extraits officiels sur la branche transports (sans déploiement Android)
-        if: (steps.build.outcome == 'success' || steps.paris_lyon.outcome == 'success' || steps.lyon_marseille.outcome == 'success' || steps.paris_marseille.outcome == 'success' || steps.marseille_toulouse.outcome == 'success' || steps.toulouse_bordeaux.outcome == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/transports-aura-suisse')
+        if: (steps.build.outcome == 'success' || steps.paris_lyon.outcome == 'success' || steps.lyon_marseille.outcome == 'success' || steps.paris_marseille.outcome == 'success' || steps.marseille_toulouse.outcome == 'success' || steps.toulouse_bordeaux.outcome == 'success' || steps.bordeaux_nantes.outcome == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/transports-aura-suisse')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           AURA_BUILD: ${{ steps.build.outcome }}
           LYON_MARSEILLE_BUILD: ${{ steps.lyon_marseille.outcome }}
+          BORDEAUX_NANTES_BUILD: ${{ steps.bordeaux_nantes.outcome }}
           TOULOUSE_BORDEAUX_BUILD: ${{ steps.toulouse_bordeaux.outcome }}
           MARSEILLE_TOULOUSE_BUILD: ${{ steps.marseille_toulouse.outcome }}
           PARIS_MARSEILLE_BUILD: ${{ steps.paris_marseille.outcome }}
@@ -143,6 +156,9 @@ jobs:
           fi
           if [ "$TOULOUSE_BORDEAUX_BUILD" = success ]; then
             git add data/gtfs/national-*-toulouse-bordeaux.zip data/gtfs/national-*-toulouse-bordeaux.zip.json
+          fi
+          if [ "$BORDEAUX_NANTES_BUILD" = success ]; then
+            git add data/gtfs/national-*-bordeaux-nantes.zip data/gtfs/national-*-bordeaux-nantes.zip.json
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Update official national GTFS slices (no commercial fares)"
@@ -170,6 +186,7 @@ jobs:
             national-paris-marseille-report.json
             national-marseille-toulouse-report.json
             national-toulouse-bordeaux-report.json
+            national-bordeaux-nantes-report.json
             data/gtfs/national-*.zip
             data/gtfs/national-*.zip.json
           if-no-files-found: warn
