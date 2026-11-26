@@ -962,22 +962,28 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     suiviMaj();
   }
   // Acquisition ponctuelle et adaptative : pas de watch GPS haute précision en continu.
-  // En route : position basse consommation toutes les 5 min (échantillons persistés à 10 min).
-  // À moins de 2 km du point de prise en charge/livraison : précision renforcée brièvement, toutes les 60 s.
+  // Cadence adaptative : 10 min en route, 2 min après la prise en charge pour détecter le départ,
+  // 1 min en précision renforcée uniquement à proximité immédiate des points GPS.
   const SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000;
+  const SUIVI_GPS_INTERVALLE_DEPART_MS = 2 * 60000;
   const SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000;
   function suiviParametresAcquisition() {
     const pos = suiviDernierePosition;
     if (!pos) return {near:false,interval:SUIVI_GPS_INTERVALLE_ROUTE_MS};
-    let near = false;
     const store = lireLocal(SUIVI_CONVOYAGE_KEY,{});
+    let near = false, departureWatch = false;
     for (const {m,t} of missionsASuivre()) {
       const state = store[t.key];
-      const target = state?.status === 'en_route' ? G.coordonnees(m,'destination') : G.coordonnees(m,'origin');
+      if (state?.status === 'prise_en_charge') { departureWatch = true; continue; }
+      const enRoute = state?.status === 'en_route';
+      const target = enRoute ? G.coordonnees(m,'destination') : G.coordonnees(m,'origin');
+      const radius = enRoute ? 2000 : 500;
       if (target && Number.isFinite(Number(target.lat)) && Number.isFinite(Number(target.lng)) &&
-          G.volOiseauKm({lat:pos.coords.latitude,lng:pos.coords.longitude},target)*1000 <= 2000) { near = true; break; }
+          G.volOiseauKm({lat:pos.coords.latitude,lng:pos.coords.longitude},target)*1000 <= radius) { near = true; break; }
     }
-    return {near,interval:near?SUIVI_GPS_INTERVALLE_APPROCHE_MS:SUIVI_GPS_INTERVALLE_ROUTE_MS};
+    if (near) return {near:true,interval:SUIVI_GPS_INTERVALLE_APPROCHE_MS};
+    if (departureWatch) return {near:false,interval:SUIVI_GPS_INTERVALLE_DEPART_MS};
+    return {near:false,interval:SUIVI_GPS_INTERVALLE_ROUTE_MS};
   }
   function suiviProgrammerProchaineAcquisition(delay) {
     clearTimeout(suiviTimer);
