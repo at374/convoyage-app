@@ -558,8 +558,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   // Suivi d'arrivée par GPS (missions de l'agenda) : voir suiviArrivee* plus bas. Données gardées sur ce téléphone uniquement.
   const MARGE_ARRIVEE_MIN = 15, RAYON_ARRIVEE_M = 400, RAYON_ARRIVEE_VILLE_M = 800, DUREE_PRESENCE_MS = 30000;   // V304 : 400 m / 30 s (étaient 300 m / 60 s : l'arrivée à Taninges n'avait rien déclenché)
   const arriveeGps = key => { try { const a = (JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_arrivees') || 'null') || {})[key]; return a && Number.isFinite(Date.parse(a.arrivee)) ? a : null; } catch (_) { return null; } };
-  // V304 : secours si le GPS n'a rien détecté : Hiflow passe la mission en « terminée » (E-PV fait sur place) ; cette heure est retenue comme arrivée.
-  const arriveeHiflow = m => { try { if (!m || m.kind !== 'acceptee' || m.platform !== 'Hiflow' || m.status !== 'terminee') return null; const mod = (Array.isArray(m.modifications) ? m.modifications : []).filter(x => x && x.champ === 'statut' && x.a === 'terminee').pop(); const le = mod && Date.parse(mod.le); return Number.isFinite(le) && Date.now() - le < 36 * 3600000 ? { arrivee: new Date(le).toISOString(), source: 'hiflow' } : null; } catch (_) { return null; } };
   function missionTiming(m) {
     const original = m._cpTimingOriginal || m;
     const pickup = hfDates(original) ? hfPk(original) : original.pickup_start;
@@ -568,7 +566,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const planKey=transportCacheKey();
     const local = original.platform && original.external_id != null ? (transportReturnPlans.get(key)||(planKey?lireLocal(planKey+':plans',{})[key]:null)) : null;
     // Arrivée détectée par le GPS du téléphone : livraison réelle + marge de 15 min (démarches), prioritaire sur l'estimation de la plateforme.
-    const gps = original.kind === 'acceptee' && original.platform && original.external_id != null ? (arriveeGps(key) || arriveeHiflow(original)) : null;
+    const gps = original.kind === 'acceptee' && original.platform && original.external_id != null ? arriveeGps(key) : null;
     const gpsPlanned = gps ? new Date(Date.parse(gps.arrivee) + MARGE_ARRIVEE_MIN * 60000).toISOString() : null;
     const confirmation = original.kind === 'acceptee' && original.platform === 'Hiflow' ? dMail(original)?.liv : null;
     const candidate = local || gpsPlanned || (confirmation && Date.parse(confirmation) !== Date.parse(deadline || '') ? confirmation : null);
@@ -593,7 +591,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       timing.planned || (finish && new Date(finish.t).toISOString());
     return bk('bkD1','PRISE EN CHARGE',esc(fmtDate(plannedStart == null ? timing.pickup : new Date(plannedStart).toISOString()))) +
       bk('bkD2','LIVRAISON PRÉVUE',delivery ? esc(fmtDate(delivery)) +
-        (timing.gps ? (timing.gps.source === 'hiflow' ? ' (fin de mission Hiflow à ' : ' (arrivée détectée par GPS à ') + esc(heureP(Date.parse(timing.gps.arrivee))) + ' + 15 min)' : !timing.planned || finish?.estimee ? ' (estimée, à confirmer)' : '') : 'À renseigner') +
+        (timing.gps ? ' (arrivée détectée par GPS à ' + esc(heureP(Date.parse(timing.gps.arrivee))) + ' + 15 min)' : !timing.planned || finish?.estimee ? ' (estimée, à confirmer)' : '') : 'À renseigner') +
       (timing.deadline ? bk('bkD2','DATE LIMITE DE LIVRAISON',esc(fmtDate(timing.deadline))) : '');
   }
   function mailBloc(m) {
@@ -1972,7 +1970,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       planningStatus.setAttribute('aria-live','polite');
       planningStatus.dataset.planningFeedback = 'true';
       planningStatus.textContent = timing.gps ?
-        (timing.gps.source === 'hiflow' ? '📍 Fin de mission Hiflow à ' : '📍 Arrivée détectée par GPS à ') + formatParis(timing.gps.arrivee) + ' : retour et jonction calculés à partir de ' + formatParis(transportPlannedReturn) + ' (marge de 15 min pour les démarches). Mise à jour automatique avec l’heure qui passe.' : transportPlannedReturn ?
+        '📍 Arrivée détectée par GPS à ' + formatParis(timing.gps.arrivee) + ' : retour et jonction calculés à partir de ' + formatParis(transportPlannedReturn) + ' (marge de 15 min pour les démarches). Mise à jour automatique avec l’heure qui passe.' : transportPlannedReturn ?
         'Livraison prévue prise en compte : ' + formatParis(transportPlannedReturn) +
         '. Agenda et recherches utilisent cet horaire. Les résultats disponibles apparaissent ci-dessous ; un trajet non raccordé ne peut pas être calculé.' :
         'Indique la date et l’heure prévues de livraison pour recalculer. La date limite reste inchangée. Ce choix est conservé sur cet appareil.';

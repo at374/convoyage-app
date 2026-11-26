@@ -16,7 +16,8 @@
   // Fin de mission : heure de livraison fournie, sinon prise en charge + durée estimée (signalée).
   function fin(m) {
     const t = Date.parse(m.delivery_end || m.delivery_start || ''); if (Number.isFinite(t)) return { t, estimee: false };
-    const d = debut(m), h = C.dureeEstimee(m).heures; if (d != null && h) return { t: d + h * H, estimee: true };
+    const dureeMission = n(m.duree_h);
+    const d = debut(m), h = dureeMission > 0 ? dureeMission : C.dureeEstimee(m).heures; if (d != null && h) return { t: d + h * H, estimee: true };
     return null;
   }
   function domicile(reglages) {
