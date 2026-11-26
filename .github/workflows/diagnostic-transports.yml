@@ -11,6 +11,7 @@ on:
       - 'scripts/moteurs_regionaux_paires.py'
       - 'scripts/test-pedestrian-hub.cjs'
       - 'transport-mission-hub.js'
+      - 'index.html'
       - 'transport-gtfs-federation.js'
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-time.js'
