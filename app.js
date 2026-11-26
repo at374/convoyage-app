@@ -2510,8 +2510,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(onlyJonction)junctionHub=session;
         else{search.session=transportHub=session;startDayLabels(activeDay);}
       };
+      const prefetchKeepsHubAlive=()=>panel.dataset.cpPrefetched==='true';
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
-        if(!panel.isConnected||panel.hidden||$('feuille').hidden){
+        if(!panel.isConnected){
+          attachedSearch?.detach(panel);junctionHub?.dispose();
+          clearInterval(progressTimer);clearTimeout(panel.__cpDefer);
+          transportHub=null;junctionHub=null;hubObserver.disconnect();
+          return;
+        }
+        // Un panneau masqué pour le pré-calcul reste propriétaire de sa session :
+        // la fiche peut être fermée et l'utilisateur peut naviguer ailleurs.
+        if((panel.hidden||$('feuille').hidden)&&!prefetchKeepsHubAlive()){
           attachedSearch?.detach(panel);junctionHub?.dispose();
           clearInterval(progressTimer);clearTimeout(panel.__cpDefer);
           transportHub=null;junctionHub=null;hubObserver.disconnect();
@@ -2549,7 +2558,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
         let gtfsTaskSignature = null;
         const runGTFS = () => {
-        if (!panel.isConnected || panel.hidden || $('feuille').hidden) return;
+        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && !prefetchKeepsHubAlive())) return;
         const point = gps => transportAddressPoint(gps) ?
           {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
         const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
@@ -2578,7 +2587,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         runGTFS();
       }
       if (next) pointsMission(next, () => {
-        if (!panel.isConnected || panel.hidden || $('feuille').hidden || $('btnTransportsMission') !== bt) return;
+        if (!panel.isConnected || ((panel.hidden || $('feuille').hidden) && !prefetchKeepsHubAlive()) || $('btnTransportsMission') !== bt) return;
         bt.cpRefreshGTFS?.();
         bt.cpRefreshRegional?.();
         bt.cpRefreshHub?.();
