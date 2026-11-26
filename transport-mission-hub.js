@@ -3253,7 +3253,7 @@ function render(host,v){
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
  const diagnostics=el(doc,'details','cp-hub-diagnostics');
- const diagnosticTitle=el(doc,'summary',null,'Diagnostics');
+ const diagnosticTitle=el(doc,'summary',null,'Diagnostics et anomalies');
  diagnosticTitle.style.color='#ef4444';diagnosticTitle.style.fontWeight='700';
  diagnostics.appendChild(diagnosticTitle);
  const errs=Object.entries(v.errors||{});
