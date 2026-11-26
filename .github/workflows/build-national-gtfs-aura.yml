@@ -75,13 +75,26 @@ jobs:
           args=()
           if [ "$OPERATOR" != all ]; then args+=(--operator "$OPERATOR"); fi
           python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --region lyon-marseille --out data/gtfs "${args[@]}" | tee national-lyon-marseille-report.json
+      - name: Actualiser Paris–Marseille sur la branche publiée
+        id: paris_marseille
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          OPERATOR: ${{ inputs.operator || 'all' }}
+        run: |
+          set -o pipefail
+          args=()
+          if [ "$OPERATOR" != all ]; then args+=(--operator "$OPERATOR"); fi
+          python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --region paris-marseille --out data/gtfs "${args[@]}" | tee national-paris-marseille-report.json
       - name: Publier les extraits officiels sur la branche transports (sans déploiement Android)
-        if: (steps.build.outcome == 'success' || steps.paris_lyon.outcome == 'success' || steps.lyon_marseille.outcome == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/transports-aura-suisse')
+        if: (steps.build.outcome == 'success' || steps.paris_lyon.outcome == 'success' || steps.lyon_marseille.outcome == 'success' || steps.paris_marseille.outcome == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/transports-aura-suisse')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           AURA_BUILD: ${{ steps.build.outcome }}
           LYON_MARSEILLE_BUILD: ${{ steps.lyon_marseille.outcome }}
+          PARIS_MARSEILLE_BUILD: ${{ steps.paris_marseille.outcome }}
           PARIS_LYON_BUILD: ${{ steps.paris_lyon.outcome }}
         run: |
           set -euo pipefail
@@ -95,6 +108,9 @@ jobs:
           fi
           if [ "$LYON_MARSEILLE_BUILD" = success ]; then
             git add data/gtfs/national-*-lyon-marseille.zip data/gtfs/national-*-lyon-marseille.zip.json
+          fi
+          if [ "$PARIS_MARSEILLE_BUILD" = success ]; then
+            git add data/gtfs/national-*-paris-marseille.zip data/gtfs/national-*-paris-marseille.zip.json
           fi
           if ! git diff --cached --quiet; then
             git commit -m "Update official national GTFS slices (no commercial fares)"
@@ -119,6 +135,7 @@ jobs:
             national-build-report.json
             national-paris-lyon-report.json
             national-lyon-marseille-report.json
+            national-paris-marseille-report.json
             data/gtfs/national-*.zip
             data/gtfs/national-*.zip.json
           if-no-files-found: warn

@@ -1,0 +1,28 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-paris-marseille.zip",
+  "sha256": "2f9c708e679c9265965b49ed38794e4698af6b4e30d59548b8027c916e97efbe",
+  "bytes": 632944,
+  "bounds": [
+    43.1,
+    2.15,
+    49.05,
+    5.85
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for paris-marseille; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 253,
+    "trips": 5307,
+    "stops": 452,
+    "fares": false,
+    "bounds": [
+      43.1,
+      2.15,
+      49.05,
+      5.85
+    ]
+  }
+}

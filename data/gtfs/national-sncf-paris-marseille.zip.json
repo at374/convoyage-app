@@ -1,0 +1,28 @@
+{
+  "operator": "sncf",
+  "file": "national-sncf-paris-marseille.zip",
+  "sha256": "c33b53cb7594186efcb23c7a1f6cb66d42b632f1cfd5a5d2f0aa0243121a8c3e",
+  "bytes": 1816854,
+  "bounds": [
+    43.1,
+    2.15,
+    49.05,
+    5.85
+  ],
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "scope": "Static GTFS slice for paris-marseille; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 321,
+    "trips": 18504,
+    "stops": 3327,
+    "fares": false,
+    "bounds": [
+      43.1,
+      2.15,
+      49.05,
+      5.85
+    ]
+  }
+}

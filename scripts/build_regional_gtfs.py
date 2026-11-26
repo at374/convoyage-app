@@ -579,7 +579,8 @@ def filter_by_bounds(z, spec):
     sélectionne d'abord les arrêts dans la bbox, puis ne garde que les courses passant par au moins deux
     d'entre eux (un seul arrêt dans la zone ne permet aucun trajet local). Les arrêts hors zone de ces
     courses sont retirés : le flux produit ne couvre que des trajets internes à la bbox, jamais un
-    trajet qui en sortirait silencieusement sans l'indiquer."""
+    trajet qui en sortirait silencieusement sans l'indiquer. L'option keep_complete_trips conserve
+    la séquence entière des courses sélectionnées pour un extrait interrégional."""
     lat_min, lon_min, lat_max, lon_max = spec['bounds']
     sfields, stops = read_table(z, 'stops.txt')
     if not stops:
@@ -610,7 +611,7 @@ def filter_by_bounds(z, spec):
         if len(local) < 2:
             continue
         kept_trip_ids.add(trip_id)
-        times.extend(local)
+        times.extend(rows if spec.get('keep_complete_trips') else local)
     if not kept_trip_ids:
         return None, 'aucune course avec au moins deux arrêts dans la zone'
     stop_ids = {t['stop_id'] for t in times}
@@ -618,6 +619,8 @@ def filter_by_bounds(z, spec):
     stops = [s for s in stops if s['stop_id'] in stop_ids or s['stop_id'] in parents]
     tfields, trips = read_table(z, 'trips.txt')
     trips = [t for t in trips if t['trip_id'] in kept_trip_ids]
+    if spec.get('keep_complete_trips') and 'shape_id' in tfields:
+        trips = [{**t, 'shape_id': ''} for t in trips]
     route_ids = {t['route_id'] for t in trips}
     service_ids = {t['service_id'] for t in trips}
     rfields, routes = read_table(z, 'routes.txt')
