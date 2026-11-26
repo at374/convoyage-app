@@ -167,7 +167,7 @@
     const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
     return { a, v, cp, d };
   };
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v2', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
