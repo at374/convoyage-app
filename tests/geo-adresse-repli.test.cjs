@@ -117,6 +117,8 @@ test('coordonnées imbriquées pickup et dropoff sont reconnues directement',()=
 test('les codes postaux de prise en charge et livraison déterminent le département',()=>{
  const a={from_city:'Commune inconnue',pickup_postal_code:'74000'};
  const b={to_city:'Autre commune inconnue',delivery_postal_code:'38500'};
+ assert.equal(G.adresseDe(a,'origin').cp,'74000');
+ assert.equal(G.adresseDe(b,'destination').cp,'38500');
  assert.equal(G.departementMission(a,'origin'),'74');
  assert.equal(G.departementMission(b,'destination'),'38');
 });
