@@ -159,8 +159,13 @@
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
   const adresseDe = (m, cote) => {
-    const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
-    const lieu = cote === 'origin' ? (m.pickup || m.pickup_location || {}) : (m.dropoff || m.delivery || m.dropoff_location || {});
+    const pre = cote === 'origin' ? 'from' : 'to';
+    const lieu = cote === 'origin'
+      ? (m.pickup || m.pickup_location || m.origin || {})
+      : (m.dropoff || m.delivery || m.dropoff_location || m.destination || {});
+    // Fusionner plutôt que choisir un seul objet : une fiche peut avoir un objet origin
+    // partiellement rempli et l'adresse complète dans pickup_address / pickup.address.
+    const p = { ...(lieu || {}), ...((m && m[cote]) || {}) };
     const mail = m.mail_info?.[cote === 'origin' ? 'depart' : 'arrivee']?.adresse;
     const v = String(m[pre + '_city'] || p.city || lieu.city || '').trim();
     const d = m[pre + '_department'] || '';
