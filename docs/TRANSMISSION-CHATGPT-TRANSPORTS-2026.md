@@ -852,3 +852,11 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Test ajouté pour vérifier leur présence, leur activation dans la zone et le chargement de chaque ZIP.
 - Commits : correctif de filtrage `a2a5aa1636cc08508267fbce3030c21ddc1cfbd4` ; test de régression `5ba45c75fe5af4da312fec5feba66dfe9ddc6efa` ; raccordement AURA `5bfa2e38afe799fe005d57b1215ebd3d35ceabd2` ; test AURA `af24d710e521750089a05bfe832dcc9b8f57fea4`.
 - La validation de ces changements nécessite toujours l'exécution réelle des tests et des scénarios de trajet complets. Aucun déploiement Android/Web n'est revendiqué.
+
+
+## Rectification de l'audit du manifeste — 26/11/2026
+
+Une vérification corrigée par recherche littérale des noms de ZIP dans le hub remplace le comptage précédent : **282 des 285 archives du manifeste sont référencées dans le moteur ou dans ses parcours dédiés**. Les trois noms de ZIP non référencés directement sont :
+- `atoumod-nomad-train.zip` : flux ferroviaire, volontairement non dupliqué dans le moteur GTFS local.
+- `bretagne-lineotim-morlaix.zip` et `bretagne-lineotim-periurbain.zip` : exclus de la génération automatique de fournisseurs car les emprises du manifeste ont des bornes GPS nulles/incomplètes. Ils doivent être corrigés à la source avant raccordement.
+Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub. Cette rectification remplace l'estimation précédente de neuf archives manquantes.
