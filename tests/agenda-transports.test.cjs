@@ -792,9 +792,9 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const fs = require('node:fs');
   const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
   assert.match(source, /refreshTransport\.textContent = '🔄 Actualiser maintenant'/);
-  assert.match(source, /refreshTransport\.onclick = \(\) => \{/);
+  assert.match(source, /refreshTransport\.onclick = reopenTransport/);
   assert.match(source, /panel\.remove\(\);[\s\S]*?bt\.click\(\);/);
-  assert.match(source, /panel\.appendChild\(refreshTransport\)/);
+  assert.match(source, /hero\.after\(refreshTransport\)/);
 }
 
 {
@@ -858,7 +858,7 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     {platform:'Hiflow',external_id:'next',duree_h:1});
   const before = JSON.stringify([a,b]);
   const plans = new Map([['["Hiflow","planned"]','2026-10-30T12:30:00.000Z']]);
-  const context = {Intl,Date,Map,transportReturnPlans:plans,etat:{missions:[a,b]},
+  const context = {Intl,Date,Map,transportReturnPlans:plans,transportCacheKey:()=>'',etat:{missions:[a,b]},
     deLEdition:x=>x,RT:require('../retours.js'),m:a,
     bk:(style,title,value)=>`[${title}] ${value}`,esc:String,
     fmtDate:value=>new Date(value).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})};
@@ -885,7 +885,7 @@ function setup(mode='agenda'){
  const m={platform:'Hiflow',external_id:'test',delivery_end:'2026-11-02T10:30:00+01:00'};
  const panel=new Element(),newButton={dataset:{},click(){calls.push('newButton');}},feedback=new Element();
  const calls=[];
- const context={Intl,Date,Map,m,panel,timing:{original:m,deadline:m.delivery_end},etat:{onglet:mode},depuis:null,
+ const context={Intl,Date,Map,api:null,m,panel,timing:{original:m,deadline:m.delivery_end},etat:{onglet:mode},depuis:null,
   document:{createElement:()=>new Element()},bt:{click(){throw Error('Old button must not be reused');}},
   transportPlanKey:'["Hiflow","test"]',transportPlannedReturn:null,transportPickup:'2026-10-30T12:00:00+01:00',
   formatParis:x=>new Date(x).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}),
