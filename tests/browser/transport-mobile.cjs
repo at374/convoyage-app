@@ -54,6 +54,7 @@ function archive(line='TEST',regional=false){
 async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),regionalFareZip=archive('Y51','full'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
+ const agendaWorkersStopped=()=>[...activeWorkers].every(worker=>!new URL(worker.url()).pathname.endsWith('/transport-gtfs-worker.js'));
  const sibraGates=[];let holdSibra=false;
  let holdRegional=false,railScenario=false,regionalPassScenario=false,regionalFareScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
@@ -303,6 +304,7 @@ async function run(){
   assert.ok(requests.length>before,'Explicit refresh issues new regional requests');
   holdSibra=true;  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
+  await page.locator('#cpTransportMissionDetails .cp-hub-recherche progress').first().waitFor();
   await until(()=>requests.length>=beforeCloseRequests+3,'Three regional refresh requests must be in flight');
   await until(()=>sibraGates.length>0,'A daily SIBRA response must be in flight before closing');
   await page.locator('#fermer').click();
@@ -312,7 +314,8 @@ async function run(){
    return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===node;
   }),true,'Install launcher is accessible again after closing the sheet');
   await until(()=>abortedRequests.length>=abortedBefore+3,'Closing the mission sheet must abort regional fetches');
-  await until(()=>activeWorkers.size===0,'Closing the mission sheet must terminate its GTFS workers');
+  await until(agendaWorkersStopped,'Closing the mission sheet must terminate its Agenda GTFS workers');
+  // The detached hub can finish and save, while the closed sheet stays untouched.
   const pendingText=await page.locator('#cpTransportMissionDetails').textContent();
   for(const resolve of regionalGates.splice(0))resolve();
   const lateSibra=page.waitForResponse(response=>new URL(response.url()).pathname==='/data/sibra/sibra-2026-11-02.json');
@@ -369,7 +372,7 @@ async function run(){
   assert.doesNotMatch(await flexPanel.innerText(),/Réalisable/);
   assert.equal(await flexPanel.locator('.cp-hub-card').count(),0,'Unbooked windows stay outside ranked journeys');
   await page.locator('#fermer').click();
-  await until(()=>activeWorkers.size===0,'TAD scenario workers must stop on close');
+  await until(agendaWorkersStopped,'TAD scenario workers must stop on close');
   // Synthetic SIBRA feed identity exercises the real worker and pass controls.
   await page.close();railScenario=false;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
@@ -396,7 +399,7 @@ async function run(){
   assert.equal(await page.evaluate(()=>CPAccount.storage.getItem('cp_sibra_pass_v1')),null);
   // Without a pass, the UI intentionally displays an explicit unverified-coverage notice, not an empty field.
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('[data-sibra-pass-cost]')).every(x=>!x.textContent.includes('0,00 € sous réserve d’abonnement valide') && x.textContent.includes('Couverture SIBRA')),null,{timeout:10000});
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'SIBRA pass worker must stop on close');
+  await page.locator('#fermer').click();await until(agendaWorkersStopped,'SIBRA pass worker must stop on close');
   await page.close();regionalPassScenario=true;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
@@ -417,7 +420,7 @@ async function run(){
   await page.locator('[data-sibra-pass-cost]').first().scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-y51-pass-applied.png')});
   assert.match(await page.locator('[data-y51-fare-reference]').first().innerText(),/2,50 €.*2,00 €/);
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Y51 scope worker must stop on close');
+  await page.locator('#fermer').click();await until(agendaWorkersStopped,'Y51 scope worker must stop on close');
   await page.close();regionalFareScenario=true;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
@@ -436,7 +439,7 @@ async function run(){
   assert.doesNotMatch(await page.locator('[data-gtfs-agenda]').innerText(),/Réalisable/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await fareRef.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-y51-full-fare.png')});
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Y51 fare worker must stop on close');
+  await page.locator('#fermer').click();await until(agendaWorkersStopped,'Y51 fare worker must stop on close');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
