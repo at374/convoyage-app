@@ -215,7 +215,8 @@ async function runSync() {
   const cyclePrecedent = await lireCycle(SUPABASE_URL, SERVICE_KEY, USER_ID);
   const cycleStartedAt = cur0 === 0 || !cyclePrecedent?.cycle_started_at ? new Date().toISOString() : cyclePrecedent.cycle_started_at;
   let cycleFailed = cur0 === 0 ? false : !!cyclePrecedent?.failed;
-  const aLire = Array.from({ length: Math.min(LOT, passes.length) }, (_, i) => passes[(cur0 + i) % passes.length]);
+  // Ne jamais chevaucher la fin du tour : le dernier lot peut être plus petit (ex. 2 sur 4).
+  const aLire = passes.slice(cur0, Math.min(cur0 + LOT, passes.length));
 
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
   const missionsBucket = {};
