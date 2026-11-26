@@ -173,7 +173,12 @@
     const cp = String(p.postal_code || p.zip || lieu.postal_code || lieu.zip || m[pre + '_postal_code'] || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
     return { a, v, cp, d };
   };
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v2', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  const aAdresseRue = (m, cote) => {
+    const a = adresseDe(m, cote).a;
+    return !!a && /\b(?:\d{1,4}\s*(?:bis|ter)?\s+)?(?:rue|avenue|av\.?|route|chemin|boulevard|bd\.?|impasse|allée|allee|place|quai|cours|passage|faubourg|voie|zone|zi|za|rond[- ]point)\b/i.test(a);
+  };
+  // geo-v3 invalide les anciens points calculés avec les règles précédentes.
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v3', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
@@ -277,7 +282,8 @@
   };
   function coordonnees(m, cote) {
     if (estSecteurFranceGeneve(m, cote)) return { lat: GENEVE_SECTEUR_FRANCE.lat, lng: GENEVE_SECTEUR_FRANCE.lng, precision: 'gps' };
-    const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
+    const pre = cote === 'origin' ? 'from' : 'to';
+    const p = m[cote] || (cote === 'origin' ? (m.pickup || m.pickup_location) : (m.dropoff || m.delivery || m.dropoff_location));
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
       // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
       // GPS fourni par la plateforme mais qui n'est que le centre de la commune (adresse de rue connue ailleurs dans la commune) :
@@ -379,7 +385,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, adresseDe, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, estSecteurFranceGeneve, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
+  const api = { POINTS, adresseDe, aAdresseRue, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, estSecteurFranceGeneve, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
