@@ -19,6 +19,8 @@
   const transportViewCache = new Map();
   const transportSearches = new Map();
   const transportSaveTimers = new Map();
+  // Pré-calcul automatique des transports retour/jonction avant la livraison estimée.
+  const transportPrefetchTimers = new Map();
   const transportSelectedDays = new Map();
   const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v1:' + api.session.user_id : '';
   function saveTransportViews(key, missionKey, entry) {
@@ -871,6 +873,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
     if (cles.length > 40) delete tous[cles[0]];
     tous[t.key] = { arrivee: new Date(ts).toISOString(), detecte: new Date().toISOString() }; ecrireLocal('cp_arrivees', tous);
+    const prefetchTimer = transportPrefetchTimers.get(t.key);
+    if (prefetchTimer) { clearInterval(prefetchTimer); transportPrefetchTimers.delete(t.key); }
     suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); if(transportCacheKey())saveTransportViews(transportCacheKey()+':plans',t.key,null); transportViewCache.delete(transportCacheKey()+'|'+t.key); saveTransportViews(transportCacheKey(),t.key,null); etat.planResultat = null;
     toast('📍 Arrivée détectée à ' + heureP(ts) + ' : retour calculé à partir de ' + heureP(ts + MARGE_ARRIVEE_MIN * 60000) + ' (marge 15 min)');
     try { if (etat.onglet === 'agenda') vueAgenda(); } catch (_) {}
@@ -1567,6 +1571,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
       if (existing) {
+        if (existing.dataset.cpPrefetched === 'true') {
+          existing.style.display = '';
+          delete existing.dataset.cpPrefetched;
+          existing.scrollIntoView({behavior:'smooth',block:'start'});
+          return;
+        }
         if (!existing.hidden) {
           existing.scrollIntoView({behavior:'smooth',block:'start'});
           return;
@@ -3668,6 +3678,41 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const b3 = $('btnAnnRetire'); if (b3) b3.onclick = () => { const o = lireLocal('cp_annul', {}) || {}; delete o[cle]; ecrireLocal('cp_annul', o); for (const x of etat.missions) if (x.kind === 'acceptee' && x.platform + '|' + x.external_id === cle && x._statutOrig !== undefined) { x.status = x._statutOrig; delete x._statutOrig; x.annulee_par_moi = false; } sauve('Annulation retirée'); };
     }
     const transportDetailButton = $('btnTransportsMission');
+    // Le moteur de recherche de la fiche connaît déjà les tâches Retour et Jonction.
+    // On le lance une seule fois à T-15 min de la livraison planifiée, puis on masque
+    // seulement son panneau : les moteurs continuent et enregistrent les vues dans le cache.
+    if (transportDetailButton && m.kind === 'acceptee' && m.status !== 'annulee' && m.status !== 'terminee') {
+      const prefetchKey = String(m.platform) + '|' + String(m.external_id);
+      const oldTimer = transportPrefetchTimers.get(prefetchKey);
+      if (oldTimer) clearInterval(oldTimer);
+      const tickPrefetch = () => {
+        if (!transportDetailButton.isConnected || $('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) {
+          clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
+        }
+        if (transportDetailButton.dataset.cpPrefetchStarted === 'true' || arriveeGps(missionTiming(m).key)) {
+          clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
+        }
+        let finish = null;
+        try { finish = RT.fin(missionForPlanning(m)); } catch (_) {}
+        if (!finish || !Number.isFinite(finish.t)) return;
+        const remaining = finish.t - Date.now();
+        if (remaining > 15 * 60000 || remaining < 0) return;
+        transportDetailButton.dataset.cpPrefetchStarted = 'true';
+        clearInterval(timer); transportPrefetchTimers.delete(prefetchKey);
+        // Le clic réutilise exactement les moteurs, filtres, signatures et caches de la fiche.
+        try {
+          if (!$('cpTransportMissionDetails')) transportDetailButton.click();
+          const prefetchPanel = $('cpTransportMissionDetails');
+          if (prefetchPanel && prefetchPanel.isConnected) {
+            prefetchPanel.dataset.cpPrefetched = 'true';
+            prefetchPanel.style.display = 'none';
+          }
+        } catch (_) { delete transportDetailButton.dataset.cpPrefetchStarted; }
+      };
+      const timer = setInterval(tickPrefetch, 30000);
+      transportPrefetchTimers.set(prefetchKey, timer);
+      tickPrefetch();
+    }
     pointsMission(m, () => {
       if ($('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) return;
       if ($('gpsO')) $('gpsO').innerHTML = mentionGps(m, 'origin');
