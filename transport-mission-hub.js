@@ -154,19 +154,23 @@ function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
 }
 function gtfsBoat(routeType){
  const type=Number(routeType);
- return type===4||(type>=700&&type<800)||(type>=1000&&type<1100);
+ // GTFS base Ferry, extended Water Transport / Ferry / Water Taxi.
+ return type===4||type===1000||type===1200||type===1502;
 }
 function gtfsMode(routeType){
  const type=Number(routeType);
- if(type===0||type===5||(type>=900&&type<1000))return 'Tram';
- if(type===1||type===109||(type>=400&&type<500))return 'Métro';
- if(type===2||(type>=100&&type<200))return 'Train';
- if(type===3||type===11||(type>=500&&type<600))return 'Bus';
- if(type>=200&&type<300)return 'Car';
- if(type===6||type===7||(type>=1300&&type<1400)||(type>=1700&&type<1800))return 'Funiculaire';
- if(type===12)return 'Monorail';
- if(gtfsBoat(type))return 'Bateau';
- return 'Bus';
+ if(type===0||type===5||(type>=900&&type<=907))return 'Tram';
+ if(type===1||(type>=400&&type<=404))return 'Métro';
+ if(type===405||type===12)return 'Monorail';
+ if(type===2||(type>=100&&type<=117))return 'Train';
+ if(type===3||(type>=700&&type<=716))return 'Bus';
+ if(type===11||(type>=800&&type<=899))return 'Trolleybus';
+ if(type>=200&&type<=209)return 'Car';
+ if(type===6||(type>=1300&&type<=1307))return 'Téléphérique';
+ if(type===7||type===1400)return 'Funiculaire';
+ if(type===1100)return 'Avion';
+ if(type>=1500&&type<=1507)return 'Taxi';
+ return 'Transport';
 }
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
