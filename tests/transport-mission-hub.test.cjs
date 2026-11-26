@@ -827,7 +827,7 @@ test('correspondance au même arrêt : deux minutes sont rejetées, cinq minutes
  const task={label:'Jonction',from:STOP1,to:MISSION,earliestDeparture:at(7,50),latestArrival:at(10,0)};
  const make=(minutes)=>({source:'GTFS',legs:[
   bus(at(8,0),at(8,20),STOP1,STOP2),
-  bus(at(8,20+Math.floor(minutes/60)),at(8,40),STOP2,MISSION)
+  bus(at(8,20+minutes),at(8,40),STOP2,MISSION)
  ],missing:[]});
  const two=H.assess(await H.completeWalks(make(2),task,fakeRouter()),task,null);
  const five=H.assess(await H.completeWalks(make(5),task,fakeRouter()),task,null);
