@@ -6,7 +6,6 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const filters = fs.readFileSync(path.join(root, 'filtres.js'), 'utf8');
 const sync = require('../server/hiflow-sync-deploy/hiflow-vendor/sync-core.js');
-const brain = fs.readFileSync(path.join(root, '..', 'convoyage-tel', 'cerveau.js'), 'utf8');
 
 test('Delivery Car partial scans never hide offers', () => {
   const i = filters.indexOf('function deliveryCarNonRevue');
