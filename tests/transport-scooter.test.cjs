@@ -260,7 +260,7 @@ test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision 
  const start=app.indexOf('const SUIVI_GPS_INTERVALLE_ROUTE_MS');
  const end=app.indexOf("if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange'",start);
  const block=app.slice(start,end);
- assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ROUTE_MS = 5 * 60000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ROUTE_MS = 10 * 60000'));
  assert.ok(block.includes('SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000'));
  assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
  assert.ok(block.includes('enableHighAccuracy: params.near'));
