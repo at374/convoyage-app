@@ -1,0 +1,29 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-bordeaux-nantes.zip",
+  "sha256": "3b995f933731d61669bf4a679ef3f30823ea6dce34356c04e65101e176ae0694",
+  "bytes": 15247,
+  "bounds": [
+    44.65,
+    -2.0,
+    47.44,
+    0.55
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "Static GTFS slice for bordeaux-nantes; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 95,
+    "trips": 95,
+    "stops": 48,
+    "fares": false,
+    "bounds": [
+      44.65,
+      -2.0,
+      47.44,
+      0.55
+    ],
+    "lastServiceDate": "2027-01-04"
+  }
+}

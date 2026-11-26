@@ -1,0 +1,29 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-bordeaux-nantes.zip",
+  "sha256": "2e44dc72eb7196c413f2b384a42966cc35d94972d59af2684eded575d51f8c2e",
+  "bytes": 71142,
+  "bounds": [
+    44.65,
+    -2.0,
+    47.44,
+    0.55
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for bordeaux-nantes; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 30,
+    "trips": 474,
+    "stops": 119,
+    "fares": false,
+    "bounds": [
+      44.65,
+      -2.0,
+      47.44,
+      0.55
+    ],
+    "lastServiceDate": "2027-05-22"
+  }
+}
