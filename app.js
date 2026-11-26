@@ -889,6 +889,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (transportCacheKey()) saveTransportViews(transportCacheKey()+':plans',t.key,current.etaDepartureAt);
         const clePreparation = t.key + '|' + String(t.pickup).slice(0,10);
         preparees.delete(clePreparation);
+        const preparationsEnCache = lireLocal(PREPARATION_TRANSPORTS_KEY,{});
+        delete preparationsEnCache[clePreparation];
+        ecrireLocal(PREPARATION_TRANSPORTS_KEY,preparationsEnCache);
         approcheEvent = {key:t.key,etaMinutes:minutes,at:current.approcheDeclencheeAt,estimatedArrival:current.etaArrivalAt,transportDeparture:current.etaDepartureAt};
       }
       saved[t.key] = current; ecrireLocal(SUIVI_CONVOYAGE_KEY,saved);
@@ -1037,7 +1040,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
   // Préparation à l'avance (application ouverte) : de 12 h à 0 h avant la prise en charge d'une mission ACCEPTÉE de l'agenda, les fichiers d'horaires utiles
   // (aller, jonction, retour) sont téléchargés d'avance (sans être lus, pour ne pas figer l'écran) et gardés sur le téléphone : « Visualisation des transports » démarre sans attente réseau.
-  const preparees = new Set(); let preparationEnCours = false;
+  const preparees = new Map();
+  const PREPARATION_TRANSPORTS_KEY = 'cp_transport_prefetch_v1';
+  const PREPARATION_TRANSPORTS_TTL_MS = 12 * 3600000;
+  let preparationEnCours = false;
   async function preparerTransports() {
     if (preparationEnCours || document.hidden) return;
     const Hub = window.CPTransportHub; if (!Hub || !Hub.makeProviders) return;
@@ -1058,7 +1064,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const suiviConvoyage = lireLocal(SUIVI_CONVOYAGE_KEY,{})[t.key];
         if (debut - now > 12 * 3600000 || (debut - now < -6 * 3600000 && suiviConvoyage?.status !== 'en_route')) continue;
         const cle = t.key + '|' + String(t.pickup).slice(0, 10);
-        if (preparees.has(cle)) continue;
         const suivante = liste[i + 1] ? liste[i + 1].m : null;
         try { await pointsMission(m); if (suivante) await pointsMission(suivante); } catch (_) { }
         const fin = suiviConvoyage?.etaDepartureAt || t.planned || t.deadline;
@@ -1068,13 +1073,30 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (home && d && fin) taches.push({ label: 'Retour', from: d, to: home, earliestDeparture: fin });
         if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 15 }); }
         if (!taches.length) continue;
+        // Cache persistant du préchauffage : à la réouverture de l'application, ne pas
+        // re-télécharger les mêmes archives si missions, points, horaires et fournisseurs n'ont pas changé.
+        const fournisseurs = Object.keys(P).filter(k => /^(local_|national_)/.test(k)).sort();
+        const signature = JSON.stringify([Hub.VERSION || '', t.key, t.pickup, t.planned || t.deadline || null,
+          suivante ? [suivante.platform, suivante.external_id, suivante.pickup_start || null] : null,
+          home, taches.map(x => [x.label, x.from, x.to, x.earliestDeparture || null, x.latestArrival || null, x.marginMinutes || 0]),
+          fournisseurs]);
+        if (preparees.get(cle) === signature) continue;
+        const cachePreparations = lireLocal(PREPARATION_TRANSPORTS_KEY, {});
+        const cached = cachePreparations[cle];
+        if (cached?.signature === signature && Number.isFinite(cached.savedAt) &&
+            now - cached.savedAt >= 0 && now - cached.savedAt < PREPARATION_TRANSPORTS_TTL_MS) {
+          preparees.set(cle, signature);
+          continue;
+        }
         let prechargementComplet = true;
         for (const tache of taches) {
+          let fournisseurEligible = false;
           for (const [k, prov] of Object.entries(P)) {
             if (!/^(local_|national_)/.test(k)) continue;
             if (document.hidden) return;
             try {
               if (prov.prefetch && prov.enabled(tache)) {
+                fournisseurEligible = true;
                 if (!prefetches.has(k)) prefetches.set(k, Promise.resolve().then(() => prov.prefetch()));
                 const ok = await prefetches.get(k);
                 if (ok !== true) prechargementComplet = false;
@@ -1082,9 +1104,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             } catch (_) { prechargementComplet = false; }
             await new Promise(r => setTimeout(r, 50));   // laisse l'écran respirer
           }
+          if (!fournisseurEligible) prechargementComplet = false;
         }
-        // Ne pas mémoriser une préparation partielle : le cycle suivant réessaiera les flux en échec.
-        if (prechargementComplet) preparees.add(cle);
+        // Ne pas mémoriser une préparation partielle ou sans fournisseur éligible.
+        if (prechargementComplet) {
+          preparees.set(cle, signature);
+          cachePreparations[cle] = { signature, savedAt: now };
+          const clesCache = Object.keys(cachePreparations);
+          while (clesCache.length > 50) delete cachePreparations[clesCache.shift()];
+          ecrireLocal(PREPARATION_TRANSPORTS_KEY, cachePreparations);
+        }
       }
     } finally { preparationEnCours = false; }
   }
