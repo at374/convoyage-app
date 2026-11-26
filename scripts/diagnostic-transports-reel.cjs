@@ -2,7 +2,7 @@
 // v4 (13/11/2026) : + 7 axes de couverture ; v3 : SNCF en 3 recherches décalées, API suisse avec repli gare la plus proche et 2e tentative.
 /* Convoyage Ultra — diagnostic RÉEL des transports sur les 8 axes, exécuté sur un serveur GitHub Actions (accès Internet).
  * Moteurs réellement interrogés : API suisse (transport.opendata.ch), Mobilités M, SNCF (fichiers officiels du dépôt),
- * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s). TripGo seulement si CP_TRIPGO_KEY est fourni.
+ * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s). TripGo retiré du produit.
  * Aucune donnée inventée : un moteur indisponible est consigné comme erreur.
  * Sortie : docs/diagnostic-serveur.json et docs/DIAGNOSTIC-SERVEUR.md
  */
@@ -11,7 +11,7 @@ const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
 const g=globalThis;g.window=g;
 for(const f of ['transport-adapters.js','transport-fares.js','transport-y51-fares.js','transport-fare-grids.js','swiss-transport-api.js','regional-routing.js',
- 'sncf-fallback.js','transport-tripgo.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
+ 'sncf-fallback.js','transport-tripgo-retired.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
  'transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js','transport-mission-hub.js','transport-coverage.js','transport-gtfs-agenda.js'])require(path.join(ROOT,f));
 const H=g.CPTransportHub,C=g.CPTransportCoverage,A=g.CPGTFSAgenda,L=g.CPGTFSLoader,I=g.CPGTFSIndex,T=g.CPGTFSTime;
 // Les fichiers « data/… » de l'application sont lus dans le dépôt ; le reste part sur Internet.
@@ -23,7 +23,6 @@ const fetcher=async(url,init)=>{
   return new Response(fs.readFileSync(file),{status:200,headers:{'content-type':file.endsWith('.json')?'application/json':'application/zip'}});}
  return fetch(u,{...init,headers:{...(init&&init.headers||{}),'User-Agent':'ConvoyageUltra-Diagnostic/1.0'}});
 };
-if(process.env.CP_TRIPGO_KEY)g.localStorage={getItem:k=>k==='cp_tripgo_key'?process.env.CP_TRIPGO_KEY:null,setItem(){},removeItem(){}};
 const feeds=new Map();
 async function feed(resource,dates){
  const key=resource.id;if(feeds.has(key))return feeds.get(key);
@@ -65,7 +64,7 @@ async function gtfsRows(axis,when){
  const NATIONAL='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
  const nationalGTFSResources=Object.fromEntries(['sncf','blablacarBus','flixbus','eurostar','trenitalia'].map(o=>[o,{url:NATIONAL+'national-'+o+'-aura.zip',format:'GTFS'}]));
  const providers=H.makeProviders(g,{fetcher,nationalGTFSResources});
- const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:providers.tripgo?.enabled?.()===true,axes:[],networks:{}};
+ const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgoRemoved:true,axes:[],networks:{}};
  for(const axis of [...C.AXES,...C.AXES_COUVERTURE.map(a=>({...a,coverage:true}))]){
   const started=Date.now();let firstAt=null;
   const task={label:'Diag',from:axis.from,to:axis.to,fromName:axis.from.name,toName:axis.to.name,
@@ -190,7 +189,7 @@ async function gtfsRows(axis,when){
  if(report.tripgo&&report.totals.tripgoJourneys>0&&report.totals.tripgoPriced===0)console.warn('::warning::TripGo fournit des trajets mais aucun de ces trajets ne possède un prix vérifié : contrôler les billets transmis par l’API.');
  report.router=router.stats?router.stats():null;
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
- const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo : ${report.tripgo?'oui':'non (pas de clé)'}.`,'',
+ const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo retiré du produit.`,'',
   `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables, ${report.totals.scheduled} en horaire programmé (officiel, marches et marge vérifiées, sans temps réel).**`,'',
   `**TripGo : ${report.totals.tripgoJourneys} trajets, ${report.totals.tripgoPriced} avec prix vérifié, ${report.totals.tripgoTicketLegs} portions avec billet chiffré.**`,'',
   'Portions TripGo sans prix par opérateur : '+(Object.entries(report.totals.tripgoMissingFareByOperator).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
