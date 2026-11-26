@@ -50,7 +50,18 @@ test('réel : dayScheduleForLeg retrouve les vrais départs du jour (TAO Orléan
   for(let i=1;i<rows.length;i++)assert.ok(rows[i].departureSeconds>=rows[i-1].departureSeconds);
   assert.equal(hub.hmFromSeconds(rows[0].departureSeconds),'06:35');
   // Rejoué : doit réutiliser le cache (réseau+jour), pas re-télécharger ni re-planter.
+  const originalIndexer=globalThis.CPGTFSIndex;
+  let repeatedScans=0;
+  globalThis.CPGTFSIndex={...originalIndexer,directTrips(...args){
+   repeatedScans++;
+   return originalIndexer.directTrips(...args);
+  }};
   const rows2=await hub.dayScheduleForLeg(raw);
+  assert.equal(repeatedScans,0);
+  const firstDeparture=rows2[0].departureSeconds;
+  rows[0].departureSeconds=0;
+  assert.equal((await hub.dayScheduleForLeg(raw))[0].departureSeconds,firstDeparture);
+  rows[0].departureSeconds=firstDeparture;
   assert.deepEqual(rows2,rows);
   assert.equal(cacheReads,1);
   assert.equal(network,0);

@@ -2688,17 +2688,24 @@ function scheduleLabel(value){
  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 }
+const daySchedulesByFeed=new WeakMap();
 async function dayScheduleForLeg(raw){
  if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
  const indexer=root.CPGTFSIndex;
  if(raw.routeId&&raw.from&&raw.to&&typeof indexer?.directTrips==='function'){
   const feed=await gtfsFeedForDaySchedule(raw);
   if(feed?.index){
+   let cache=daySchedulesByFeed.get(feed);
+   if(!cache){cache=new Map();daySchedulesByFeed.set(feed,cache);}
+   const key=JSON.stringify([raw.serviceDate,String(raw.routeId),String(raw.from),String(raw.to)]);
+   if(cache.has(key))return cache.get(key).map(row=>({...row}));
    const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
-   const rows=indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
+   const rows=uniqueDayScheduleRows(indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
     .filter(ride=>String(ride.routeId)===String(raw.routeId))
-    .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival)}));
-   return uniqueDayScheduleRows(rows);
+    .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival)})));
+   cache.set(key,rows);
+   if(cache.size>64)cache.delete(cache.keys().next().value);
+   return rows.map(row=>({...row}));
   }
  }
  const tables=await gtfsTablesForDaySchedule(raw);
