@@ -275,15 +275,19 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     $('pNon').onclick = () => { enregistrerPause('non', '19:00', '07:00'); $('feuille').hidden = true; toast('Toujours actif'); };
   }
 
+  let generationChargementMissions = 0;
   async function charger(silencieux) {
     if (!api?.connecte) return;
     if (silencieux && pauseActive()) return;   // V146 : heures de désactivation
+    const generation = ++generationChargementMissions;
     try {
       const [missions, alertes, reglages, factures] = await Promise.all([api.missions(), api.alertes(), api.reglages(), api.factures()]);
-      if (!api.connecte) return;
+      if (!api.connecte || generation !== generationChargementMissions) return;
       etat.facturesServeur = factures !== null; if (factures) etat.factures = factures;   // V96
-      try { etat.sources = await api.sourcesEtat(); } catch (_) { etat.sources = null; }   // V114
-      if (!api.connecte) return;
+      let sources = null;
+      try { sources = await api.sourcesEtat(); } catch (_) {}   // V114
+      if (!api.connecte || generation !== generationChargementMissions) return;
+      etat.sources = sources;
       const alertesNouv = seulesNouvelles(alertes);
       const avant = new Set(etat.alertes.map(a => a.id));
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
@@ -295,6 +299,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       etat.chargeLeDejaVu = true;
       if (!silencieux) toast('Missions à jour');
     } catch (e) {
+      if (generation !== generationChargementMissions) return;
       etat.erreur = String(e.message || e); majPastille();
       if (!api.connecte) return verrouillerEcran();
       if (!silencieux) toast('Hors connexion : dernières données affichées');
@@ -621,7 +626,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   const sugFiltrees = m => { const L = sugListe(m); const fin = Date.parse(m.delivery_end || m.delivery_start || ''); if (!L.length || !Number.isFinite(fin)) return L;
     const jourP = t => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(t)), jf = jourP(fin);
     const dureeMs = (z, x) => { const hx = Number(x && x.duree_h); if (Number.isFinite(hx) && hx > 0) return hx * 3600000; const s = String(z.t || '').split('|').map(q => q.trim()).find(q => /\d\s*(h|min)/i.test(q) && !/km/i.test(q)) || ''; const h = s.match(/(\d+)\s*h/i), mi = s.match(/(\d+)\s*min/i), h2 = s.match(/\bh\s*(\d+)/i); if (!h && !mi) return -1; return ((h ? +h[1] : 0) * 60 + (mi ? +mi[1] : (h2 ? +h2[1] : 0))) * 60000; };
-    return L.filter(z => { const x = etat.missions.find(y => y.platform === m.platform && String(y.external_id) === String(z.id)); if (!x) return false;
+    return L.filter(z => { const x = etat.missions.find(y => y.platform === m.platform && String(y.external_id) === String(z.id)); if (!estDisponible(x)) return false;
       const a = Date.parse(x.pickup_start || ''), b = Date.parse(x.pickup_end || x.pickup_start || ''); if (!Number.isFinite(a)) return false;
       if (jourP(a) > jf || (Number.isFinite(b) && jourP(b) < jf)) return false;
       const d = dureeMs(z, x), debut = Math.max(fin, a); if (d < 0) return jourP(a) === jf && jourP(debut) === jf; return jourP(debut + d) === jf; }); };
@@ -732,13 +737,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee' && !(x.platform === 'Hiflow' && x.status === 'annulee')).map(x => x.platform + '|' + x.external_id)); } return _accSet; };
   const clesDevis = () => { if (_devRef !== etat.missions) { _devRef = etat.missions; _devSet = new Set(etat.missions.filter(x => x && x.kind === 'disponible' && x.fees && x.fees.devis_numero).map(x => x.platform + '|' + x.external_id)); } return _devSet; };
   const devisAccepte = m => !!m && m.platform === 'Hiflow' && (m.kind === 'acceptee' || !!(m.fees && m.fees.devis_accepte === 1));   // V241 : toute mission Hiflow de l'Agenda vient d'un devis accepté
-  const estDisponible = m => { if (!m || m.kind !== 'disponible' || (m.status !== 'disponible' && !(m.status === 'plus_vue' && m.platform === 'Hiflow' && m.fees && m.fees.devis_numero))) return false;
+  const estDisponible = m => m?.status === 'disponible' && estSuiviDisponible(m);
+  const estSuiviDisponible = m => { if (!m || m.kind !== 'disponible' || (m.status !== 'disponible' && !(m.status === 'plus_vue' && m.platform === 'Hiflow' && m.fees && m.fees.devis_numero))) return false;
     if (clesAcceptees().has(m.platform + '|' + m.external_id) || (m.fees && m.fees.devis_accepte === 1)) return false;
     if (m.platform === 'Hiflow' && m.fees && Number(m.fees.devis_refuse) === 1) return false;   // devis refusé / expiré / annulé (marqué par le téléphone, APK 2.33)
     if (PLAQUE_VILLE.test(String(m.from_city || '')) || PLAQUE_VILLE.test(String(m.to_city || ''))) return false;
     const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || (m.pickup_text ? String(m.pickup_text).replace(' ', 'T') : '') || ''); return !(Number.isFinite(d) && d < Date.now()); };   // V123 : plus aucune marge — une mission dont l'heure est dépassée disparaît toute seule   // V122 : une mission DriiveMe dont la période est finie (ex. « ven. 09/10 00:00-23:59 » vue le 10/10) n'est plus disponible
   // V278 : filtre « Devis / acceptées » : missions disponibles avec devis envoyé + missions acceptées à venir
-  const listeDevis = (mode) => deLEdition(etat.missions).filter(m => { if (!m) return false; if (m.kind === 'disponible') return mode !== 'acceptees' && estDisponible(m) && !!(m.fees && m.fees.devis_numero); if (m.kind === 'acceptee') { if (mode === 'devis') return false; if (m.status === 'annulee' || m.status === 'terminee') return false; const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); } return false; });
+  const listeDevis = (mode) => deLEdition(etat.missions).filter(m => { if (!m) return false; if (m.kind === 'disponible') return mode !== 'acceptees' && estSuiviDisponible(m) && !!(m.fees && m.fees.devis_numero); if (m.kind === 'acceptee') { if (mode === 'devis') return false; if (m.status === 'annulee' || m.status === 'terminee') return false; const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); } return false; });
   const deliveryCarSource = () => (etat.sources || []).find(s => s.platform === 'DeliveryCar');
   function vueMissions() {
     const dispo = etat.missions.filter(estDisponible);
@@ -1535,7 +1541,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   // V78 : retours possibles après cette mission (toutes plateformes), estimés.
   function blocRetours(m) {
     const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
-    const res = RT.retours(m, etat.missions.filter(x => x.kind === 'disponible'), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
+    const res = RT.retours(m, etat.missions.filter(estDisponible), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
     // V223 : une mission « à la suite » doit pouvoir démarrer le MÊME JOUR que la fin de la mission précédente ; les jours suivants relèvent du Planning sur plusieurs jours
     const jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
     const jSrc = (res.finSource && res.finSource.t) ? jP(res.finSource.t) : (Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ? jP(Date.parse(m.delivery_end || m.delivery_start)) : '');
@@ -1566,7 +1572,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const estProche = x => x.retourDomicileKm != null && x.retourDomicileKm <= 50;   // V221 : « retour vers le domicile » = la mission arrive à 50 km ou moins du domicile
     if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
     // V159 : chaînage — pour chaque retour proposé, les suites possibles après lui (2 niveaux), avec distance et durée de liaison.
-    const dispoR = etat.missions.filter(z => z.kind === 'disponible');
+    const dispoR = etat.missions.filter(estDisponible);
     const suites = (src, deja, prof) => {
       if (prof > 2) return [];
       let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
@@ -3827,6 +3833,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   $('feuille').onclick = ev => { if (ev.target === $('feuille')) { stopGTFSTransports(); $('feuille').hidden = true; } };
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { stopGTFSTransports(); $('feuille').hidden = true; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') charger(true); });
+  window.addEventListener('online', () => { if (document.visibilityState === 'visible') charger(true); });
   setInterval(() => { if (document.visibilityState === 'visible') charger(true); }, 60000);
 
   if (location.hash === '#alertes') etat.onglet = 'alertes';
