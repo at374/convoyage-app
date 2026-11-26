@@ -351,16 +351,19 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  s.dispose();
 });
 
-test('cache des marches : partagé et persistant (stockage du téléphone), clés arrondies à ~10 m',async()=>{
+test('cache piéton v3 : conserve les coordonnées exactes et sépare les adresses proches',async()=>{
  const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
- const base=fakeRouter();const r1=H.cachedRouter(base,{storage});
- await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);// même point à 2 m près
- assert.equal(base.calls.length,1,'un seul appel Valhalla');
- const base2=fakeRouter();const r2=H.cachedRouter(base2,{storage});// nouvelle fiche
+ const base=fakeRouter(),r1=H.cachedRouter(base,{storage});
+ await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);
+ assert.equal(base.calls.length,2,'deux coordonnées distinctes exigent deux calculs');
+ const base2=fakeRouter(),r2=H.cachedRouter(base2,{storage});
  const x=await r2.route(STOP1,STOP2);
- assert.equal(base2.calls.length,0,'réutilisé depuis le stockage');assert.equal(x.status,'calculated');assert.equal(x.cached,true);
- const failing={route:async()=>({status:'unavailable'})};const r3=H.cachedRouter(failing,{storage:null});
- await r3.route(HOME,MISSION);assert.equal((await r3.route(HOME,MISSION)).status,'unavailable','un échec n’est pas mis en cache définitif');
+ assert.equal(base2.calls.length,0,'la route exacte est réutilisée');assert.equal(x.status,'calculated');assert.equal(x.cached,true);
+ const wrong={route:async()=>({status:'calculated',distanceMeters:100,durationSeconds:80,geometry:[STOP1,STOP2],endpointsMatched:false})};
+ const r3=H.cachedRouter(wrong,{storage:null});
+ await r3.route(STOP1,STOP2);assert.equal(r3.stats().stored,0,'une géométrie non alignée ne doit jamais entrer en cache');
+ const failing={route:async()=>({status:'unavailable'})},r4=H.cachedRouter(failing,{storage:null});
+ await r4.route(HOME,MISSION);assert.equal((await r4.route(HOME,MISSION)).status,'unavailable','un échec reste réessayable');
 });
 
 test('transport à la demande : information affichée seulement dans le secteur concerné',()=>{
