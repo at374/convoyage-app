@@ -230,6 +230,15 @@ test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en r
  assert.ok(app.includes("vit > 3"));
 });
 
+test('suivi GPS : le passage en arrière-plan ne détruit plus le watchPosition',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const block=app.slice(app.indexOf('function suiviMaj()'),app.indexOf('// Préparation à l\'avance (application ouverte)'));
+ assert.ok(block.includes('const actif = !suiviRefus && navigator.geolocation'));
+ assert.ok(!block.includes('!document.hidden && navigator.geolocation'));
+ assert.ok(block.includes('if (!document.hidden)'));
+ assert.ok(!block.includes('document.hidden && suiviWatch !== null'));
+});
+
 test('suivi arrivée : événements Google Maps / Waze lus via l’APK, validés par la position',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes('window.CPNatif; if (!N || typeof N.prendreNavigation'));
