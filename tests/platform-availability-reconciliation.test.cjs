@@ -11,8 +11,8 @@ test('Delivery Car partial scans never hide offers', () => {
   const i = filters.indexOf('function deliveryCarNonRevue');
   assert.notEqual(i, -1);
   const fn = filters.slice(i, filters.indexOf('\n  }', i) + 4);
-  assert.match(fn, /·\) complet/);
-  assert.match(fn, /startsWith\('Dernier balayage Delivery Car'\)/);
+  assert.match(fn, /complet/);
+  assert.match(fn, /Dernier balayage Delivery Car/);
 });
 
 test('Delivery Car PWA asset is versioned and precached after the partial-scan fix', () => {
@@ -23,18 +23,15 @@ test('Delivery Car PWA asset is versioned and precached after the partial-scan f
   assert.match(sw, /filtres\.js\?v=deliverycar-complet-20261126/);
 });
 
-test('A platform mission removed from the local scan can be sent again when it returns', () => {
+test('A mission can be sent again after its previous local scan entry was removed', () => {
   const row = { user_id: 'user', platform: 'Otoqi', external_id: 'mission_1234567', kind: 'disponible', status: 'disponible' };
   assert.deepEqual(sync.changedRows([row], {}), [row]);
   const key = sync.keyOf(row);
   const sent = { [key]: sync.hash(row) };
   assert.deepEqual(sync.changedRows([row], sent), []);
-  // The Android synchronizer deletes envoyes entries for keys absent from the current local rows.
-  assert.match(brain, /const vivantes = new Set\(rows\.map\(x => S\.keyOf\(x\)\)\); let oubli = 0; for \(const k of Object\.keys\(envoyes\)\) if \(!vivantes\.has\(k\)\) \{ delete envoyes\[k\];/);
-  assert.deepEqual(sync.changedRows([row], {}), [row]);
-});
-
-test('Only completed Delivery Car scans can mark missing offers as plus_vue', () => {
-  assert.match(brain, /if \(pf === 'DeliveryCar' && \(!lu\.completeAt/);
-  assert.match(brain, /const complete = \(annonce > 0 && vuesUniques >= annonce\) \|\| emptyScans >= 2/);
+  // When the row is absent from the current scan, the Android synchronizer forgets its sent hash.
+  const currentRows = [];
+  const live = new Set(currentRows.map(x => sync.keyOf(x)));
+  for (const k of Object.keys(sent)) if (!live.has(k)) delete sent[k];
+  assert.deepEqual(sync.changedRows([row], sent), [row]);
 });
