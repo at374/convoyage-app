@@ -816,3 +816,12 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Le test `tests/transport-mission-hub.test.cjs` est étendu : les 10 réseaux PACA/Occitanie/Nouvelle-Aquitaine et les 18 réseaux Pays de la Loire doivent tous s'activer dans leur emprise, charger leur ZIP déclaré et se désactiver hors zone.
 - Commit fournisseur : `2b3501de2f3d9181eb8cc78e4db7104370b1b006` ; commit test : `e60c7ea947495f14056bacbdd3c514f79bc8d8a1`.
 - Les réseaux sont désormais câblés dans le hub, mais les tests d'intégration et les recherches porte-à-porte réelles restent à confirmer par CI. Aucun statut « déployé » n'est ajouté à la carte et aucun déploiement Android/Web n'est revendiqué.
+
+
+## Session ChatGPT — raccordement des 92 flux IDFM (26/11/2026)
+
+- Les **92 extraits IDFM** du manifeste `data/gtfs/manifest.json`, tous dotés d'un ZIP et d'une emprise GPS non nulle, sont maintenant déclarés dans `makeProviders` du moteur des fiches mission.
+- Les fournisseurs reprennent le nom, le fichier ZIP et les limites GPS du manifeste. Cela couvre les réseaux territoriaux, les segments RATP par ligne et les extraits dédiés (dont tramways, métro, RER et Transilien selon le contenu effectivement filtré lors de la collecte). Les horaires restent théoriques; le raccordement au fournisseur n'établit ni circulation en temps réel, ni prix, ni correspondance piétonne validée.
+- Test ajouté dans `tests/transport-mission-hub.test.cjs` : il vérifie les 92 identifiants, l'enregistrement de chaque fournisseur, le chargement du fichier ZIP correspondant, l'activation dans l'emprise et le rejet hors emprise.
+- Commit du raccordement : `1631adf1fe6b145fd3b5c7d0929bf2efc59a40c3` ; commit du test : `cc6f6d8cf8c4d1eaa8b2c380c539234ea0a46e5c`.
+- Le raccordement est enregistré sur la branche de travail. Il reste à obtenir la CI verte et à tester des trajets réels de bout en bout (adresse GPS exacte, marche, horaires, correspondances et marge). Ne pas annoncer le déploiement Android/Web ou la carte publique avant ces validations.
