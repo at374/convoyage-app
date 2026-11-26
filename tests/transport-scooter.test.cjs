@@ -203,7 +203,7 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes("RAYON_ARRIVEE_M = 400"));
  assert.ok(app.includes("arriveeHiflow(original)"));
- assert.ok(app.includes("navigator.geolocation.watchPosition(suiviTraiter"));
+ assert.ok(app.includes("navigator.geolocation.getCurrentPosition(pos =>"));
  assert.ok(app.includes("MARGE_ARRIVEE_MIN * 60000"));
  assert.ok(app.includes("arriveeGps(key)"));
  assert.ok(app.includes("new CustomEvent('cp-arrivee'"));
@@ -216,6 +216,8 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
 test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en roulant',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  assert.ok(app.includes('suiviReprise ||'));
+ assert.ok(app.includes('suiviTimer = setTimeout(suiviMaj, 10 * 60000)'));
+ assert.ok(!app.includes('watchPosition(suiviTraiter'));
  assert.ok(app.includes("vit > 3"));
 });
 
