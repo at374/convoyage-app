@@ -148,8 +148,12 @@
   // Côté d'une mission : 'origin' (départ) ou 'destination' (arrivée).
   function departementMission(m, cote) {
     const pre = cote === 'origin' ? 'from' : 'to';
-    return codeDepartement(m[pre + '_department']) || departementDuCodePostal(cpDans(m[cote + '_address']) || (m[cote] && m[cote].postal_code) || '') ||
-      (trouverVille(m[pre + '_city']) || {}).dep || null;
+    const p = m[cote] || (cote === 'origin' ? (m.pickup || m.pickup_location) : (m.dropoff || m.delivery || m.dropoff_location)) || {};
+    const a = cote === 'origin'
+      ? (m.origin_address || m.from_address || m.pickup_address || p.address || p.street)
+      : (m.destination_address || m.to_address || m.delivery_address || m.dropoff_address || p.address || p.street);
+    return codeDepartement(m[pre + '_department']) || departementDuCodePostal(cpDans(a) || p.postal_code || p.zip || m[pre + '_postal_code'] || '') ||
+      (trouverVille(m[pre + '_city'] || p.city) || {}).dep || null;
   }
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
@@ -265,7 +269,9 @@
   // Vrai si le point (lat,lng) est (à 400 m près) le centre de la commune de la mission alors qu'une adresse de rue est indiquée.
   function centreCommune(m, cote, lat, lng) {
     const x = adresseDe(m, cote); if (!x.a || x.a.length < 4) return false;
-    const pre = cote === 'origin' ? 'from' : 'to', v = trouverVille(m[pre + '_city'] || (m[cote] && m[cote].city), departementMission(m, cote));
+    const pre = cote === 'origin' ? 'from' : 'to';
+    const p = m[cote] || (cote === 'origin' ? (m.pickup || m.pickup_location) : (m.dropoff || m.delivery || m.dropoff_location)) || {};
+    const v = trouverVille(m[pre + '_city'] || p.city, departementMission(m, cote));
     if (!v || !Number.isFinite(v.lat) || !Number.isFinite(v.lng)) return false;
     const R = 6371, rad = z => z * Math.PI / 180, dLat = rad(lat - v.lat), dLng = rad(lng - v.lng);
     const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(v.lat)) * Math.cos(rad(lat)) * Math.sin(dLng / 2) ** 2;
