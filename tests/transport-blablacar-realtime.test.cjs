@@ -47,7 +47,7 @@ test('conflicting same-time versions are ambiguous instead of choosing an arbitr
 });
 test('concurrent operator checks share a download and cancellation preserves remaining consumers',async()=>{
  let count=0,finish,networkSignal;const client=rt.createClient({now:()=>clock,fetcher:async(url,init)=>{
-  assert.equal(url,rt.ENDPOINT);assert.equal(init.credentials,'omit');assert.equal(init.referrerPolicy,'no-referrer');assert.equal(init.headers['X-TripGo-Key'],undefined);
+  assert.equal(url,rt.ENDPOINT);assert.equal(init.credentials,'omit');assert.equal(init.referrerPolicy,'no-referrer');assert.equal(init.headers['X-Client-Secret'],undefined);
   count++;networkSignal=init.signal;return new Promise(resolve=>{finish=()=>resolve(new Response(JSON.stringify(copy())));});
  }});
  const a=new AbortController(),b=new AbortController(),first=client.check(journey(),options,{signal:a.signal}),second=client.check(journey(),options,{signal:b.signal});
