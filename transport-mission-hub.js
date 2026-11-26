@@ -1190,11 +1190,8 @@ function makeProviders(r,opts={}){
        Date.parse(dateParts(earliest).date+'T23:59:59Z'));
      if(!Number.isFinite(earliest)||!Number.isFinite(latest)||earliest>latest)return [];
      const start=dateParts(earliest),end=dateParts(latest);
-     let serviceDate=start.date;
-     // Only roll back the service day when a real previous-mission departure bound
-     // is before 06:00. An arrival-only search must still include same-day morning services.
-     if(Number.isFinite(ms(task.earliestDeparture))&&Number(start.clock.slice(0,2))<6)
-      serviceDate=shiftDate(serviceDate,-1);
+     const beforeSix=Number.isFinite(ms(task.earliestDeparture))&&Number(start.clock.slice(0,2))<6;
+     const serviceDate=beforeSix?shiftDate(start.date,-1):start.date;
      const endDate=end.date,connectionDates=[];
      for(let day=serviceDate;day<=endDate;day=shiftDate(day,1)){
       connectionDates.push(day);
@@ -1208,11 +1205,23 @@ function makeProviders(r,opts={}){
        loadFederationFeed(pair.b,connectionDates,signal)
       ]);
       if(signal?.aborted)return [];
-      const result=r.CPGTFSFederation.crossNetworkTrips([first,second],serviceDate,pair.from,pair.to,window,{
-       connectionDates,radiusMeters:700,transferRadiusMeters:150,minTransferMinutes:5,maxWaitMinutes:120,
-       maxLegs:5000,maxPairs:3000,maxJourneys:60,maxStopLookups:120
-      });
-      const rows=(result.journeys||[]).map(row=>({...row,network:row.network||pair.a[1]+' → '+pair.b[1]}));
+      // Before 06:00, some operators publish the same early service against the
+      // previous service day (28:xx), while others publish it against the calendar
+      // day (04:xx). Search both origins; the GTFS index decides which is active.
+      const originServiceDates=beforeSix?[serviceDate,start.date]:[serviceDate];
+      const found=originServiceDates.map(day=>r.CPGTFSFederation.crossNetworkTrips(
+       [first,second],day,pair.from,pair.to,window,{
+        connectionDates,radiusMeters:700,transferRadiusMeters:150,minTransferMinutes:5,maxWaitMinutes:120,
+        maxLegs:5000,maxPairs:3000,maxJourneys:60,maxStopLookups:120
+       }));
+      const truncated=found.some(result=>result.searchTruncated);
+      const unique=new Map();
+      for(const result of found)for(const row of result.journeys||[]){
+       const key=JSON.stringify([row.tripId,row.departure,row.arrival,row.transferStopId]);
+       if(!unique.has(key))unique.set(key,row);
+      }
+      const rows=[...unique.values()].map(row=>({...row,searchTruncated:truncated,
+       network:row.network||pair.a[1]+' → '+pair.b[1]}));
       return fromGTFS(rows,'Correspondance inter-réseaux').slice(0,8);
      }catch(error){
       if(signal?.aborted)return [];
