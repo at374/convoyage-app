@@ -85,7 +85,7 @@ function directCandidates(files,index,date,origins,destinations){
     found.add(end.stop_id);
     const arrival=minutes(end.arrival_time);
     if(arrival===null||arrival<minutes(start.departure_time)||!regularAccess(end.drop_off_type))continue;
-    journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',date,
+    journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',routeType:Number(route.route_type),date,
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
      serviceScheduled:true,serviceConfirmed:false,
      exactOrigin:false,exactDestination:false,accessVerified:false,priceEUR:null});
@@ -160,7 +160,7 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
     const arrivalMinutes=minutes(end.arrival_time);
     if(arrivalMinutes===null||Math.round(arrivalMinutes*60)>maxArrivalSeconds||arrivalMinutes<departureMinutes||
        !(Number(end.stop_sequence)>Number(start.stop_sequence))||!regularAccess(end.drop_off_type)||start.stop_id===end.stop_id)continue;
-    const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',
+    const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',routeType:Number(route.route_type),
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
      departureMinutes,arrivalMinutes,serviceConfirmed:false};
     if(fromOrigin&&!add(firstByStop,{...leg,toTransfer:end.stop_id}))break trips;
