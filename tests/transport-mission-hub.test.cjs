@@ -835,3 +835,32 @@ test('correspondance au même arrêt : deux minutes sont rejetées, cinq minutes
  assert.match(two.statusDetail,/correspondance trop courte/);
  assert.doesNotMatch(five.statusDetail,/correspondance trop courte/,'5 minutes ne doivent pas déclencher le blocage de correspondance');
 });
+
+
+
+test('marche Valhalla calculée mais extrémité hors tolérance : ne valide jamais l’adresse exacte',async()=>{
+ const router={route:async(a,b)=>({status:'calculated',distanceMeters:2700,durationSeconds:2234,
+  from:{...a},to:{...b},geometry:[a,b],endpointsMatched:false,startGapMeters:0,endGapMeters:17})};
+ const task={label:'Aller',from:HOME,to:MISSION,toName:'Rue Louis Armand, Voiron',toPrecision:'rue',
+  latestArrival:at(9,0),marginMinutes:15};
+ const j={source:'GTFS',legs:[bus(at(8,0),at(8,30),STOP1,STOP2)],missing:[]};
+ const done=await H.completeWalks(j,task,router);
+ assert.equal(done.legs.some(l=>l.kind==='walk'),false,'une géométrie qui termine à 17 m ne doit pas être ajoutée');
+ const assessed=H.assess(done,task,null);
+ assert.equal(assessed.feasible,false);
+ assert.match(assessed.statusDetail,/marche jusqu’à l’adresse exacte d’arrivée non calculée/);
+});
+
+test('cache piéton : ne conserve pas une géométrie dont les extrémités ne correspondent pas',async()=>{
+ const memory=new Map();
+ const storage={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)};
+ const router={route:async(a,b)=>({status:'calculated',distanceMeters:2700,durationSeconds:2234,
+  from:{...a},to:{...b},geometry:[a,b],endpointsMatched:false})};
+ const cached=H.cachedRouter(router,{storage,key:'test_exact_endpoints'});
+ const first=await cached.route(HOME,MISSION);
+ assert.equal(first.endpointsMatched,false);
+ assert.equal(cached.stats().stored,0,'route non concordante non mise en cache');
+ const second=await cached.route(HOME,MISSION);
+ assert.equal(second.endpointsMatched,false);
+ assert.equal(cached.stats().misses,2,'route non concordante doit être retentée, pas réutilisée comme valide');
+});
