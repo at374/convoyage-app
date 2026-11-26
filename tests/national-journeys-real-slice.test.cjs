@@ -72,7 +72,8 @@ const marseille={lat:43.303,lon:5.380};
 for(const [slug,bounds,from,to] of [
  ['paris-lyon',[45.55,2.15,49.05,5.45],{lat:48.8443,lon:2.373},lyon],
  ['lyon-marseille',[43.10,3.65,46.15,5.85],lyon,marseille],
- ['paris-marseille',[43.10,2.15,49.05,5.85],{lat:48.8443,lon:2.373},marseille]
+ ['paris-marseille',[43.10,2.15,49.05,5.85],{lat:48.8443,lon:2.373},marseille],
+ ['marseille-toulouse',[43.05,1.25,44.25,5.65],marseille,{lat:43.611,lon:1.454}]
 ]){
 test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet',async()=>{
  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
@@ -114,6 +115,14 @@ test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet
     const reverse={...task,from:to,to:from};
     assert.equal(corridor.enabled(reverse),true);
     assert.ok((await corridor.run(reverse)).length>0,operator+' Marseille → Paris');
+   }
+   if(slug==='marseille-toulouse'){
+    const reverse={...task,from:to,to:from};
+    assert.equal(corridor.enabled(reverse),true);
+    for(const [direction,candidates] of [[task,trips],[reverse,await corridor.run(reverse)]]){
+     assert.ok(candidates.some(candidate=>candidate.legs.length===1&&
+      !hub.assess(candidate,direction,()=>null).reasons.some(reason=>reason.includes('hors plage de jour'))),operator);
+    }
    }
    for(const leg of trip.legs){
     const source=hub.scheduleSourceForLeg(leg);
