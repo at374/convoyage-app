@@ -1,8 +1,8 @@
 {
   "operator": "sncf",
   "file": "national-sncf-aura.zip",
-  "sha256": "f8bf85ab4a3b386d118a4d8596e579a5b728a50a5895a902ffce5ff4c2751bea",
-  "bytes": 864100,
+  "sha256": "2e05b2d92db997ccb1f5b5e76578b9012429c5daf20ad686e70ed5068e54c1ba",
+  "bytes": 859797,
   "bounds": [
     44.0,
     3.6,
@@ -10,18 +10,20 @@
     7.4
   ],
   "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
-  "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
+  "scope": "Static GTFS slice for aura; no live ticket prices or seat availability",
   "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": false,
   "details": {
     "routes": 153,
-    "trips": 9427,
-    "stops": 1332,
+    "trips": 9372,
+    "stops": 1331,
     "fares": false,
     "bounds": [
       44.0,
       3.6,
       46.7,
       7.4
-    ]
+    ],
+    "lastServiceDate": "2027-04-30"
   }
 }

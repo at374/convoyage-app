@@ -1,7 +1,7 @@
 {
   "operator": "blablacarBus",
   "file": "national-blablacarBus-paris-marseille.zip",
-  "sha256": "657aac0d523a9fa30fb77259a5ed2c6c99fec77e4304746f9aec39d413626bed",
+  "sha256": "213d19be431e3c69874f5f21ab2c0e1ee58db871efe854ce2fa8df7b3ae70784",
   "bytes": 101967,
   "bounds": [
     43.1,
@@ -23,6 +23,7 @@
       2.15,
       49.05,
       5.85
-    ]
+    ],
+    "lastServiceDate": "2027-01-05"
   }
 }

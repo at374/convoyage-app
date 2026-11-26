@@ -1,7 +1,7 @@
 {
   "operator": "flixbus",
   "file": "national-flixbus-aura.zip",
-  "sha256": "3606442573442d1806beef6e9bcc6b5b3e498a6914e9679b541fc17ecd708d98",
+  "sha256": "52e4cff082769fc0fd4f2a5e066c6471bc3167e520f39b850885ba40f72b59bb",
   "bytes": 145415,
   "bounds": [
     44.0,
@@ -10,8 +10,9 @@
     7.4
   ],
   "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
-  "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
+  "scope": "Static GTFS slice for aura; no live ticket prices or seat availability",
   "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": false,
   "details": {
     "routes": 122,
     "trips": 2404,
@@ -22,6 +23,7 @@
       3.6,
       46.7,
       7.4
-    ]
+    ],
+    "lastServiceDate": "2027-05-22"
   }
 }

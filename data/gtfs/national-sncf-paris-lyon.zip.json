@@ -1,8 +1,8 @@
 {
   "operator": "sncf",
   "file": "national-sncf-paris-lyon.zip",
-  "sha256": "c18c432356497a5a4231a9701924af06a0a0bd7542c5346b4e1eb4eabec06a53",
-  "bytes": 887623,
+  "sha256": "6f2e7cb82c24b37d62657efedc8749e1f643e796dd74b03d06ef140e4e1d6218",
+  "bytes": 887310,
   "bounds": [
     45.55,
     2.15,
@@ -11,17 +11,19 @@
   ],
   "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
   "scope": "Static GTFS slice for paris-lyon; no live ticket prices or seat availability",
-  "excludedOutOfRegionDetourTrips": 539,
+  "excludedOutOfRegionDetourTrips": 546,
+  "keepsCompleteTrips": false,
   "details": {
     "routes": 220,
-    "trips": 11348,
-    "stops": 1243,
+    "trips": 11358,
+    "stops": 1246,
     "fares": false,
     "bounds": [
       45.55,
       2.15,
       49.05,
       5.45
-    ]
+    ],
+    "lastServiceDate": "2027-04-30"
   }
 }

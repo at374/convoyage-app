@@ -1,7 +1,7 @@
 {
   "operator": "sncf",
   "file": "national-sncf-paris-marseille.zip",
-  "sha256": "c33b53cb7594186efcb23c7a1f6cb66d42b632f1cfd5a5d2f0aa0243121a8c3e",
+  "sha256": "bebc16b39cb2df0b6e4a2ad99b108d936f58ac93207814f2acd39c43e8e346c3",
   "bytes": 1816854,
   "bounds": [
     43.1,
@@ -23,6 +23,7 @@
       2.15,
       49.05,
       5.85
-    ]
+    ],
+    "lastServiceDate": "2027-04-30"
   }
 }

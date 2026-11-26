@@ -1,7 +1,7 @@
 {
   "operator": "flixbus",
   "file": "national-flixbus-paris-marseille.zip",
-  "sha256": "2f9c708e679c9265965b49ed38794e4698af6b4e30d59548b8027c916e97efbe",
+  "sha256": "0fe89d003534aa05721d6480692d53fc6e53c38d7700efe6322f0f6d31b47493",
   "bytes": 632944,
   "bounds": [
     43.1,
@@ -23,6 +23,7 @@
       2.15,
       49.05,
       5.85
-    ]
+    ],
+    "lastServiceDate": "2027-05-22"
   }
 }

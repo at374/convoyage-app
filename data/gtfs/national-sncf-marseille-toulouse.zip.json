@@ -1,7 +1,7 @@
 {
   "operator": "sncf",
   "file": "national-sncf-marseille-toulouse.zip",
-  "sha256": "cf5f4df4a7742e2fb1ec7e03f3e2593b71988b8bdbcbf2c83e9a0bfd95d4ad52",
+  "sha256": "55e6a2a3eef3134bb0fe19fb0084d416efd7a7a969ce9341a9ca21e8955b0ffa",
   "bytes": 707066,
   "bounds": [
     43.05,
