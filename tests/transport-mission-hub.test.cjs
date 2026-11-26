@@ -299,18 +299,18 @@ test('trois niveaux : horaire GTFS complet = « Horaire programmé », jamais «
  const r2=H.rank([broken,sched]);assert.equal(r2.picks.find(p=>p.labels.includes('Plus rapide')).journey.scheduled,true,'programmé classé avant non confirmé');
 });
 
-test('correspondance GTFS : ≥ 10 min programmées = réserve à confirmer ; plus courte = bloquante',()=>{
+test('correspondance GTFS : 5 min programmées = réserve à confirmer ; moins de 5 min = bloquante',()=>{
  const A={stop_name:'A',lat:45.90,lon:6.12},T={stop_name:'T',lat:45.80,lon:6.00},B={stop_name:'B',lat:45.76,lon:4.86};
  const row=(arr1,dep2)=>({operator:'sncf',date:'2026-11-16',originStop:A,destinationStop:B,transferStop:T,departure:'08:00',arrival:'10:00',
   legs:[{line:'K1',departure:'08:00',arrival:arr1},{line:'K2',departure:dep2,arrival:'10:00'}]});
- const long=H.fromNationalGTFS([row('08:40','08:55')],'sncf')[0],short=H.fromNationalGTFS([row('08:40','08:44')],'sncf')[0];
- assert.equal(long.legs[0].gtfsRaw.operator,'sncf');
- assert.equal(long.legs[0].gtfsRaw.networkId,'national:sncf');
- assert.equal(long.legs[0].gtfsRaw.date,'2026-11-16');
- assert.ok(long.missing.includes('correspondance programmée non confirmée en temps réel'));
+ const five=H.fromNationalGTFS([row('08:40','08:45')],'sncf')[0],short=H.fromNationalGTFS([row('08:40','08:44')],'sncf')[0];
+ assert.equal(five.legs[0].gtfsRaw.operator,'sncf');
+ assert.equal(five.legs[0].gtfsRaw.networkId,'national:sncf');
+ assert.equal(five.legs[0].gtfsRaw.date,'2026-11-16');
+ assert.ok(five.missing.includes('correspondance programmée non confirmée en temps réel'));
  assert.ok(short.missing.includes('correspondance GTFS non confirmée'));
  const task={from:{lat:A.lat,lon:A.lon},to:{lat:B.lat,lon:B.lon},earliestDeparture:'2026-11-16T06:00:00Z'};
- assert.equal(H.assess(long,task,null).scheduled,true);assert.equal(H.assess(short,task,null).scheduled,false);
+ assert.equal(H.assess(five,task,null).scheduled,true);assert.equal(H.assess(short,task,null).scheduled,false);
 });
 
 test('classement : un horaire programmé plus rapide passe devant un réalisable plus lent ; à égalité le réalisable gagne',()=>{
