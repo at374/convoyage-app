@@ -988,7 +988,7 @@ test('fédération GTFS : fixture Sibra Annecy vers M Réso Voironnais via makeP
    'stops.txt':side==='first'
     ?'stop_id,stop_name,stop_lat,stop_lon\nA,Annecy Gare,45.9000,6.1200\nX,Arrêt correspondance,45.5000,5.7000'
     :'stop_id,stop_name,stop_lat,stop_lon\nX,Arrêt correspondance,45.5005,5.7005\nB,Voiron Gare,45.3600,5.5900',
-   'routes.txt':'route_id,agency_id,route_short_name\nR,A,'+network,
+   'routes.txt':'route_id,agency_id,route_short_name,route_type\nR,A,'+network+',3',
    'trips.txt':'trip_id,route_id,service_id\nT,R,S',
    'stop_times.txt':side==='first'
     ?'trip_id,stop_id,stop_sequence,arrival_time,departure_time\nT,A,1,09:00:00,09:00:00\nT,X,2,10:00:00,10:00:00'
