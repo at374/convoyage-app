@@ -798,3 +798,12 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Test ajouté dans `tests/transport-mission-hub.test.cjs` : les 22 entrées du manifeste doivent être présentes, s'activer à l'intérieur de leur emprise, charger le ZIP correspondant et rester désactivées hors zone.
 - Commit fournisseur : `fe94426951f7aa2a71e3a245f2b305138fcae3ef` ; commit du test : `e6dcae1b044ee35db3eeadf4305c4a16d8c5f8ee`.
 - La CI diagnostic transports surveille `transport-mission-hub.js` et doit se déclencher sur le push. Au moment de cette note, le connecteur ne retourne encore aucun statut combiné ni run de workflow associé : **le test n'est pas déclaré exécuté ni réussi**. Les 22 fournisseurs sont câblés dans le code, mais ne sont pas encore certifiés en trajet porte-à-porte réel et ne doivent pas être annoncés comme déployés sur Android/Web ou sur la carte publique.
+
+
+## Session ChatGPT — raccordement PACA, Occitanie et Nouvelle-Aquitaine (26/11/2026)
+
+- Après les 22 fournisseurs terrestres Bretagne, le hub de fiches mission reçoit 10 autres fournisseurs à partir des ZIP présents dans le manifeste national : ZOU Proximité, ZOU Express Bus, Lignes d’Azur Nice, Réseau Mistral Toulon, Téléphérique du Faron, liO cars interurbains, Tisséo Toulouse, TaM Montpellier, Tango Nîmes et Cars Région Nouvelle-Aquitaine.
+- Les emprises GPS, noms et fichiers sont repris directement de `data/gtfs/manifest.json`; les limites d’activation restent celles du fournisseur GTFS commun. Les flux ferroviaires déjà traités par SNCF ne sont pas réintroduits dans ces fournisseurs régionaux. Les tarifs restent inconnus lorsqu’aucune table officielle exploitable n’est présente; aucune disponibilité temps réel ni réservation TAD n’est déduite du seul horaire théorique.
+- Test ajouté dans `tests/transport-mission-hub.test.cjs` : pour chacun des 10 réseaux, le fournisseur doit être présent, s’activer dans son emprise, charger le fichier du manifeste et refuser un point hors zone.
+- Commit du raccordement : `7bccb4a60da2ae06efe333d32aee6238df54bad6` ; commit des tests : `73e55db591a9dac60d21a095958c162e3fe9ec3c`.
+- Comme pour la tranche Bretagne, les modifications sont enregistrées sur `feature/transports-aura-suisse`, mais les tests locaux et la CI distante ne sont pas encore confirmés par cette session. Ces 10 fournisseurs sont donc **câblés dans le code, non certifiés en trajet porte-à-porte**. Aucun déploiement Android/Web ni mise à jour de carte n’est revendiqué.
