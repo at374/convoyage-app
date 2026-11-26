@@ -1,0 +1,23 @@
+name: DriiveMe rotation and stale-mission purge
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/driiveme-sync-deploy/**'
+      - 'tests/driiveme-rotation-purge.test.cjs'
+      - '.github/workflows/test-driiveme-rotation-purge.yml'
+  pull_request:
+    paths:
+      - 'server/driiveme-sync-deploy/**'
+      - 'tests/driiveme-rotation-purge.test.cjs'
+      - '.github/workflows/test-driiveme-rotation-purge.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --check server/driiveme-sync-deploy/driiveme-sync.cjs
+      - run: node --test tests/driiveme-rotation-purge.test.cjs
