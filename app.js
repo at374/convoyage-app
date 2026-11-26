@@ -1959,7 +1959,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           return true;
         };
         const surArrivee = ev => { if (!panel.isConnected) { document.removeEventListener('cp-arrivee', surArrivee); return; } if (ev.detail && ev.detail.key === transportPlanKey) { document.removeEventListener('cp-arrivee', surArrivee); suivreHorloge(); } };
-        if (typeof document.addEventListener === 'function') document.addEventListener('cp-arrivee', surArrivee);
+        if (typeof document.addEventListener === 'function') {
+          document.addEventListener('cp-arrivee', surArrivee);
+          const surApprocheLivraison = ev => {
+            if (!panel.isConnected) { document.removeEventListener('cp-livraison-approche',surApprocheLivraison); return; }
+            if (ev.detail && ev.detail.key === transportPlanKey) suivreHorloge();
+          };
+          document.addEventListener('cp-livraison-approche',surApprocheLivraison);
+          panel.addEventListener('DOMNodeRemoved',()=>document.removeEventListener('cp-livraison-approche',surApprocheLivraison),{once:true});
+        }
         // Mission en cours (de 2 h avant la prise en charge jusqu'à 6 h après la livraison prévue) ou arrivée détectée : le parcours est actualisé toutes les 5 min (trajet aller, jonction, retour).
         // 22/11/2026 (Laurent : « Y51 après 13h01 s'affiche puis se fige puis disparaît ») : ce rafraîchissement
         // relance un rendu complet de la fiche (detail()) PUIS toute la recherche transport (clic simulé sur
