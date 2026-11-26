@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['mobivie',['MobiVie Vichy','mobivie-vichy']],
  ['t2c',['T2C (Clermont Auvergne Métropole)','t2c-clermont']],
  ['ondea',['Ondéa Aix-les-Bains (Grand Lac)','ondea-aix-les-bains',true]],
  ['citea',['Citéa (Valence Romans Mobilités)','citea-valence']],
@@ -1392,7 +1393,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['star_roanne', "Star Roanne", 'star-roanne.zip', [45.96,3.78,46.22,4.26]],
  ['lebus', "Le Bus Tain-Tournon", 'lebus-tain-tournon.zip', [44.99,4.52,45.16,5.07]],
  ['smtut', "SMTUT Thiers", 'smtut-thiers.zip', [45.69,3.36,46.03,3.74]],
- ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
+ ['mobivie', "MobiVie Vichy", 'mobivie-vichy-gtfs-rt.zip', [46.06,3.37,46.17,3.49]],
  ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
  // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
  // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel avant câblage. stas/t2c :
@@ -3239,6 +3240,8 @@ function card(doc,j,labels,expanded=false,task=null){
 }
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
 const TAD=[
+ {name:'MobiVie sur Mesure (Vichy Communauté)',bounds:[46.06,3.37,46.17,3.49],url:'https://www.vichy-communaute.fr/transport-la-demande/',
+  phone:'04 15 98 20 80',note:'Sous réserve d’éligibilité du domicile et d’adhésion préalable. Réservation obligatoire au plus tard la veille avant 12 h. La prise en charge et son horaire sont à confirmer auprès de l’opérateur.'},
  {name:'Flexi (Synchro mobilités, Grand Chambéry)',bounds:[45.45,5.75,45.65,6.15],url:'https://synchro.grandchambery.fr/',note:'Réservation obligatoire par téléphone (04 79 68 73 73), application ou site. Préavis : à vérifier auprès de l’opérateur.',bookingUrl:'https://synchro.grandchambery.fr/',phone:'04 79 68 73 73'},
  {name:'Cars Région Y92 / Y93 / Y94 à la demande (Cluses – Taninges – Morzine / Praz de Lys / Sixt)',bounds:[46.02,6.50,46.22,6.78],url:'https://www.laregionvoustransporte.fr/',phone:'04 8000 7000',note:'⚠️ à réserver 24 h à l’avance (la veille avant 16 h), 48 h ou plus pour un lundi (réserver le vendredi avant 16 h), 📞 numéro à appeler : 04 8000 7000 ; seuls les horaires de la fiche de ligne existent'},
  {name:'Mobéa (Ondéa Grand Lac)',bounds:[45.65,5.75,45.85,6.05],url:'https://www.ondeagrandlac.fr/',note:'Réservation obligatoire. Préavis et disponibilité à confirmer auprès de l’opérateur.',bookingUrl:'https://www.ondeagrandlac.fr/'}

@@ -81,6 +81,11 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'mobivie-vichy-gtfs-rt', 'network': 'MobiVie Vichy',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/c087ca61-f4db-44b2-bdc1-ec221c2bf762',
+     'bounds': [46.06, 3.37, 46.17, 3.49], 'keep_complete_trips': True,
+     'route_ids': {'A', 'B', 'C', 'D', 'E', 'G', 'H', 'I'}},
+
     # Le SAEIV partage les identifiants GTFS-RT. Garder les dix lignes régulières
     # déjà couvertes, sans ajouter les circuits scolaires de cette archive mixte.
     {'id': 'rubis-bourg-gtfs-rt', 'network': 'Rubis Bourg-en-Bresse',
