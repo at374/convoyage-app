@@ -1054,5 +1054,6 @@ test('normalisation GTFS conserve les modes de ligne et écarte toutes les caté
   assert.equal(journeys[0].legs[0].mode,expected,'type GTFS '+type);
  }
  for(const type of [4,1000,1200,1502])assert.equal(H.fromGTFS([row(type)]).length,0,'bateau GTFS '+type);
+ assert.equal(H.fromGTFS([row(null)])[0].legs[0].mode,'Transport','un type absent reste non classé plutôt que Tram');
 });
 
