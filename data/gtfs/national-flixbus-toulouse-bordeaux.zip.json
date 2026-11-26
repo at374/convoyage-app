@@ -1,0 +1,29 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-toulouse-bordeaux.zip",
+  "sha256": "2b965c3797051fbf1a63fc7b9988bcbdf84069d55390e27ec8138f4f9d2caee3",
+  "bytes": 78293,
+  "bounds": [
+    43.45,
+    -0.85,
+    45.02,
+    1.7
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for toulouse-bordeaux; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 35,
+    "trips": 602,
+    "stops": 114,
+    "fares": false,
+    "bounds": [
+      43.45,
+      -0.85,
+      45.02,
+      1.7
+    ],
+    "lastServiceDate": "2027-05-22"
+  }
+}
