@@ -39,13 +39,15 @@ test('Mobilités M réel (fixture 30/10) : réseau M Réso, arrêts géolocalis�
  assert.equal(ride.provider,'M Réso - Métropole Grenobloise');assert.ok(ride.fromPoint&&ride.toPoint);assert.equal(ride.line,'C1');
 });
 
-test('Valhalla réel (fixture 30/10) accepté comme marche calculée',async()=>{
+test('Valhalla réel (fixture 30/10) : géométrie décalée de plus de 10 m refusée pour une adresse exacte',async()=>{
  const [a,b]=valhallaFixture.request.locations;
  const route=W.validateValhalla(valhallaFixture.response,a,b);
- const j={source:'x',sources:['x'],legs:[{...bus(at(8,0),at(8,30),{lat:b.lat,lon:b.lon},STOP2),kind:'transit'}].map(l=>({...l,fromPoint:{lat:b.lat,lon:b.lon}}))};
+ assert.equal(route.endpointsMatched,false,'la fixture finit à plus de 10 m du point GPS demandé');
+ assert.ok(route.endGapMeters>10&&route.endGapMeters<=50);
+ const j={source:'x',sources:['x'],legs:[{...bus(at(8,0),at(8,30),{lat:b.lat,lon:b.lon},STOP2),kind:'transit',fromPoint:{lat:b.lat,lon:b.lon}}]};
  const router={route:async()=>route};
  const done=await H.completeWalks(j,{from:a,to:STOP2},router);
- assert.equal(done.legs[0].kind,'walk');assert.equal(done.legs[0].walkSource,'valhalla');assert.equal(done.legs[0].distanceMeters,260);
+ assert.equal(done.legs.some(l=>l.kind==='walk'),false,'ne pas présenter une marche approximative comme accès GPS exact');
 });
 
 test('Suisse : sections walk retirées, bateaux exclus, retards conservés',()=>{
@@ -352,7 +354,7 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  // Les 8 premiers ont une marche impossible (arrêt inaccessible) ; les suivants sont réalisables.
  const BAD={lat:45.9500,lon:6.1300};
  const router={calls:0,route:async(a,b)=>{router.calls++;if(Math.abs(a.lat-BAD.lat)<1e-6||Math.abs(b.lat-BAD.lat)<1e-6)return {status:'unavailable'};
-  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b]};}};
+  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b],endpointsMatched:true};}};
  const js=[];for(let i=0;i<8;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i),at(7,i+20),BAD,STOP2,{line:'K'+i})]});
  for(let i=0;i<6;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,30+i),at(7,50+i),STOP1,STOP2,{line:'G'+i})]});
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
@@ -363,14 +365,14 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  s.dispose();
 });
 
-test('cache des marches : partagé et persistant (stockage du téléphone), clés arrondies à ~10 m',async()=>{
+test('cache des marches : partagé et persistant ; adresses GPS distinctes non fusionnées',async()=>{
  const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
  const base=fakeRouter();const r1=H.cachedRouter(base,{storage});
- await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);// même point à 2 m près
- assert.equal(base.calls.length,1,'un seul appel Valhalla');
+ await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);// point déplacé d'environ 2 m : nouveau calcul
+ assert.equal(base.calls.length,2,'deux coordonnées distinctes exigent deux appels Valhalla');
  const base2=fakeRouter();const r2=H.cachedRouter(base2,{storage});// nouvelle fiche
  const x=await r2.route(STOP1,STOP2);
- assert.equal(base2.calls.length,0,'réutilisé depuis le stockage');assert.equal(x.status,'calculated');assert.equal(x.cached,true);
+ assert.equal(base2.calls.length,0,'la route aux coordonnées exactes est réutilisée depuis le stockage');assert.equal(x.status,'calculated');assert.equal(x.cached,true);
  const failing={route:async()=>({status:'unavailable'})};const r3=H.cachedRouter(failing,{storage:null});
  await r3.route(HOME,MISSION);assert.equal((await r3.route(HOME,MISSION)).status,'unavailable','un échec n’est pas mis en cache définitif');
 });
