@@ -29,4 +29,4 @@ jobs:
       - name: Run Swiss transport adapter regression tests
         run: node tests/swiss-transport-api.test.cjs
       - name: Run low-battery Android GPS bridge regression tests
-        run: node --test tests/transport-scooter.test.cjs
+        run: node --test tests/native-gps-bridge.test.cjs
