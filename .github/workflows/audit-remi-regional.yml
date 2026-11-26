@@ -46,4 +46,32 @@ jobs:
               print('FEED latest calendar date', max(dates))
               for rid, r in sorted(routes.items()):
                   print('ROUTE', rid, r.get('route_short_name'), r.get('route_long_name'), 'trips', counts[rid], 'reservation flags', flags[rid])
+              today = datetime.date.today()
+              horizon = today + datetime.timedelta(days=30)
+              services = collections.defaultdict(set)
+              def day(s): return datetime.datetime.strptime(s, '%Y%m%d').date()
+              if 'calendar.txt' in z.namelist():
+                  for r in rows('calendar.txt'):
+                      d, end = max(today, day(r['start_date'])), day(r['end_date'])
+                      while d <= end:
+                          if r[d.strftime('%A').lower()] == '1':
+                              services[r['service_id']].add(d)
+                          d += datetime.timedelta(days=1)
+              if 'calendar_dates.txt' in z.namelist():
+                  for r in rows('calendar_dates.txt'):
+                      d = day(r['date'])
+                      if d >= today:
+                          if r['exception_type'] == '1':
+                              services[r['service_id']].add(d)
+                          elif r['exception_type'] == '2':
+                              services[r['service_id']].discard(d)
+              route_days = collections.defaultdict(set)
+              for t in rows('trips.txt'):
+                  if t['route_id'].startswith('REMI37:'):
+                      route_days[t['route_id']].update(services[t['service_id']])
+              for rid, days in sorted(route_days.items()):
+                  print('REMI37 CALENDAR', rid, routes[rid]['route_short_name'],
+                        'first', min(days, default=None), 'last', max(days, default=None),
+                        'active next 30 days', sum(today <= d <= horizon for d in days),
+                        'reservation flags', flags[rid])
           PY
