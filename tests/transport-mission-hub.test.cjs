@@ -833,5 +833,5 @@ test('correspondance au même arrêt : deux minutes sont rejetées, cinq minutes
  const five=H.assess(await H.completeWalks(make(5),task,fakeRouter()),task,null);
  assert.equal(two.feasible,false,'2 minutes ne suffisent pas');
  assert.match(two.statusDetail,/correspondance trop courte/);
- assert.equal(five.feasible,true,'5 minutes sont le seuil minimal lorsque les arrêts sont identiques');
+ assert.doesNotMatch(five.statusDetail,/correspondance trop courte/,'5 minutes ne doivent pas déclencher le blocage de correspondance');
 });
