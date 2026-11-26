@@ -974,3 +974,15 @@ test('les six flux AURA du manifeste (Sibra, Ondéa, M Réso et Star’t) sont r
   assert.ok(loaded.at(-1).endsWith('/'+entry.file),id+' doit charger son ZIP officiel');
  }
 });
+
+test('un itinéraire piéton dont le moteur signale des extrémités GPS non appariées ne confirme jamais le trajet',async()=>{
+ const shifted={lat:HOME.lat+0.002,lon:HOME.lon};
+ const router={route:async(a,b)=>({status:'calculated',distanceMeters:500,durationSeconds:500,
+  from:shifted,to:b,endpointsMatched:false,geometry:[shifted,b]})};
+ const task={label:'Aller',from:HOME,to:MISSION,latestArrival:at(10,0)};
+ const j={source:'GTFS',sources:['GTFS'],legs:[bus(at(8,0),at(8,30),shifted,MISSION)]};
+ const completed=await H.completeWalks(j,task,router);
+ assert.ok(completed.missing.some(x=>/marche depuis l’adresse exacte.*non calculée/.test(x)));
+ assert.equal(H.assess(completed,task).feasible,false);
+ assert.equal(await H.walkOnly({...task,to:{lat:HOME.lat+0.001,lon:HOME.lon}},router,3),null);
+});
