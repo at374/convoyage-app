@@ -113,3 +113,16 @@ test('coordonnées imbriquées pickup et dropoff sont reconnues directement',()=
  assert.equal(G.coordonnees(b,'destination').lng,5.57);
  assert.equal(G.coordonnees(b,'destination').precision,'gps');
 });
+
+test('les codes postaux de prise en charge et livraison déterminent le département',()=>{
+ const a={from_city:'Commune inconnue',pickup_postal_code:'74000'};
+ const b={to_city:'Autre commune inconnue',delivery_postal_code:'38500'};
+ assert.equal(G.departementMission(a,'origin'),'74');
+ assert.equal(G.departementMission(b,'destination'),'38');
+});
+
+test('secteur France Genève est reconnu depuis une adresse pickup imbriquée',()=>{
+ const m={from_city:'Genève',pickup:{address:'Aéroport de Genève – Secteur France Route Douanière',city:'Genève'}};
+ assert.equal(G.estSecteurFranceGeneve(m,'origin'),true);
+ assert.equal(G.coordonnees(m,'origin').lat,46.237722);
+});
