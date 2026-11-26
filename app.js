@@ -2157,7 +2157,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         majDiag();
       }
       const localCards={};
-      // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
+      // Hub transports : Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       const hubHosts={};
       // La progression reste indépendante du rendu des cartes.
       const rechercheBadges={};
