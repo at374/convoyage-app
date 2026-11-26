@@ -839,6 +839,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     // Le suivi de position reste à 10 min, mais l'ETA est actualisée à 5 min
     // pour déclencher le préchargement au plus près du seuil de 15 min.
     suiviConvoyageEstimerArrivee(m,t,here,ts,state);
+    store[t.key] = state;
+    ecrireLocal(SUIVI_CONVOYAGE_KEY, store);
     if (ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return;
     const sample = {at:new Date(ts).toISOString(),lat:here.lat,lng:here.lng,accuracy,speed:Number.isFinite(Number(pos.coords.speed))?Number(pos.coords.speed):null};
     state.samples = (Array.isArray(state.samples)?state.samples:[]).concat(sample).slice(-36);
@@ -853,10 +855,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     if (Number.isFinite(lastAttempt) && ts - lastAttempt < SUIVI_CONVOYAGE_ETA_INTERVALLE_MS) return;
     // Persister le dernier essai même en cas d'erreur réseau pour éviter de solliciter
     // l'API à chaque position GPS fournie par Android.
-    const attemptStore = Object.assign({},lireLocal(SUIVI_CONVOYAGE_KEY,{})), attemptState = attemptStore[t.key];
-    if (!attemptState || attemptState.status !== 'en_route' || attemptState.approcheDeclencheeAt) return;
-    attemptState.etaAttemptAt = new Date(ts).toISOString();
-    attemptStore[t.key] = attemptState; ecrireLocal(SUIVI_CONVOYAGE_KEY,attemptStore);
+    if (state.status !== 'en_route') return;
+    state.etaAttemptAt = new Date(ts).toISOString();
     const routes = window.CPRoutes, auth = window.CPAuthenticatedApi, session = auth?.connecte ? auth.session : null;
     let config = window.CP_CONFIG?.anonKey ? window.CP_CONFIG : window.CP_CONFIG_ACTIVE?.anonKey ? window.CP_CONFIG_ACTIVE : null;
     try { if (!config && window.CPNatif?.configuration) config = JSON.parse(window.CPNatif.configuration() || '{}'); } catch (_) {}
