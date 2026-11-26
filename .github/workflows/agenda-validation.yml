@@ -28,3 +28,8 @@ jobs:
         run: node tests/agenda-transports.test.cjs
       - name: Run Swiss transport adapter regression tests
         run: node tests/swiss-transport-api.test.cjs
+
+      - name: Run address geocoding regression tests
+        run: |
+          node tests/geo-adresse-repli.test.cjs
+          node tests/transport-geocode-missing.test.cjs
