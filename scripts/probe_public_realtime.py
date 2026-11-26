@@ -14,12 +14,31 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def probe(r):
     result = dict(r)
     try:
-        req = urllib.request.Request(r['url'],headers={'User-Agent':'ConvoyageUltra-CatalogueAudit/1.0','Range':'bytes=0-65535'})
+        req = urllib.request.Request(r['url'],headers={'User-Agent':'ConvoyageUltra-CatalogueAudit/1.0'})
         with urllib.request.build_opener(NoRedirect()).open(req,timeout=10) as response:
-            sample = response.read(65536)
+            cap = 8 * 1024 * 1024
+            sample = response.read(cap + 1)
             typ = response.headers.get('Content-Type','')
             result['payload_hint'] = ('html' if b'<html' in sample[:1024].lower() or b'<!doctype html' in sample[:1024].lower() else 'xml' if sample.lstrip().startswith(b'<') else 'json' if sample.lstrip().startswith((b'{',b'[')) else 'binary_or_other')
             result.update(http=response.status,content_type=typ,sample_bytes=len(sample),status='anonymous_response_unvalidated' if sample else 'empty_response')
+            if len(sample)>cap:
+                result['status']='payload_too_large'
+            elif result['payload_hint']=='html':
+                result['status']='unexpected_html'
+            elif result['payload_hint']=='xml':
+                try:
+                    root=ET.fromstring(sample)
+                    result['xml_root']=root.tag
+                    result['status']='siri_xml_structure_detected' if root.tag.split('}')[-1] in ('Siri','ServiceDelivery') else 'unexpected_xml'
+                except ET.ParseError:
+                    result['status']='invalid_xml'
+            elif result['payload_hint']=='json':
+                try:
+                    obj=json.loads(sample)
+                    result['status']='json_parsed_unvalidated'
+                    result['json_root_keys']=list(obj)[:20] if isinstance(obj,dict) else []
+                except (ValueError,UnicodeError):
+                    result['status']='invalid_json'
     except urllib.error.HTTPError as e:
         result.update(http=e.code,status='auth_required_or_forbidden' if e.code in (401,403) else 'http_error')
     except (OSError,ValueError) as e:
