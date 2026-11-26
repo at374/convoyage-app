@@ -1,0 +1,24 @@
+name: Web mission availability
+on:
+  push:
+    paths:
+      - 'app.js'
+      - 'tests/available-missions-web.test.cjs'
+      - '.github/workflows/available-missions-web.yml'
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'tests/available-missions-web.test.cjs'
+      - '.github/workflows/available-missions-web.yml'
+permissions:
+  contents: read
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app.js
+      - run: node --test tests/available-missions-web.test.cjs
