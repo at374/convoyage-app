@@ -231,8 +231,7 @@ async function run(){
    for(const resolve of gates.get(number))resolve();gates.delete(number);
   };
   await release('14');
-  // Synchronise sur la seconde requête IGN réelle plutôt que sur un libellé UI
-  // qui peut apparaître après le rendu asynchrone du moteur régional.
+  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Retour régional'));
   await release('16');
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
