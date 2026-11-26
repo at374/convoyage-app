@@ -140,3 +140,11 @@ test('un objet destination partiel ne masque pas delivery_address',()=>{
  assert.equal(G.adresseDe(m,'destination').a,'Rue Louis Armand');
  assert.equal(G.adresseDe(m,'destination').cp,'38500');
 });
+
+test('un objet origin partiel ne masque pas les coordonnées GPS du pickup',()=>{
+ const m={from_city:'Annecy',origin:{city:'Annecy'},pickup:{lat:45.91,lng:6.12,city:'Annecy',address:'12 rue Royale'}};
+ const p=G.coordonnees(m,'origin');
+ assert.equal(p.lat,45.91);
+ assert.equal(p.lng,6.12);
+ assert.equal(p.precision,'gps');
+});
