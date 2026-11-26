@@ -1917,7 +1917,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const pickupEndImplicit = (() => { if (okT(orig.pickup_end) || !okT(pickupDate) || !/hiflow/i.test(String(orig.platform || m.platform || '')) || !okT(orig.delivery_end)) return null;
         const h = Number(orig.duree_h || m.duree_h); if (!(h > 0 && h < 24)) return null;
         const t = Date.parse(orig.delivery_end) - h * 3600000; return t > Date.parse(pickupDate) + 15 * 60000 ? new Date(t).toISOString() : null; })();
-      const pickupEndIso = okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : pickupEndImplicit;
+      const pickupEndIso = (orig.kind === 'acceptee' || orig.status === 'acceptee') ? null : okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : pickupEndImplicit;
       const deliveryStartIso = !transportPlannedReturn && deliveryStartFloor !== null && okT(orig.delivery_end) && Date.parse(orig.delivery_end) > deliveryStartFloor ? new Date(deliveryStartFloor + securityMarginMin * 60000).toISOString() : null;
       const deliveryEndMs = deliveryStartIso ? Date.parse(orig.delivery_end) + securityMarginMin * 60000 : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
@@ -2184,7 +2184,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const pDay0=(pPlan&&parisServiceDay(origT.pickup_start)&&parisServiceDay(origT.pickup_start)<pPlan?parisServiceDay(origT.pickup_start):pPlan),pDay1=parisServiceDay(origT.pickup_end)||pPlan;
       const dDay0=(dPlan&&deliveryStartFloor!==null&&parisServiceDay(new Date(deliveryStartFloor).toISOString())<dPlan?parisServiceDay(new Date(deliveryStartFloor).toISOString()):dPlan),dDay1=parisServiceDay(origT.delivery_end)||dPlan;
       const multiAller=[],multiRetour=[];
-      if(pDay0&&pDay1&&pDay1>pDay0){for(let d=pDay0,n=0;d<=pDay1&&n<10;d=dayAfter(d),n++)multiAller.push(d);}
+      if(origT.kind!=='acceptee'&&origT.status!=='acceptee'&&pDay0&&pDay1&&pDay1>pDay0){for(let d=pDay0,n=0;d<=pDay1&&n<10;d=dayAfter(d),n++)multiAller.push(d);}
       if(dDay0&&dDay1&&dDay1>dDay0){for(let d=dDay0,n=0;d<=dDay1&&n<10;d=dayAfter(d),n++)multiRetour.push(d);}
       for(const d of multiAller)if(d!==pPlan)transportDays['Aller@'+d]=d;
       for(const d of multiRetour)if(d!==dPlan)transportDays['Retour@'+d]=d;
@@ -2400,7 +2400,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Jonction vers la mission suivante : fenêtre de prise en charge (début–fin) ; si elle a lieu un autre jour que la livraison,
         // les trajets cherchés sont ceux du jour de la mission (départ dès 04:00 ce jour-là, au cas où l'on dormirait sur place).
         const nextDay=next?parisServiceDay(next.pickup_start):null,delivDay=deliveryDate?parisServiceDay(deliveryDate):null;
-        const jonctionLatest=next&&okT(next.pickup_end)&&Date.parse(next.pickup_end)>Date.parse(next.pickup_start)?new Date(Date.parse(next.pickup_end)).toISOString():(next?next.pickup_start:null);
+        const jonctionLatest=next?next.pickup_start:null;
         const jonctionStart=plancher(nextDay&&delivDay&&nextDay>delivDay?parisIso(nextDay,4,0):deliveryDate);
         const jonctionEarliest=missedAt&&jonctionStart?new Date(Math.max(missedAt,Date.parse(jonctionStart))).toISOString():jonctionStart;
         const tasks=[];
