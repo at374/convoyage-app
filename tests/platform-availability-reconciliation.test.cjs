@@ -6,6 +6,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const filters = fs.readFileSync(path.join(root, 'filtres.js'), 'utf8');
 const sync = require('../server/hiflow-sync-deploy/hiflow-vendor/sync-core.js');
+const platformState = require('../etat.js');
 
 test('Delivery Car partial scans never hide offers', () => {
   const i = filters.indexOf('function deliveryCarNonRevue');
@@ -13,6 +14,15 @@ test('Delivery Car partial scans never hide offers', () => {
   const fn = filters.slice(i, filters.indexOf('\n  }', i) + 4);
   assert.match(fn, /complet/);
   assert.match(fn, /Dernier balayage Delivery Car/);
+});
+
+test('Delivery Car partial marker overrides a stale ok=true source status', () => {
+  const row = { platform: 'DeliveryCar', lu_le: new Date(0).toISOString(), ok: true, message: 'Dernier balayage Delivery Car · partiel · 39 offres annoncées' };
+  const partial = platformState.ligne(row, 60_000);
+  assert.equal(partial.couleur, 'orange');
+  assert.match(partial.texte, /partiel/);
+  const complete = platformState.ligne({ ...row, message: 'Dernier balayage Delivery Car · complet · 39 offres annoncées' }, 60_000);
+  assert.equal(complete.couleur, 'vert');
 });
 
 test('Delivery Car PWA asset is versioned and precached after the partial-scan fix', () => {
