@@ -621,7 +621,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   const sugFiltrees = m => { const L = sugListe(m); const fin = Date.parse(m.delivery_end || m.delivery_start || ''); if (!L.length || !Number.isFinite(fin)) return L;
     const jourP = t => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(t)), jf = jourP(fin);
     const dureeMs = (z, x) => { const hx = Number(x && x.duree_h); if (Number.isFinite(hx) && hx > 0) return hx * 3600000; const s = String(z.t || '').split('|').map(q => q.trim()).find(q => /\d\s*(h|min)/i.test(q) && !/km/i.test(q)) || ''; const h = s.match(/(\d+)\s*h/i), mi = s.match(/(\d+)\s*min/i), h2 = s.match(/\bh\s*(\d+)/i); if (!h && !mi) return -1; return ((h ? +h[1] : 0) * 60 + (mi ? +mi[1] : (h2 ? +h2[1] : 0))) * 60000; };
-    return L.filter(z => { const x = etat.missions.find(y => y.platform === m.platform && String(y.external_id) === String(z.id)); if (!x) return false;
+    return L.filter(z => { const x = etat.missions.find(y => y.platform === m.platform && String(y.external_id) === String(z.id)); if (!estDisponible(x)) return false;
       const a = Date.parse(x.pickup_start || ''), b = Date.parse(x.pickup_end || x.pickup_start || ''); if (!Number.isFinite(a)) return false;
       if (jourP(a) > jf || (Number.isFinite(b) && jourP(b) < jf)) return false;
       const d = dureeMs(z, x), debut = Math.max(fin, a); if (d < 0) return jourP(a) === jf && jourP(debut) === jf; return jourP(debut + d) === jf; }); };
@@ -1536,7 +1536,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   // V78 : retours possibles après cette mission (toutes plateformes), estimés.
   function blocRetours(m) {
     const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
-    const res = RT.retours(m, etat.missions.filter(x => x.kind === 'disponible'), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
+    const res = RT.retours(m, etat.missions.filter(estDisponible), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
     // V223 : une mission « à la suite » doit pouvoir démarrer le MÊME JOUR que la fin de la mission précédente ; les jours suivants relèvent du Planning sur plusieurs jours
     const jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
     const jSrc = (res.finSource && res.finSource.t) ? jP(res.finSource.t) : (Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ? jP(Date.parse(m.delivery_end || m.delivery_start)) : '');
@@ -1567,7 +1567,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const estProche = x => x.retourDomicileKm != null && x.retourDomicileKm <= 50;   // V221 : « retour vers le domicile » = la mission arrive à 50 km ou moins du domicile
     if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
     // V159 : chaînage — pour chaque retour proposé, les suites possibles après lui (2 niveaux), avec distance et durée de liaison.
-    const dispoR = etat.missions.filter(z => z.kind === 'disponible');
+    const dispoR = etat.missions.filter(estDisponible);
     const suites = (src, deja, prof) => {
       if (prof > 2) return [];
       let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
