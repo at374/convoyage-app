@@ -243,7 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
- ['remi41_blois_sologne',['Rémi 41 Blois–Sologne','https://api.okina.fr/gateway/cvl/gtfsrt/trip-updates?useoriginalId=true']],
+ ['remi41_blois_sologne',['Rémi 41','https://api.okina.fr/gateway/cvl/gtfsrt/trip-updates?useoriginalId=true']],
  ['azalys_blois',['Azalys Blois','https://www.data.gouv.fr/api/1/datasets/r/61d5a03f-311d-4fb1-9c14-dd0c8856af32']],
  ['fil_bleu_tours',['Fil Bleu (Tours)','https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates']],
  ['levib_vierzon',['Le Vib’ Vierzon','le-vib-vierzon']],
@@ -1355,7 +1355,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
  ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
  ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
- ['remi41_blois_sologne','Rémi 41 Blois–Sologne','remi41-blois-sologne-gtfs-rt.zip',[47.20,1.29,47.62,2.09]],
+ ['remi41_blois_sologne','Rémi 41','remi41-blois-vendome-gtfs-rt.zip',[47.20,1.03,47.87,2.09]],
  ['azalys_blois','Azalys Blois','azalys-blois-gtfs-rt.zip',[47.55,1.27,47.64,1.39]],
  ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.31,0.591,47.489,0.878]],
  ['filibus_chartres',"Filibus (Chartres)",'filibus-chartres.zip',[48.344,1.337,48.545,1.602]],

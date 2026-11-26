@@ -81,10 +81,11 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
-    {'id': 'remi41-blois-sologne-gtfs-rt', 'network': 'Rémi 41 Blois–Sologne',
+    {'id': 'remi41-blois-vendome-gtfs-rt', 'network': 'Rémi 41',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
-     'bounds': [47.20, 1.29, 47.62, 2.09], 'keep_complete_trips': True,
-     'route_ids': {'REMI41:Line:5', 'REMI41:Line:431'}},
+     'bounds': [47.20, 1.03, 47.87, 2.09], 'keep_complete_trips': True,
+     'route_ids': {'REMI41:Line:1', 'REMI41:Line:3', 'REMI41:Line:4', 'REMI41:Line:5',
+                   'REMI41:Line:7', 'REMI41:Line:9', 'REMI41:Line:431'}},
 
     {'id': 'azalys-blois-gtfs-rt', 'network': 'Azalys Blois',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/e6e0228d-9916-4216-bb5f-7d3edf57866c',
