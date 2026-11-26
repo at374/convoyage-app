@@ -877,3 +877,12 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Test ajouté : même si un ancien objet `CPTripGo` subsiste dans l'environnement, aucun fournisseur TripGo ne doit être créé.
 - Les fonctions de conversion historique `fromTripGo` et le fixture de test restent dans le dépôt pour l'instant ; ils ne sont plus branchés au moteur. Le nettoyage de ces éléments morts sera fait séparément après vérification des références restantes.
 - Commits : `5f517dac692ce5ff4cf611d3c850e7cb85cf3cb4`, `70f82409497b90be6144b0448c82abdfda9bc4f2`, `6ae17b983e10341de7b05b81311f80b97c401e88`.
+
+
+## Nettoyage TripGo et chargement de la fédération GTFS — 26/11/2026
+
+- Le code mort `tripgoMode` / `fromTripGo` a été retiré du hub, ainsi que son export public.
+- Les tests de mission ne chargent plus l'adaptateur ni le fixture TripGo. Les cas génériques de classement et de moteurs désactivés ont été conservés avec des noms neutres.
+- Le module existant `transport-gtfs-federation.js` est maintenant chargé par `index.html` après l'index et le loader GTFS et avant le hub mission. Un test vérifie cet ordre de dépendances.
+- Important : cela rend le moteur de fédération disponible dans le navigateur, mais ne signifie pas encore que les recherches de mission appellent `crossNetworkTrips`. Le raccordement opérationnel des paires de réseaux, la marche réelle entre arrêts et les essais porte-à-porte restent à faire.
+- Commits : nettoyage hub `bd7a66cc544247a19f7c5a2d3a95a045ce77a765` ; nettoyage tests `f8410a79bac96f989f8a03001cf73b4ba01be1c8` ; chargement fédération `42233cc602d51d9ab0ceb300e678476ccc63922d` ; test ordre scripts `a392a6746d4904526897f11542498336ecf29219`.
