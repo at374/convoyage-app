@@ -38,9 +38,12 @@ test('pré-calcul transport : une arrivée GPS déjà confirmée déclenche imm�
   assert.match(src, /if \(!arrivalKnown\) \{/);
 });
 
-test('pré-calcul transport : le minuteur de mission est bien arrêté à la livraison GPS', () => {
+test('pré-calcul transport : le minuteur reste actif jusqu’au tick qui détecte l’arrivée GPS', () => {
   const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
-  assert.match(src, /const prefetchKey = String\(m\.platform\) \+ '\\|' \+ String\(m\.external_id\)/);
-  assert.match(src, /transportPrefetchTimers\.get\(prefetchKey\)/);
-  assert.match(src, /transportPrefetchTimers\.delete\(prefetchKey\)/);
+  const start = src.indexOf('function suiviArrivee(m, t, ts)');
+  const end = src.indexOf('function suiviMaj()', start);
+  const arrival = src.slice(start, end);
+  assert.match(arrival, /Ne pas arrêter le minuteur ici/);
+  assert.doesNotMatch(arrival, /transportPrefetchTimers\.delete/);
+  assert.match(src, /const arrivalKnown = arriveeGps\(missionTiming\(m\)\.key\)/);
 });
