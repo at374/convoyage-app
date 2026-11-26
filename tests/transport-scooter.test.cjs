@@ -254,6 +254,19 @@ test('suivi convoyage : ETA recalculée toutes les 5 min sans accélérer les re
  assert.ok(!block.includes('state.etaCheckedAt || state.departedAt'));
 });
 
+test('suivi GPS : acquisitions ponctuelles basse consommation, haute précision limitée à l’approche',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('const SUIVI_GPS_INTERVALLE_ROUTE_MS');
+ const end=app.indexOf("if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange'",start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_ROUTE_MS = 5 * 60000'));
+ assert.ok(block.includes('SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000'));
+ assert.ok(block.includes('navigator.geolocation.getCurrentPosition'));
+ assert.ok(block.includes('enableHighAccuracy: params.near'));
+ assert.ok(block.includes('maximumAge: params.near ? 0 : 2 * 60000'));
+ assert.ok(!block.includes('navigator.geolocation.watchPosition'));
+});
+
 test('suivi GPS : le passage en arrière-plan ne détruit plus le watchPosition',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  const block=app.slice(app.indexOf('function suiviMaj()'),app.indexOf('// Préparation à l\'avance (application ouverte)'));
