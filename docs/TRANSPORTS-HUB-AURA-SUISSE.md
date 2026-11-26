@@ -38,7 +38,7 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 
 ## 3. Règles appliquées
 
-- **Marche** : jamais de vol d'oiseau présenté comme une marche. Approche, correspondances et marche finale passent par Valhalla/OpenStreetMap ou par la marche calculée par le fournisseur (TripGo, Mobilités M). Les sections « walk » de transport.opendata.ch sont recalculées, car l'API ignore la marche initiale dans l'heure de départ.
+- **Marche** : jamais de vol d'oiseau présenté comme une marche. Approche, correspondances et marche finale passent par Valhalla/OpenStreetMap ou par la marche calculée par le fournisseur (Mobilités M). Les sections « walk » de transport.opendata.ch sont recalculées, car l'API ignore la marche initiale dans l'heure de départ.
 - **Trajet tout à pied** : proposé si la marche réelle est ≤ 3 km (réglable de 0 à 10 km). Il n'est demandé que si la distance à vol d'oiseau est déjà ≤ seuil.
 - **Marge** : 15 min par défaut ; 5 min seulement si le point GPS de la mission est exact **et** si l'option est cochée dans les Réglages.
 - **Réalisable** : horaires cohérents, toutes les marches calculées, correspondances assez longues (marche + 2 min) et arrivée ≤ heure de mission − marge. Sinon « Transport non confirmé » avec la raison. Sans temps réel, la carte précise « horaires théoriques : retards et annulations à surveiller le jour J ».
@@ -81,8 +81,8 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 
 ## 6. Blocages techniques réels
 
-1. **Clé TripGo** : sans clé enregistrée dans l'application, TripGo n'est pas interrogé. Son offre gratuite est limitée en nombre de requêtes.
-2. **Aucun accès réseau aux fournisseurs depuis l'environnement de Claude** : TripGo, transport.opendata.ch, SNCF et data.gouv sont refusés par le proxy. Les tests utilisent des réponses réelles déjà enregistrées dans le dépôt. Les appels en direct doivent être validés sur le téléphone.
+1. **TripGo retiré** : aucune clé ni aucun appel ne doivent être configurés. Les itinéraires interurbains reposent désormais sur SNCF, BlaBlaCar Bus, FlixBus, les GTFS régionaux et les API publiques.
+2. **Aucun accès réseau aux fournisseurs depuis l'environnement de Claude** : transport.opendata.ch, SNCF et data.gouv sont refusés par le proxy. Les tests utilisent des réponses réelles déjà enregistrées dans le dépôt. Les appels en direct doivent être validés sur le téléphone.
 3. **Valhalla public** (valhalla1.openstreetmap.de) : environ 1 requête par seconde, d'où au plus 60 marches par fiche. Optimisé le 13/11 :
    - les doublons entre moteurs ne recalculent pas leurs marches ;
    - un trajet déjà hors délai sur ses seuls horaires n'en consomme aucune ;
@@ -99,15 +99,15 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 
 - `node --test tests/transport-mission-hub.test.cjs` : **20/20**, dont la chaîne suisse complète au format documenté et les tarifs Sibra, M réso et Ondéa (réponse Mobilités M réelle : C1 + 80 = 2,00 €, un seul titre).
 - Tous les tests `tests/transport-*`, `swiss-transport-api` et `agenda-transports` : tous réussis sauf `transport-y51-fares`, en échec identique sur `main`.
-- `tests/browser/transport-hub-mobile.cjs`, Chromium au format Pixel 7 : **OK**. TripGo appelé 6 fois, SNCF 5 fois, Valhalla 2 fois ; Retour Annecy → Grenoble avec BlaBlaCar Bus et FlixBus 1789 ; Aller à pied gratuit ; pas de débordement horizontal ; aucune écriture serveur ; aucune erreur JavaScript.
+- `tests/browser/transport-hub-mobile.cjs`, Chromium au format Pixel 7 : **OK**. ancien test avant retrait de TripGo ; appels SNCF et Valhalla historiques, à rejouer avec les sources actuelles ; Retour Annecy → Grenoble avec BlaBlaCar Bus et FlixBus 1789 ; Aller à pied gratuit ; pas de débordement horizontal ; aucune écriture serveur ; aucune erreur JavaScript.
 - `tests/browser/transport-mobile.cjs` : échoue à la même assertion Y51 que sur `main`, sans régression avant ce point.
 
-**Données réelles :** réponses TripGo, Mobilités M, Valhalla et SNCF enregistrées dans le dépôt. **Simulé :** Valhalla dans le test navigateur, API suisse (réponse vide), géocodage. **Non testé :** appels en direct depuis un téléphone.
+**Données réelles historiques :** réponses Mobilités M, Valhalla et SNCF enregistrées dans le dépôt ; les anciennes réponses TripGo ne sont plus utilisées. **Simulé :** Valhalla dans le test navigateur, API suisse (réponse vide), géocodage. **Non testé :** appels en direct depuis un téléphone.
 
 ## 8. Procédure de validation Android
 
 1. Installer la version de la branche (APK ou PWA de test), sans la publier.
-2. Réglages → Transports : enregistrer la clé TripGo ; vérifier « marche max 3 km » ; laisser la marge courte décochée.
+2. Ne pas configurer de clé TripGo. Vérifier les flux GTFS nationaux et régionaux, « marche max 3 km » et les marges de sécurité.
 3. Ouvrir une mission acceptée réelle en Haute-Savoie, avec une adresse géolocalisée → 🚌 Visualisation des transports.
 4. Vérifier, sans rien toucher, qu'en moins de 30 s chaque direction affiche des cartes « Moins cher / Meilleur compromis / Plus rapide » ou « Aucun trajet trouvé » avec « Moteurs consultés ».
 5. Ouvrir une carte : étapes, minutes de marche, tracé, sources. Comparer un horaire avec l'application officielle de l'opérateur.
@@ -120,7 +120,7 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 
 - **Prix fournis par les sources elles-mêmes**, en priorité sur les grilles :
   - tarifs publiés dans les flux GTFS officiels (`transport-gtfs-fares.js`, GTFS Fares V1 : prix par zone et par ligne, durée de correspondance) ;
-  - billet par portion transmis par TripGo (`ticket`), sans jamais reprendre son coût global estimé (`moneyCost`).
+  - aucun prix billet supposé depuis les horaires GTFS ; seuls les tarifs officiels vérifiés dans les grilles opérateurs sont affichés.
 - **Performances :**
   - cache des marches partagé entre moteurs, directions et fiches (stockage du téléphone, 30 jours, points arrondis à environ 10 m) ;
   - cartes affichées immédiatement avec « marches en cours de calcul » ;
