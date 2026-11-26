@@ -1208,3 +1208,16 @@ test('la fiche horaire survit à un doublon reçu pendant le calcul des marches'
   assert.equal(trip.legs.find(l=>l.line===ride.line).terminus,'Gare centrale');
  }finally{release();session.dispose();}
 });
+
+test('une nouvelle fiche horaire invalide le rendu même si le trajet reste identique',()=>{
+ const stopRender=new Error('début du rendu');
+ const host={childNodes:[{}],querySelectorAll(){throw stopRender;}};
+ const ride=bus(at(8,0),at(8,25),STOP1,STOP2);
+ const view={others:[{legs:[ride]}]};
+ const redraw=()=>assert.throws(()=>H.render(host,view),error=>error===stopRender);
+ redraw();
+ assert.doesNotThrow(()=>H.render(host,view));
+ ride.gtfsRaw={routeId:'R1',from:'S1',to:'S2',serviceDate:'2026-11-16',networkUrls:['https://example.org/gtfs.zip']};
+ redraw();
+ assert.doesNotThrow(()=>H.render(host,view));
+});

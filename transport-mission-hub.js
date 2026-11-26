@@ -3114,7 +3114,9 @@ function selectJourneyCards(view,next,limit=6){
  return selected;
 }
 function viewFingerprint(v){
- const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters,j.legs?.map(l=>directionForLeg(l,v.task)).join('|'),walkStatusLabel(j,missingWalkLabels(j,v.task))].join(','):'';
+ const schedules=j=>JSON.stringify((j.legs||[]).filter(leg=>!isFoot(leg)).map(({gtfsRaw:r})=>
+  r?[r.networkUrls,r.routeId,r.from,r.to,r.serviceDate]:null));
+ const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters,schedules(j),j.legs?.map(l=>directionForLeg(l,v.task)).join('|'),walkStatusLabel(j,missingWalkLabels(j,v.task))].join(','):'';
  return [v.savedAt||0,v.done?1:0,v.total,JSON.stringify(v.previousArrival||[]),(v.alternatives||[]).map(one).join(';'),(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
   (v.flexCandidates||[]).map(c=>JSON.stringify([c.network,c.tripId,c.pickupWindow,c.pickupRule])).join('|'),Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }
