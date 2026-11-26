@@ -14,6 +14,12 @@ chaque appel et garde sa position dans la table `plateforme_curseurs` (créée p
 Scheduler doit donc appeler `/sync` **toutes les ~5 minutes** (202 ÷ 4 ≈ 51 appels pour un tour
 complet, ≈ 4h15 par rotation complète à ce rythme — ajustable avec `DRIIVEME_LOT`).
 
+## Synchronisation des missions disparues — correction prioritaire
+
+Le code du robot intègre désormais le suivi d'un tour national complet : les lots ne chevauchent plus la fin de la rotation, et les missions disponibles absentes ne sont marquées `plus_vue` qu'après un tour sans erreur. Un lot incomplet, une déconnexion ou un refus 403/429 invalide le tour et interdit la purge. La purge est limitée à `user_id`, `platform='DriiveMe'`, `kind='disponible'`, `status='disponible'` et `last_seen_at` antérieur au début du tour. Les missions acceptées ne sont jamais touchées.
+
+Avant déploiement, exécuter `server/driiveme-sync-deploy/001_sync_cycles.sql` dans Supabase SQL Editor. Le premier tour après migration est volontairement non purgeable si le curseur est déjà au milieu d'une rotation ; le tour suivant sera qualifiant.
+
 ## Limites connues de cette première version (à faire évoluer ensuite si besoin)
 - Pas de lecture des fiches détail (créneaux horaires exacts, adresse précise, véhicule) : seules
   les informations de la liste (ville, département, prix, dates du jour, distance) sont envoyées.
