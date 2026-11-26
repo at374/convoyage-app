@@ -158,7 +158,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Signaler les opérateurs indisponibles
-        if: steps.build.outcome != 'success' || steps.paris_lyon.outcome == 'failure' || steps.lyon_marseille.outcome == 'failure'
+        if: steps.build.outcome != 'success' || steps.paris_lyon.outcome == 'failure' || steps.lyon_marseille.outcome == 'failure' || steps.paris_marseille.outcome == 'failure' || steps.marseille_toulouse.outcome == 'failure'
         run: |
           echo 'Certains flux nationaux sont absents ou non exploitables : consulter le rapport, aucun tarif inventé.' >> "$GITHUB_STEP_SUMMARY"
           exit 1
