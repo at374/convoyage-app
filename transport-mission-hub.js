@@ -868,6 +868,25 @@ function makeProviders(r,opts={}){
    ['tam-montpellier', "TaM Montpellier", 'tam-montpellier.zip', [43.524286,3.700952,43.751809,4.040798]],
    ['tango-nimes', "Tango Nîmes", 'tango-nimes.zip', [43.67123,4.125444,43.976132,4.565333]],
    ['cars-region-nouvelle-aquitaine', "Cars Région Nouvelle-Aquitaine", 'cars-region-nouvelle-aquitaine.zip', [42.751541,-1.555172,47.217964,3.100622]],
+   // Pays de la Loire : 18 flux terrestres issus de l'agrégat Destineo, testés dans la collecte régionale.
+   ['pdl-irigo-angers', "IRIGO Angers", 'pdl-irigo-angers.zip', [47.34288,-0.751186,47.616505,-0.296042]],
+   ['pdl-brevibus', "Brévibus", 'pdl-brevibus.zip', [47.20343,-2.175259,47.268318,-2.042087]],
+   ['pdl-tul-laval', "TUL Laval", 'pdl-tul-laval.zip', [47.986195,-1.067463,48.182369,-0.630723]],
+   ['pdl-naolib-nantes', "Naolib Nantes", 'pdl-naolib-nantes-part-01.zip', [47.122986,-1.778301,47.339466,-1.347233]],
+   ['pdl-choletbus', "Choletbus", 'pdl-choletbus.zip', [46.996525,-1.025293,47.200306,-0.365312]],
+   ['pdl-oleane-les-sables', "OLEANE Les Sables-d’Olonne", 'pdl-oleane-les-sables.zip', [46.476704,-1.81103,46.606007,-1.669963]],
+   ['pdl-illygo', "illyGO", 'pdl-illygo.zip', [47.817245,-0.150787,48.194958,0.5391]],
+   ['pdl-sovetours', "SOVETOURS", 'pdl-sovetours.zip', [46.44981,-0.825715,46.476505,-0.782197]],
+   ['pdl-yceo-saint-nazaire', "Ycéo Saint-Nazaire", 'pdl-yceo-saint-nazaire.zip', [47.236698,-2.34973,47.455299,-2.01425]],
+   ['pdl-impulsyon-la-roche', "Impulsyon La Roche-sur-Yon", 'pdl-impulsyon-la-roche.zip', [46.573444,-1.571489,46.745117,-1.230544]],
+   ['pdl-aleop-sarthe', "Aléop en Sarthe", 'pdl-aleop-sarthe.zip', [47.643642,-0.34185,48.439854,0.799541]],
+   ['pdl-aleop-vendee', "Aléop en Vendée", 'pdl-aleop-vendee.zip', [46.152397,-2.299102,47.075844,-0.808353]],
+   ['pdl-aleop-ler', "Aléop Lignes Express régionales", 'pdl-aleop-ler.zip', [46.152397,-2.26441,48.001759,0.335553]],
+   ['pdl-aleop-mayenne', "Aléop en Mayenne", 'pdl-aleop-mayenne.zip', [47.464859,-1.374651,48.480667,0.099065]],
+   ['pdl-aleop-loire-atlantique', "Aléop en Loire-Atlantique", 'pdl-aleop-loire-atlantique.zip', [46.861324,-2.219055,47.68713,-1.017468]],
+   ['pdl-aleop-maine-et-loire', "Aléop en Maine-et-Loire", 'pdl-aleop-maine-et-loire.zip', [47.012371,-1.372049,47.83136,0.161452]],
+   ['pdl-reso-sable', "Réso Sablé-sur-Sarthe", 'pdl-reso-sable.zip', [47.822269,-0.362821,47.857777,-0.295294]],
+   ['pdl-heoh-clisson', "héoh Clisson", 'pdl-heoh-clisson.zip', [47.076775,-1.286229,47.09597,-1.239642]],
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
