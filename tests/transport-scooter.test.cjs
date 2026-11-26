@@ -271,6 +271,23 @@ test('géocodage GPS : temporise les adresses sans résultat pour éviter les re
  assert.ok(block.includes('transportPointRetryAt.delete(cle)'));
 });
 
+test('préchargement transports : cache persistant 12 h, invalidé par la signature de mission et seulement après succès complet',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const start=app.indexOf('async function preparerTransports()');
+ const end=app.indexOf('setTimeout(preparerTransports',start);
+ const block=app.slice(start,end);
+ assert.ok(block.includes("PREPARATION_TRANSPORTS_KEY = 'cp_transport_prefetch_v1'"));
+ assert.ok(block.includes('PREPARATION_TRANSPORTS_TTL_MS = 12 * 3600000'));
+ assert.ok(block.includes('cached?.signature === signature'));
+ assert.ok(block.includes('preparees.get(cle) === signature'));
+ assert.ok(block.includes('const signature = JSON.stringify([Hub.VERSION ||'));
+ assert.ok(block.includes('if (!fournisseurEligible) prechargementComplet = false'));
+ assert.ok(block.includes('if (prechargementComplet) {'));
+ assert.ok(block.includes('ecrireLocal(PREPARATION_TRANSPORTS_KEY, cachePreparations)'));
+ const eta=app.slice(app.indexOf('async function suiviConvoyageEstimerArrivee'),app.indexOf('function suiviTraiter'));
+ assert.ok(eta.includes('delete preparationsEnCache[clePreparation]'));
+});
+
 test('suivi GPS navigateur : aucune nouvelle acquisition lorsque la page est masquée',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
  const start=app.indexOf('function suiviMaj()');
