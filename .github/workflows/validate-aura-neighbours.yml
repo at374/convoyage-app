@@ -32,6 +32,7 @@ jobs:
           esac
           curl --fail --location --retry 2 --max-time 300 --max-filesize 536870912 "$url" -o /tmp/source.zip
           python -m zipfile -t /tmp/source.zip
+          python -c 'import zipfile,csv,io,json; z=zipfile.ZipFile("/tmp/source.zip"); rows=list(csv.DictReader(io.TextIOWrapper(z.open("agency.txt"),encoding="utf-8-sig"))); assert rows; print(json.dumps([{k:r.get(k) for k in ("agency_id","agency_name","agency_url")} for r in rows],ensure_ascii=False))'
           for corridor in lyon-dijon bourg-besancon grenoble-gap clermont-bourges clermont-millau; do
             python scripts/build_national_gtfs_aura.py --input /tmp/source.zip --operator "$OPERATOR" --region "$corridor" --source-url "$url" --out /tmp/validated
           done
