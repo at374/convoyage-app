@@ -990,7 +990,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (debut - now > 12 * 3600000 || (debut - now < -6 * 3600000 && suiviConvoyage?.status !== 'en_route')) continue;
         const cle = t.key + '|' + String(t.pickup).slice(0, 10);
         if (preparees.has(cle)) continue;
-        preparees.add(cle);
         const suivante = liste[i + 1] ? liste[i + 1].m : null;
         try { await pointsMission(m); if (suivante) await pointsMission(suivante); } catch (_) { }
         const fin = suiviConvoyage?.etaDepartureAt || t.planned || t.deadline;
@@ -999,14 +998,23 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if (home && o) taches.push({ label: 'Aller', from: home, to: o, latestArrival: t.pickup, marginMinutes: 15 });
         if (home && d && fin) taches.push({ label: 'Retour', from: d, to: home, earliestDeparture: fin });
         if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 15 }); }
+        if (!taches.length) continue;
+        let prechargementComplet = true;
         for (const tache of taches) {
           for (const [k, prov] of Object.entries(P)) {
             if (!/^(local_|national_)/.test(k)) continue;
-            if (document.hidden) { preparees.delete(cle); return; }
-            try { if (prov.prefetch && prov.enabled(tache)) await prov.prefetch(); } catch (_) { }
+            if (document.hidden) return;
+            try {
+              if (prov.prefetch && prov.enabled(tache)) {
+                const ok = await prov.prefetch();
+                if (ok !== true) prechargementComplet = false;
+              }
+            } catch (_) { prechargementComplet = false; }
             await new Promise(r => setTimeout(r, 50));   // laisse l'écran respirer
           }
         }
+        // Ne pas mémoriser une préparation partielle : le cycle suivant réessaiera les flux en échec.
+        if (prechargementComplet) preparees.add(cle);
       }
     } finally { preparationEnCours = false; }
   }
