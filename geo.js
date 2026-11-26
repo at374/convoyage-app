@@ -186,6 +186,11 @@
       if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
       const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
       if (numero && x.cp) essais.push({ q: [sansLieu.replace(/\b\d{5}\b/g, ''), x.v].filter(Boolean).join(' '), commune: false, sansCP: true });
+      if (numero) {
+        const mots = norm(sansLieu.replace(/\b\d{5}\b/g, '')).replace(/\bd\s+(?=\w)/g, '').trim();
+        const q = [mots, x.v].filter(Boolean).join(' ');
+        if (!essais.some(e => e.q === q && e.sansCP)) essais.push({q, commune:false, sansCP:true});
+      }
       let meilleur = null;
       for (const es of essais) {
         // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
