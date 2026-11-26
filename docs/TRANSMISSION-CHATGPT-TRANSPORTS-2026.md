@@ -807,3 +807,12 @@ Un contrôle plus précis utilise le géocodeur public officiel de la BAN pour �
 - Test ajouté dans `tests/transport-mission-hub.test.cjs` : pour chacun des 10 réseaux, le fournisseur doit être présent, s’activer dans son emprise, charger le fichier du manifeste et refuser un point hors zone.
 - Commit du raccordement : `7bccb4a60da2ae06efe333d32aee6238df54bad6` ; commit des tests : `73e55db591a9dac60d21a095958c162e3fe9ec3c`.
 - Comme pour la tranche Bretagne, les modifications sont enregistrées sur `feature/transports-aura-suisse`, mais les tests locaux et la CI distante ne sont pas encore confirmés par cette session. Ces 10 fournisseurs sont donc **câblés dans le code, non certifiés en trajet porte-à-porte**. Aucun déploiement Android/Web ni mise à jour de carte n’est revendiqué.
+
+
+## Session ChatGPT — raccordement Pays de la Loire (26/11/2026)
+
+- Le hub de fiches mission ajoute les 18 flux terrestres Pays de la Loire présents dans le manifeste : IRIGO, Brévibus, TUL Laval, Naolib Nantes, Choletbus, Oléane, illyGO, SOVETOURS, Ycéo, Impulsyon, les lignes Aléop départementales et express, Réso Sablé et héoh Clisson.
+- Les 18 entrées sont prises dans le manifeste courant et utilisent le chargeur GTFS standard. Naolib est proche du plafond d'archive mobile (20 364 353 octets pour un plafond de 20 Mio) : conserver la surveillance de taille dans les collectes futures; ne pas relever le plafond global sans nouvelle mesure.
+- Le test `tests/transport-mission-hub.test.cjs` est étendu : les 10 réseaux PACA/Occitanie/Nouvelle-Aquitaine et les 18 réseaux Pays de la Loire doivent tous s'activer dans leur emprise, charger leur ZIP déclaré et se désactiver hors zone.
+- Commit fournisseur : `2b3501de2f3d9181eb8cc78e4db7104370b1b006` ; commit test : `e60c7ea947495f14056bacbdd3c514f79bc8d8a1`.
+- Les réseaux sont désormais câblés dans le hub, mais les tests d'intégration et les recherches porte-à-porte réelles restent à confirmer par CI. Aucun statut « déployé » n'est ajouté à la carte et aucun déploiement Android/Web n'est revendiqué.
