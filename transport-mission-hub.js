@@ -152,6 +152,17 @@ function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
  return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:
   {...row,gtfsFare:row.gtfsFare||one(row)});
 }
+function gtfsMode(routeType){
+ const type=Number(routeType);
+ if(type===0||type===5)return 'Tram';
+ if(type===1||type===109)return 'Métro';
+ if(type===2||type===100)return 'Train';
+ if(type===3||type===11)return 'Bus';
+ if(type===4||type===1000)return 'Bateau';
+ if(type===6||type===7)return 'Funiculaire';
+ if(type===12)return 'Monorail';
+ return 'Bus';
+}
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
  // stop pairs. Keep the shortest straight-line access + egress candidate per trip
@@ -172,12 +183,12 @@ function fromGTFS(rows,network='Réseau local'){
   if(!previous||score<previous.score)bestDirect.set(key,{r,score});
  }
  selected.push(...[...bestDirect.values()].map(x=>x.r));
- return selected.map(r=>{
+ return selected.filter(r=>Number(r.routeType)!==4&&!(Array.isArray(r.legs)&&r.legs.some(l=>Number(l.routeType)===4))).map(r=>{
   const raw=Array.isArray(r.legs)&&r.legs.length?r.legs:[{line:r.line,network:r.network,from:r.originStop?.name||r.from,to:r.destinationStop?.name||r.to,departure:r.departure,arrival:r.arrival}];
   const legs=raw.map((l,i)=>{
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
    const end=i===raw.length-1?r.destinationStop:(r.transferStop||null);
-   const out=leg({mode:'Bus',line:l.line||r.line,provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
+   const out=leg({mode:gtfsMode(l.routeType??r.routeType),line:l.line||r.line,provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
     fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
    out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?{...l,date:l.date||r.date,networkId:l.networkId||r.networkId,originStop:l.originStop||{stopId:l.from},destinationStop:l.destinationStop||{stopId:l.to}}:r;
