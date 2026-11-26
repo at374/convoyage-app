@@ -947,7 +947,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
-    const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
+    const actif = !suiviRefus && navigator.geolocation && missionsASuivre().length > 0;
     // Le GPS fourni par la plateforme est parfois le centre de la ville (2 km de l'adresse réelle) : on cherche le point officiel de l'adresse de livraison avant de comparer.
     for (const { m } of missionsASuivre()) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
@@ -957,7 +957,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       if (e && e.code === 1) { suiviRefus = true; if (suiviWatch !== null) navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
     }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 60000 });
   }
-  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) { suiviReprise = true; setTimeout(() => { suiviReprise = false; }, 20000); suiviMaj(); } });
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => {
+    // Ne pas arrêter watchPosition quand la PWA passe en arrière-plan : Android peut
+    // continuer à fournir des positions selon ses règles batterie/localisation.
+    // Les navigateurs peuvent toutefois suspendre le JavaScript en arrière-plan ;
+    // un service natif Android reste nécessaire pour une garantie écran éteint.
+    if (!document.hidden) {
+      suiviReprise = true;
+      setTimeout(() => { suiviReprise = false; }, 20000);
+      suiviMaj();
+    }
+  });
   if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
   // Préparation à l'avance (application ouverte) : de 12 h à 0 h avant la prise en charge d'une mission ACCEPTÉE de l'agenda, les fichiers d'horaires utiles
   // (aller, jonction, retour) sont téléchargés d'avance (sans être lus, pour ne pas figer l'écran) et gardés sur le téléphone : « Visualisation des transports » démarre sans attente réseau.
