@@ -1,0 +1,35 @@
+name: Discover public realtime resources
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/discover_public_realtime.py'
+      - 'scripts/probe_public_realtime.py'
+      - '.github/workflows/discover-public-realtime.yml'
+concurrency:
+  group: public-realtime-audit-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install gtfs-realtime-bindings==1.0.0
+      - run: python scripts/discover_public_realtime.py
+      - run: |
+          python scripts/probe_public_realtime.py 90 0
+          mv realtime-probes.json realtime-probes-000.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-realtime-candidates
+          path: |
+            realtime-candidates.json
+            realtime-probes-*.json
+          if-no-files-found: error
+          retention-days: 7
