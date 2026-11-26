@@ -1,0 +1,49 @@
+name: Audit regional GTFS
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/audit-remi-regional.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download official regional feed
+        run: curl --fail --location --retry 2 --max-time 90 --max-filesize 250000000 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e' -o regional.zip
+      - name: Inspect agencies, routes and calendar
+        run: |
+          python - <<'PY'
+          import csv, zipfile, io, collections, datetime
+          with zipfile.ZipFile('regional.zip') as z:
+              assert sum(i.file_size for i in z.infolist()) < 1500000000
+              assert z.testzip() is None
+              def rows(name):
+                  with z.open(name) as f:
+                      yield from csv.DictReader(io.TextIOWrapper(f, encoding='utf-8-sig'))
+              for a in rows('agency.txt'):
+                  print('AGENCY', a.get('agency_id'), a.get('agency_name'), a.get('agency_url'))
+              routes = {r['route_id']: r for r in rows('routes.txt')}
+              trips = {}
+              for t in rows('trips.txt'):
+                  assert t['route_id'] in routes
+                  assert t['trip_id'] not in trips
+                  trips[t['trip_id']] = t['route_id']
+              counts = collections.Counter(trips.values())
+              stops = {s['stop_id'] for s in rows('stops.txt')}
+              flags = collections.Counter()
+              for s in rows('stop_times.txt'):
+                  assert s['trip_id'] in trips and s['stop_id'] in stops
+                  if s.get('pickup_type') in ('2','3') or s.get('drop_off_type') in ('2','3'):
+                      flags[trips[s['trip_id']]] += 1
+              dates = []
+              if 'calendar.txt' in z.namelist():
+                  dates.extend(r['end_date'] for r in rows('calendar.txt'))
+              if 'calendar_dates.txt' in z.namelist():
+                  dates.extend(r['date'] for r in rows('calendar_dates.txt') if r['exception_type']=='1')
+              print('FEED latest calendar date', max(dates))
+              for rid, r in sorted(routes.items()):
+                  print('ROUTE', rid, r.get('route_short_name'), r.get('route_long_name'), 'trips', counts[rid], 'reservation flags', flags[rid])
+          PY
