@@ -1,0 +1,29 @@
+{
+  "operator": "sncf",
+  "file": "national-sncf-marseille-toulouse.zip",
+  "sha256": "cf5f4df4a7742e2fb1ec7e03f3e2593b71988b8bdbcbf2c83e9a0bfd95d4ad52",
+  "bytes": 707066,
+  "bounds": [
+    43.05,
+    1.25,
+    44.25,
+    5.65
+  ],
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "scope": "Static GTFS slice for marseille-toulouse; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 99,
+    "trips": 6737,
+    "stops": 1315,
+    "fares": false,
+    "bounds": [
+      43.05,
+      1.25,
+      44.25,
+      5.65
+    ],
+    "lastServiceDate": "2027-04-30"
+  }
+}

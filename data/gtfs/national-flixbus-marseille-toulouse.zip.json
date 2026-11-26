@@ -1,0 +1,29 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-marseille-toulouse.zip",
+  "sha256": "04e1492f252201b768176474bc0b7bd72d220088c78c6ce06af666965a5e77c9",
+  "bytes": 175939,
+  "bounds": [
+    43.05,
+    1.25,
+    44.25,
+    5.65
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for marseille-toulouse; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 72,
+    "trips": 1188,
+    "stops": 198,
+    "fares": false,
+    "bounds": [
+      43.05,
+      1.25,
+      44.25,
+      5.65
+    ],
+    "lastServiceDate": "2027-05-22"
+  }
+}
