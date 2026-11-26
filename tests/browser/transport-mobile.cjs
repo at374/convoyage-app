@@ -224,7 +224,7 @@ async function run(){
   await page.locator('#cpTransportMissionDetails').waitFor();
   const release=async number=>{
    await page.waitForFunction(()=>true);
-   const start=Date.now();while(!gates.has(number)){if(Date.now()-start>5000)throw Error('No pending geocode '+number);await new Promise(resolve=>setTimeout(resolve,20));}
+   const start=Date.now();while(!gates.has(number)){if(Date.now()-start>5000)throw Error('No pending geocode '+number+'; pending='+JSON.stringify([...gates.keys()])+'; geocodeRequests='+JSON.stringify(requests.slice(-12)));await new Promise(resolve=>setTimeout(resolve,20));}
    for(const resolve of gates.get(number))resolve();gates.delete(number);
   };
   await release('14');
