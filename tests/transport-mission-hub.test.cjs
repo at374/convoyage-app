@@ -923,3 +923,31 @@ test('49 flux normands, Centre-Val de Loire et Grand Est du manifeste sont racco
    id+' doit refuser un trajet hors zone');
  }
 });
+
+test('le moteur conserve un départ matin compatible même si 35 courses antérieures remplissent le plafond',async()=>{
+ const origin={lat:48.60,lon:2.40},destination={lat:48.65,lon:2.50};
+ const rows=Array.from({length:35},(_,i)=>({
+  tripId:'too-early-'+i,departure:'07:00:00',arrival:'09:20:00',
+  originStop:{stopId:'o'+i,name:'Départ',lat:48.601,lon:2.401,distanceMeters:100},
+  destinationStop:{stopId:'d'+i,name:'Arrivée',lat:48.649,lon:2.499,distanceMeters:100},
+  accessDistanceMeters:100,egressDistanceMeters:100
+ }));
+ rows.push({
+  tripId:'valid-after-previous-mission',departure:'08:05:00',arrival:'08:50:00',
+  originStop:{stopId:'ov',name:'Départ valide',lat:48.601,lon:2.401,distanceMeters:100},
+  destinationStop:{stopId:'dv',name:'Arrivée valide',lat:48.649,lon:2.499,distanceMeters:100},
+  accessDistanceMeters:100,egressDistanceMeters:100
+ });
+ const root={
+  CPGTFSLoader:{loadResource:async()=>({files:{},index:{}})},
+  CPGTFSIndex:{nearbyDirectTrips:()=>rows}
+ };
+ const provider=H.makeProviders(root)['local_idfm-idfm-1080'];
+ const task={from:origin,to:destination,earliestDeparture:at(8,0,'2026-11-27'),latestArrival:at(10,0,'2026-11-27')};
+ assert.ok(provider&&provider.enabled(task));
+ const results=await provider.run(task);
+ assert.ok(results.some(j=>j.legs?.[0]?.departure===at(8,5,'2026-11-27')),
+  'le départ de 08:05 doit rester proposé après la fin de mission précédente à 08:00');
+ assert.ok(results.every(j=>Date.parse(j.legs?.[0]?.departure)>=Date.parse(task.earliestDeparture)-60000),
+  'aucune course incompatible ne doit consommer le plafond des 30 résultats');
+});
