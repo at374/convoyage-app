@@ -174,7 +174,7 @@
       .filter(Boolean);
     const city = norm(v);
     const a = candidates.find(value => !city || norm(value).replace(/\b(?:\d{5}|\d{2})\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() !== city) || '';
-    const cp = String(p.postal_code || p.zip || lieu.postal_code || lieu.zip || m[pre + '_postal_code'] || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
+    const cp = String(p.postal_code || p.zip || lieu.postal_code || lieu.zip || m[pre + '_postal_code'] || (cote === 'origin' ? m.pickup_postal_code : (m.delivery_postal_code || m.dropoff_postal_code)) || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
     return { a, v, cp, d };
   };
   const aAdresseRue = (m, cote) => {
