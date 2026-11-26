@@ -1,0 +1,116 @@
+name: Audit regional GTFS
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/audit-remi-regional.yml'
+      - 'scripts/build_regional_gtfs.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official regional feed
+        run: curl --fail --location --retry 2 --max-time 90 --max-filesize 250000000 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e' -o regional.zip
+      - name: Inspect agencies, routes and calendar
+        run: |
+          python - <<'PY'
+          import csv, zipfile, io, collections, datetime
+          with zipfile.ZipFile('regional.zip') as z:
+              assert sum(i.file_size for i in z.infolist()) < 1500000000
+              assert z.testzip() is None
+              def rows(name):
+                  with z.open(name) as f:
+                      yield from csv.DictReader(io.TextIOWrapper(f, encoding='utf-8-sig'))
+              for a in rows('agency.txt'):
+                  print('AGENCY', a.get('agency_id'), a.get('agency_name'), a.get('agency_url'))
+              routes = {r['route_id']: r for r in rows('routes.txt')}
+              trips = {}
+              for t in rows('trips.txt'):
+                  assert t['route_id'] in routes
+                  assert t['trip_id'] not in trips
+                  trips[t['trip_id']] = t['route_id']
+              counts = collections.Counter(trips.values())
+              stops = {s['stop_id'] for s in rows('stops.txt')}
+              flags = collections.Counter()
+              for s in rows('stop_times.txt'):
+                  assert s['trip_id'] in trips and s['stop_id'] in stops
+                  if s.get('pickup_type') in ('2','3') or s.get('drop_off_type') in ('2','3'):
+                      flags[trips[s['trip_id']]] += 1
+              dates = []
+              if 'calendar.txt' in z.namelist():
+                  dates.extend(r['end_date'] for r in rows('calendar.txt'))
+              if 'calendar_dates.txt' in z.namelist():
+                  dates.extend(r['date'] for r in rows('calendar_dates.txt') if r['exception_type']=='1')
+              print('FEED latest calendar date', max(dates))
+              for rid, r in sorted(routes.items()):
+                  print('ROUTE', rid, r.get('route_short_name'), r.get('route_long_name'), 'trips', counts[rid], 'reservation flags', flags[rid])
+              today = datetime.date.today()
+              horizon = today + datetime.timedelta(days=30)
+              services = collections.defaultdict(set)
+              def day(s): return datetime.datetime.strptime(s, '%Y%m%d').date()
+              if 'calendar.txt' in z.namelist():
+                  for r in rows('calendar.txt'):
+                      d, end = max(today, day(r['start_date'])), day(r['end_date'])
+                      while d <= end:
+                          if r[d.strftime('%A').lower()] == '1':
+                              services[r['service_id']].add(d)
+                          d += datetime.timedelta(days=1)
+              if 'calendar_dates.txt' in z.namelist():
+                  for r in rows('calendar_dates.txt'):
+                      d = day(r['date'])
+                      if d >= today:
+                          if r['exception_type'] == '1':
+                              services[r['service_id']].add(d)
+                          elif r['exception_type'] == '2':
+                              services[r['service_id']].discard(d)
+              route_days = collections.defaultdict(set)
+              for t in rows('trips.txt'):
+                  if t['route_id'].startswith('REMI37:'):
+                      route_days[t['route_id']].update(services[t['service_id']])
+              for rid, days in sorted(route_days.items()):
+                  print('REMI37 CALENDAR', rid, routes[rid]['route_short_name'],
+                        'first', min(days, default=None), 'last', max(days, default=None),
+                        'active next 30 days', sum(today <= d <= horizon for d in days),
+                        'reservation flags', flags[rid])
+          PY
+      - name: Extract and validate selected Rémi 37 routes
+        run: |
+          python - <<'PY'
+          import sys, zipfile, io, hashlib
+          sys.path.insert(0, 'scripts')
+          import build_regional_gtfs as b
+          spec = next(s for s in b.FILTERED_MIRROR if s['id']=='remi37-regular-gtfs-rt')
+          with zipfile.ZipFile('regional.zip') as z:
+              data, info = b.filter_by_bounds(z, spec)
+          assert data is not None, info
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              b.validate(z)
+              _, routes = b.read_table(z, 'routes.txt')
+              assert {r['route_id'] for r in routes} == spec['route_ids']
+              _, times = b.read_table(z, 'stop_times.txt')
+              assert not any(t.get('pickup_type') in ('2','3') or t.get('drop_off_type') in ('2','3') for t in times)
+          print('EXTRACT', info, 'bytes', len(data), 'sha256', hashlib.sha256(data).hexdigest())
+          open('remi37-regular-gtfs-rt.zip','wb').write(data)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: remi37-verified-gtfs
+          path: remi37-regular-gtfs-rt.zip
+          if-no-files-found: error
+      - name: Publish verified archive to development branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feature/remi36-line800-map'
+        run: |
+          git fetch origin feature/remi36-line800-map
+          git checkout -B feature/remi36-line800-map origin/feature/remi36-line800-map
+          mkdir -p data/gtfs
+          cp remi37-regular-gtfs-rt.zip data/gtfs/
+          git add data/gtfs/remi37-regular-gtfs-rt.zip
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Add validated Rémi 37 GTFS archive'
+          git push origin HEAD:feature/remi36-line800-map

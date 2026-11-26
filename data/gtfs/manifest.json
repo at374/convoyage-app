@@ -845,10 +845,10 @@
    "sha256": "b443c32dff2400db702b0dcf0c93fa5a449db533d6ba10e683a029f1763ef8d6",
    "bytes": 6133106,
    "bounds": [
-    45.0,
+    45,
     5.5,
     45.45,
-    6.0
+    6
    ],
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2",
    "trips": 19577
@@ -890,7 +890,7 @@
     46.2,
     4.7,
     46.5,
-    5.0
+    5
    ],
    "origin": "https://static.data.gouv.fr/resources/offre-de-transport-du-reseau-trema-gtfs/20260821-115049/trema-gtfs-2026-08-21.zip",
    "trips": 6264
@@ -932,7 +932,7 @@
     46.7,
     4.75,
     46.85,
-    5.0
+    5
    ],
    "origin": "https://static.data.gouv.fr/resources/reseauzoom-horaires-theoriques/20251229-092806/gtfs-20251217-143039-stac-gc.zip",
    "trips": 2693
@@ -943,7 +943,7 @@
    "sha256": "765d76d019d56a6e9b02d45782f7bc76f9ed3c246418acf5b9fd09d264bc66d7",
    "bytes": 396406,
    "bounds": [
-    47.0,
+    47,
     5.4,
     47.2,
     5.65
@@ -1141,7 +1141,7 @@
    "bounds": [
     43.7,
     4.15,
-    44.0,
+    44,
     4.55
    ],
    "origin": "https://static.data.gouv.fr/resources/offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt/20261119-155657/gtfs-production.zip",
@@ -1170,7 +1170,7 @@
     42.6,
     2.8,
     42.8,
-    3.0
+    3
    ],
    "origin": "https://eur.mecatran.com/utw/ws/gtfsfeed/static/perpignan?apiKey=612f606b5e3b0a3e6e1f441a2c4a050f6a345b55",
    "trips": 7355
@@ -1209,7 +1209,7 @@
    "sha256": "4982b6519db86dcbda799091ff8020ef91edd672cf0279d3bedcc3d9e9073f8a",
    "bytes": 1162549,
    "bounds": [
-    43.0,
+    43,
     2.1,
     43.45,
     2.75
@@ -1601,7 +1601,7 @@
    "sha256": "c8e4f88f0cb42e824b576ed313b1de178157553c9f566d65962dc301183eb3ef",
    "bytes": 2000767,
    "bounds": [
-    46.0,
+    46,
     -1.24,
     46.27,
     -0.9
@@ -2175,8 +2175,8 @@
    "sha256": "885817e860f408e80c2c34a776e36f1833d7492095b67527d422fba3d459e75f",
    "bytes": 4359789,
    "bounds": [
-    46.0,
-    -2.0,
+    46,
+    -2,
     49.5,
     2.5
    ],
@@ -2189,8 +2189,8 @@
    "sha256": "c2706525ccf5c840f24ba49e4abba75b0d890a53713f7652fc93e5fc25c53006",
    "bytes": 2636473,
    "bounds": [
-    46.0,
-    -2.0,
+    46,
+    -2,
     49.5,
     2.5
    ],
@@ -2273,8 +2273,8 @@
    "sha256": "638b78db0a855a32cd2d95a93825c551e64a6896971f32eee023b25e5101c931",
    "bytes": 2110984,
    "bounds": [
-    43.0,
-    -5.0,
+    43,
+    -5,
     50.5,
     3.5
    ],
@@ -2287,8 +2287,8 @@
    "sha256": "daaf59d5bbbbf0a5dd33a21ec802c771ed6c4c6fbc7d15f9aa2ede13bab92362",
    "bytes": 5353379,
    "bounds": [
-    43.0,
-    -5.0,
+    43,
+    -5,
     50.5,
     3.5
    ],
@@ -2301,8 +2301,8 @@
    "sha256": "7e38a59b15d19dbfecb422269591593bab036c710854b6afea2dae4785091ef9",
    "bytes": 3812317,
    "bounds": [
-    43.0,
-    -5.0,
+    43,
+    -5,
     50.5,
     3.5
    ],
@@ -2315,8 +2315,8 @@
    "sha256": "bc03d16183d81dded42140a84f986fa7603d4f7fbf52411f96906b898672d90e",
    "bytes": 2759174,
    "bounds": [
-    43.0,
-    -5.0,
+    43,
+    -5,
     50.5,
     3.5
    ],
@@ -2329,8 +2329,8 @@
    "sha256": "88266d8c8f6350a03d984c3717f6fb82d937910ca550adf5a2dd71f158f0a55a",
    "bytes": 2010852,
    "bounds": [
-    43.0,
-    -5.0,
+    43,
+    -5,
     50.5,
     3.5
    ],
@@ -2343,8 +2343,8 @@
    "sha256": "cddeb4ab114d9ec85aae304768dafe2981a1e5d2c63831a83cf2dd98a5131ac7",
    "bytes": 644073,
    "bounds": [
-    43.0,
-    -5.0,
+    43,
+    -5,
     50.5,
     3.5
    ],
@@ -2357,7 +2357,7 @@
    "sha256": "562c8bf8ce5e0f8780c9417dd1509880ae25e5bfed2c1c17f713f32a0b024ad0",
    "bytes": 4418522,
    "bounds": [
-    43.0,
+    43,
     5.75,
     43.25,
     6.15
@@ -2456,7 +2456,7 @@
    "bytes": 1640239,
    "bounds": [
     49.35,
-    0.0,
+    0,
     49.7,
     0.5
    ],
@@ -2475,7 +2475,7 @@
    "fares": true,
    "bounds": [
     43.55,
-    7.0,
+    7,
     43.9,
     7.5
    ]
@@ -2560,7 +2560,7 @@
    "fares": false,
    "bounds": [
     45.72,
-    3.0,
+    3,
     45.85,
     3.2
    ]
@@ -2593,7 +2593,7 @@
    "stops": 770,
    "fares": false,
    "bounds": [
-    44.0,
+    44,
     3.3,
     44.95,
     4.7
@@ -2627,10 +2627,10 @@
    "stops": 1104,
    "fares": false,
    "bounds": [
-    44.0,
-    5.0,
-    45.0,
-    7.0
+    44,
+    5,
+    45,
+    7
    ]
   },
   "zou-express-nord": {
@@ -2644,8 +2644,8 @@
    "stops": 348,
    "fares": false,
    "bounds": [
-    44.0,
-    5.0,
+    44,
+    5,
     45.2,
     7.2
    ]
@@ -2848,7 +2848,7 @@
    "stops": 1046,
    "fares": false,
    "bounds": [
-    47.0,
+    47,
     2.3,
     47.15,
     2.5
@@ -2920,6 +2920,40 @@
     1.35,
     49.25,
     3.6
+   ]
+  },
+  "remi36-tours-line800-gtfs-rt": {
+   "network": "Rémi 36 · ligne 800",
+   "file": "remi36-tours-line800-gtfs-rt.zip",
+   "sha256": "07e27c9763eba78032afa56840faa2725bdeccb2642fcbd18f14d4f48dbad5f5",
+   "bytes": 121309,
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e",
+   "routes": 1,
+   "trips": 885,
+   "stops": 167,
+   "fares": false,
+   "bounds": [
+    46.78,
+    0.55,
+    47.45,
+    1.78
+   ]
+  },
+  "remi37-regular-gtfs-rt": {
+   "network": "Rémi 37",
+   "file": "remi37-regular-gtfs-rt.zip",
+   "sha256": "b6b14c97b464cf276acca53c4444f37a9996ef2cc79b7d3c88e0ff81c0ca1149",
+   "bytes": 94925,
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e",
+   "routes": 7,
+   "trips": 509,
+   "stops": 517,
+   "fares": false,
+   "bounds": [
+    46.75,
+    -0.15,
+    47.85,
+    1.45
    ]
   }
  },

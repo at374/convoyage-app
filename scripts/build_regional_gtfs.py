@@ -81,6 +81,18 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    # Axe Indre → Indre-et-Loire : ligne 800 commerciale distincte des circuits scolaires.
+    # Les horaires proviennent du GTFS Rémi officiel ; aucune tarification n'est déduite.
+    # Rémi 37 : sept lignes actives, sans indicateur de réservation (audit CI 45830993385).
+    {'id': 'remi37-regular-gtfs-rt', 'network': 'Rémi 37',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
+     'bounds': [46.75, -0.15, 47.85, 1.45], 'keep_complete_trips': True,
+     'route_ids': {'REMI37:Line:139', 'REMI37:Line:144', 'REMI37:Line:156',
+                   'REMI37:Line:157', 'REMI37:Line:29', 'REMI37:Line:353', 'REMI37:Line:37'}},
+    {'id': 'remi36-tours-line800-gtfs-rt', 'network': 'Rémi 36 · ligne 800',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
+     'bounds': [46.78, 0.55, 47.45, 1.78], 'keep_complete_trips': True,
+     'route_ids': {'REMI36:Line:800'}},
     {'id': 'remi36-indre-gtfs-rt', 'network': 'Rémi 36',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c52238c-1c1e-4c5a-922b-8b66c0415a9e',
      'bounds': [46.79, 1.32, 47.15, 2.42], 'keep_complete_trips': True,

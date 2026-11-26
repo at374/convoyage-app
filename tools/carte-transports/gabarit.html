@@ -48,7 +48,8 @@ const CO=[[42.95,9.4],[42.5,9.55],[41.9,9.4],[41.4,9.25],[41.4,8.7],[42.0,8.6],[
 const CH=[[47.6,7.55],[47.7,8.6],[47.5,9.6],[46.9,9.5],[46.8,10.4],[46.3,10.1],[46.0,9.0],[45.85,8.5],[46.1,7.0],[46.25,6.05],[46.45,6.1],[47.0,6.9]];
 const lim=new Date(Date.now()+14*864e5).toISOString().slice(0,10).replace(/-/g,'');
 const fmt=e=>e?e.slice(6)+'/'+e.slice(4,6)+'/'+e.slice(0,4):'inconnue';
-const kind=o=>o.file.startsWith('national-')?'nat':(o.file.startsWith('cars-region')?'car':'urb');
+const kind=o=>o.type|| (o.file.startsWith('national-')?'nat':(o.file.startsWith('cars-region')||o.file.startsWith('remi')?'car':'urb'));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const col={urb:'var(--urb)',car:'var(--car)',nat:'var(--nat)'};
 let h='<polygon points="'+poly(CH)+'" fill="var(--ch)" stroke="var(--line)"/><polygon points="'+poly(FR)+'" fill="var(--land)" stroke="var(--line)" stroke-width="1.5"/><polygon points="'+poly(CO)+'" fill="var(--land)" stroke="var(--line)" stroke-width="1.5"/>';
 h+='<text x="590" y="440" font-size="13" fill="var(--mut)">SUISSE</text>';
@@ -63,10 +64,10 @@ svg.style.cursor='zoom-in';
 svg.addEventListener('click',ev=>{if(ev.target.classList&&ev.target.classList.contains('dot'))return;const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());const w=VB[2]/2.2,h=VB[3]/2.2;if(w<50)return;VB=[Math.max(0,Math.min(780-w,p.x-w/2)),Math.max(0,Math.min(710-h,p.y-h/2)),w,h];maj()});
 rz.onclick=()=>{VB=[0,0,780,710];maj()};}
 const info=document.getElementById('info');
-const show=i=>{const o=L[i];info.innerHTML='<b>'+o.name+'</b><br><span class="sub">'+({urb:'Réseau urbain / local',car:'Cars régionaux',nat:'Ligne nationale'})[kind(o)]+'</span><br>Moteurs de l\'onglet Transports : <b class="'+(o.moteur===false?'bad':'ok')+'">'+(o.moteur===false?'NON branché':'branché')+'</b><br>Arrêts : '+o.stops+' · Fichier : '+o.mb+' Mo<br>Horaires jusqu\'au <b class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</b>'};
+const show=i=>{const o=L[i];const routes=(o.routes||[]).map(r=>'<li><b>'+esc(r.ligne)+'</b> · '+esc(r.destination)+'</li>').join('');info.innerHTML='<b>'+esc(o.name)+'</b><br><span class="sub">'+({urb:'Réseau urbain / local',car:'Cars régionaux',nat:'Ligne nationale'})[kind(o)]+'</span><br>Moteurs de l\'onglet Transports : <b class="'+(o.moteur===false?'bad':'ok')+'">'+(o.moteur===false?'NON branché':'branché')+'</b><br>Arrêts : '+o.stops+' · Fichier : '+o.mb+' Mo<br>Horaires jusqu\'au <b class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</b>'+(routes?'<br><b>Lignes GTFS disponibles ('+o.routes.length+')</b><ul>'+routes+'</ul>':'')};
 document.querySelectorAll('.dot').forEach(c=>c.addEventListener('click',()=>show(+c.dataset.i)));
 const lst=document.getElementById('list');
-L.map((o,i)=>[o,i]).sort((a,b)=>a[0].name.localeCompare(b[0].name,'fr')).forEach(([o,i])=>{const d=document.createElement('div');d.innerHTML='<span>'+o.name+'</span><span class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</span>';d.onclick=()=>show(i);lst.append(d)});
+L.map((o,i)=>[o,i]).sort((a,b)=>a[0].name.localeCompare(b[0].name,'fr')).forEach(([o,i])=>{const d=document.createElement('div');d.innerHTML='<span>'+esc(o.name)+'</span><span class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</span>';d.onclick=()=>show(i);lst.append(d)});
 const n=k=>L.filter(o=>kind(o)==k).length,w=L.filter(o=>o.end&&o.end<lim).length;
 document.getElementById('kpi').innerHTML=[[L.length,'fichiers horaires'],[n('urb'),'réseaux urbains / locaux'],[n('car'),'réseaux de cars régionaux'],[n('nat'),'lignes nationales'],[L.filter(o=>o.moteur!==false).length,'branchés aux moteurs Transports'],[w,'calendriers qui finissent bientôt']].map(a=>'<div class="k"><b>'+a[0]+'</b><span>'+a[1]+'</span></div>').join('');
 document.getElementById('wf').innerHTML='<tr><th>Mise à jour</th><th>Dernier passage</th><th>État</th></tr>'+WF.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td class="'+(r[2]=='OK'?'ok':'bad')+'">'+r[2]+'</td></tr>').join('');
