@@ -275,15 +275,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     $('pNon').onclick = () => { enregistrerPause('non', '19:00', '07:00'); $('feuille').hidden = true; toast('Toujours actif'); };
   }
 
+  let generationChargementMissions = 0;
   async function charger(silencieux) {
     if (!api?.connecte) return;
     if (silencieux && pauseActive()) return;   // V146 : heures de désactivation
+    const generation = ++generationChargementMissions;
     try {
       const [missions, alertes, reglages, factures] = await Promise.all([api.missions(), api.alertes(), api.reglages(), api.factures()]);
-      if (!api.connecte) return;
+      if (!api.connecte || generation !== generationChargementMissions) return;
       etat.facturesServeur = factures !== null; if (factures) etat.factures = factures;   // V96
       try { etat.sources = await api.sourcesEtat(); } catch (_) { etat.sources = null; }   // V114
-      if (!api.connecte) return;
+      if (!api.connecte || generation !== generationChargementMissions) return;
       const alertesNouv = seulesNouvelles(alertes);
       const avant = new Set(etat.alertes.map(a => a.id));
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
