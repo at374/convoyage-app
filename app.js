@@ -855,11 +855,22 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const saved = Object.assign({},lireLocal(SUIVI_CONVOYAGE_KEY,{})), current = saved[t.key];
       if (!current || current.status !== 'en_route' || current.approcheDeclencheeAt) return;
       current.etaMinutes = minutes; current.etaCheckedAt = new Date(ts).toISOString();
+      current.etaArrivalAt = new Date(ts + minutes * 60000).toISOString();
+      let approcheEvent = null;
       if (minutes <= 15) {
+        current.etaDepartureAt = new Date(ts + (minutes + MARGE_ARRIVEE_MIN) * 60000).toISOString();
         current.approcheDeclencheeAt = new Date(ts).toISOString();
-        document.dispatchEvent(new CustomEvent('cp-livraison-approche',{detail:{key:t.key,etaMinutes:minutes,at:current.approcheDeclencheeAt}}));
+        transportReturnPlans.set(t.key,current.etaDepartureAt);
+        if (transportCacheKey()) saveTransportViews(transportCacheKey()+':plans',t.key,current.etaDepartureAt);
+        const clePreparation = t.key + '|' + String(t.pickup).slice(0,10);
+        preparees.delete(clePreparation);
+        approcheEvent = {key:t.key,etaMinutes:minutes,at:current.approcheDeclencheeAt,estimatedArrival:current.etaArrivalAt,transportDeparture:current.etaDepartureAt};
       }
       saved[t.key] = current; ecrireLocal(SUIVI_CONVOYAGE_KEY,saved);
+      if (approcheEvent) {
+        document.dispatchEvent(new CustomEvent('cp-livraison-approche',{detail:approcheEvent}));
+        setTimeout(() => { if (preparationEnCours) setTimeout(preparerTransports,5000); else preparerTransports(); }, 1000);
+      }
     } catch (_) { /* indisponibilité du calcul routier : le suivi GPS continue */ }
     finally { suiviConvoyageEtaEnCours.delete(t.key); }
   }
@@ -965,13 +976,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const pt = g => { const c = g && Number.isFinite(Number(g.lat)) && Number.isFinite(Number(g.lng)) ? g : null; return c ? { lat: Number(c.lat), lon: Number(c.lng) } : null; };
       for (let i = 0; i < liste.length; i++) {
         const { m, t } = liste[i], debut = Date.parse(t.pickup);
-        if (debut - now > 12 * 3600000 || debut - now < -6 * 3600000) continue;
+        const suiviConvoyage = lireLocal(SUIVI_CONVOYAGE_KEY,{})[t.key];
+        if (debut - now > 12 * 3600000 || (debut - now < -6 * 3600000 && suiviConvoyage?.status !== 'en_route')) continue;
         const cle = t.key + '|' + String(t.pickup).slice(0, 10);
         if (preparees.has(cle)) continue;
         preparees.add(cle);
         const suivante = liste[i + 1] ? liste[i + 1].m : null;
         try { await pointsMission(m); if (suivante) await pointsMission(suivante); } catch (_) { }
-        const fin = t.planned || t.deadline;
+        const fin = suiviConvoyage?.etaDepartureAt || t.planned || t.deadline;
         const o = pt(G.coordonnees(m, 'origin')), d = pt(G.coordonnees(m, 'destination'));
         const taches = [];
         if (home && o) taches.push({ label: 'Aller', from: home, to: o, latestArrival: t.pickup, marginMinutes: 15 });
