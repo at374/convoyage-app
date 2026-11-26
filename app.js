@@ -2510,6 +2510,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(onlyJonction)junctionHub=session;
         else{search.session=transportHub=session;startDayLabels(activeDay);}
       };
+      // Le marqueur data-cp-prefetched est aussi lu directement par les workers isolés.
       const prefetchKeepsHubAlive=()=>panel.dataset.cpPrefetched==='true';
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
         if(!panel.isConnected){
