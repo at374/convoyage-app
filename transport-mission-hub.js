@@ -243,6 +243,7 @@ function bookingNote(nets){
  return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
 }
 const LOCAL_REALTIME_NETWORKS=new Map([
+ ['t2c',['T2C (Clermont Auvergne Métropole)','t2c-clermont']],
  ['ondea',['Ondéa Aix-les-Bains (Grand Lac)','ondea-aix-les-bains',true]],
  ['citea',['Citéa (Valence Romans Mobilités)','citea-valence']],
  ['rubis',['Rubis Bourg-en-Bresse','rubis-bourg-en-bresse']],
