@@ -59,3 +59,20 @@ test('Annecy : apostrophe échappée et code postal erroné ne masquent pas le n
  assert.ok(urls.every(u=>!u.includes('\\')));
  assert.ok(urls.some(u=>!u.includes('&postcode=')));
 });
+
+test('recherche de secours : voie seule puis numéro exact dans la bonne commune',async()=>{
+ const m={to_city:'Annecy',to_department:'74',destination_address:"94 avenue d'Aix-les-Bains, 74000 Annecy"};
+ const urls=[];
+ const feature=(properties)=>({geometry:{coordinates:[6.10477,45.88807]},properties:{score:0.9,...properties}});
+ const r=await G.chercherPoint(m,'destination',async u=>{
+  urls.push(u);
+  const type=new URL(u).searchParams.get('type');
+  const features=type==='street'?[feature({type:'street',name:"Avenue d'Aix-les-Bains",city:'Annecy',postcode:'74600'})]:
+   type==='housenumber'?[feature({type:'housenumber',housenumber:'92',street:"Avenue d'Aix-les-Bains",city:'Annecy'}),feature({type:'housenumber',housenumber:'94',street:"Avenue d'Aix-les-Bains",city:'Annecy'})]:[];
+  return {ok:true,json:async()=>({features})};
+ });
+ assert.equal(r.trouve,true);
+ assert.equal(r.point.precision,'adresse');
+ assert.ok(urls.some(u=>u.includes('&type=street')));
+ assert.ok(urls.some(u=>u.includes('&type=housenumber')));
+});
