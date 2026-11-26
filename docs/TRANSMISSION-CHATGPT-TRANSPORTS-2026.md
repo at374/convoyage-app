@@ -868,3 +868,12 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Les réponses qui ne fournissent pas ce champ restent compatibles avec les adaptateurs existants ; seule une non-correspondance explicite est bloquante.
 - Test ajouté : une marche faussement déclarée « calculée » avec extrémités non appariées doit laisser le trajet non réalisable et être refusée en marche seule.
 - Commits : `9a5287f1ec332f826937e0645013d5d48cad4dbd` et `aae4ccdd98a30f35678603abb4b7cfdb0b7e3096`.
+
+
+## Retrait effectif de TripGo — 26/11/2026
+
+- Suppression du fournisseur `P.tripgo` dans le moteur de recherche des fiches mission.
+- Retrait du chargement de `transport-tripgo.js` dans `index.html` : l'application ne charge plus cet adaptateur au démarrage.
+- Test ajouté : même si un ancien objet `CPTripGo` subsiste dans l'environnement, aucun fournisseur TripGo ne doit être créé.
+- Les fonctions de conversion historique `fromTripGo` et le fixture de test restent dans le dépôt pour l'instant ; ils ne sont plus branchés au moteur. Le nettoyage de ces éléments morts sera fait séparément après vérification des références restantes.
+- Commits : `5f517dac692ce5ff4cf611d3c850e7cb85cf3cb4`, `70f82409497b90be6144b0448c82abdfda9bc4f2`, `6ae17b983e10341de7b05b81311f80b97c401e88`.
