@@ -927,3 +927,23 @@ assert.equal(vm.runInContext("transportParisDate('2026-07-30T13:30')",context),'
 console.log('PASS: Agenda click refreshes visible mission, uses new button, confirms chosen time, focuses validation errors, reports render failure, preserves deadline and handles DST');
 
 }
+
+// Accepted missions must never inherit the flexible pickup window of an offer.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const start=app.indexOf('const pickupEndImplicit =');
+  const end=app.indexOf('const deliveryStartIso =',start);
+  assert.ok(start>=0 && end>start);
+  const code=app.slice(start,end)+'\n pickupEndIso';
+  const pickupDate='2026-11-25T15:00:00+01:00';
+  const base={platform:'Hiflow',pickup_end:'2026-11-25T17:00:00+01:00',delivery_end:'2026-11-25T19:00:00+01:00',duree_h:2};
+  const evaluate=orig=>vm.runInNewContext(code,{orig,m:orig,pickupDate,okT:v=>Number.isFinite(Date.parse(v||''))});
+  for(const state of [{kind:'acceptee'},{status:'acceptee'}]){
+    assert.equal(evaluate({...base,...state}),null);
+    assert.equal(evaluate({...base,...state,pickup_end:null}),null);
+  }
+  assert.equal(evaluate(base),'2026-11-25T16:00:00.000Z');
+  assert.equal(evaluate({...base,pickup_end:null}),'2026-11-25T16:00:00.000Z');
+  console.log('PASS: accepted pickup at 15:00 cannot inherit a 17:00 deadline');
+}
