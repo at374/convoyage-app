@@ -76,3 +76,16 @@ test('recherche de secours : voie seule puis numéro exact dans la bonne commune
  assert.ok(urls.some(u=>u.includes('&type=street')));
  assert.ok(urls.some(u=>u.includes('&type=housenumber')));
 });
+
+test('schémas plateformes : pickup, delivery, dropoff et codes postaux sont normalisés',()=>{
+ const cases=[
+  [{from_city:'Annecy',pickup_address:'12 rue Royale',pickup:{zip:'74000'}},'origin','12 rue Royale','74000'],
+  [{to_city:'Annecy',delivery_address:'94 avenue d\'Aix-les-Bains',delivery:{postal_code:'74600'}},'destination',"94 avenue d'Aix-les-Bains",'74600'],
+  [{to_city:'Annecy',dropoff_address:'8 rue du Pâquier',dropoff:{zip:'74000'}},'destination','8 rue du Pâquier','74000'],
+  [{from_city:'Voiron',from_address:'Rue Louis Armand',origin:{postal_code:'38500'}},'origin','Rue Louis Armand','38500']
+ ];
+ for(const [m,cote,a,cp] of cases){
+  const x=G.adresseDe(m,cote);assert.equal(x.a,a);assert.equal(x.cp,cp);
+  assert.ok(G.cleAdresse(m,cote),'la clé doit être créée pour le géocodage');
+ }
+});
