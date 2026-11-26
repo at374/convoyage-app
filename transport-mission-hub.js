@@ -857,6 +857,17 @@ function makeProviders(r,opts={}){
    ['bretagne-surf-fougeres', "SURF Fougères", 'bretagne-surf-fougeres.zip', [48.319667,-1.234321,48.37095,-1.147296]],
    ['bretagne-riv-ploermel', "RIV Ploërmel", 'bretagne-riv-ploermel.zip', [47.864667,-2.563861,48.084417,-2.282444]],
    ['bretagne-aleop-morbihan', "BreizhGo en Morbihan", 'bretagne-aleop-morbihan.zip', [47.478376,-3.606616,48.514088,-2.056498]],
+   // PACA, Occitanie et Nouvelle-Aquitaine : flux réels validés par le collecteur régional.
+   ['zou-proximite-paca', "ZOU Proximité (cars régionaux PACA)", 'zou-proximite-paca.zip', [43.09314,4.61792,44.8984,7.49791]],
+   ['zou-express-paca', "ZOU Express (cars régionaux PACA)", 'zou-express-paca.zip', [43.12723,4.80777,45.19287,7.21008]],
+   ['lignes-azur-nice', "Lignes d'Azur Nice", 'lignes-azur-nice.zip', [43.651165,6.866431,44.28372,7.382698]],
+   ['mistral-toulon', "Réseau Mistral Toulon", 'mistral-toulon.zip', [43.027769,5.794589,43.195558,6.199596]],
+   ['mistral-telepherique-faron', "Téléphérique du Faron", 'mistral-telepherique-faron.zip', [43.137293,5.930214,43.149344,5.93441]],
+   ['lio-interurbain-occitanie', "liO — cars interurbains Occitanie", 'lio-interurbain-occitanie.zip', [42.367208,-0.368846,45.778791,4.80963]],
+   ['tisseo-toulouse', "Tisséo Toulouse", 'tisseo-toulouse.zip', [43.39124,1.151046,43.749902,1.690543]],
+   ['tam-montpellier', "TaM Montpellier", 'tam-montpellier.zip', [43.524286,3.700952,43.751809,4.040798]],
+   ['tango-nimes', "Tango Nîmes", 'tango-nimes.zip', [43.67123,4.125444,43.976132,4.565333]],
+   ['cars-region-nouvelle-aquitaine', "Cars Région Nouvelle-Aquitaine", 'cars-region-nouvelle-aquitaine.zip', [42.751541,-1.555172,47.217964,3.100622]],
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
