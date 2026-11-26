@@ -7,7 +7,7 @@ on:
       - 'tests/gps-convoyage-integration.test.cjs'
       - '.github/workflows/test-gps-convoyage-mainline.yml'
   push:
-    branches: [fix/gps-convoyage-mainline-20261126]
+    branches: [main, fix/gps-convoyage-mainline-20261126]
     paths:
       - 'app.js'
       - 'tests/gps-convoyage-integration.test.cjs'
