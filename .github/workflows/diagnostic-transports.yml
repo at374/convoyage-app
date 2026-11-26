@@ -1,6 +1,6 @@
 name: Diagnostic réel des transports (15 axes AURA–Suisse)
 # Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
-# TripGo seulement si le secret CP_TRIPGO_KEY est défini. Publie docs/diagnostic-serveur.json sur la branche source.
+# Publie le diagnostic des moteurs nationaux et régionaux raccordés sur la branche source.
 on:
   workflow_dispatch:
   push:
@@ -8,7 +8,6 @@ on:
     paths:
       - '.github/workflows/diagnostic-transports.yml'
       - 'scripts/diagnostic-transports-reel.cjs'
-      - 'transport-tripgo.js'
       - 'transport-mission-hub.js'
       - 'transport-fare-grids.js'
       - 'transport-coverage.js'
@@ -458,7 +457,6 @@ jobs:
         run: |
           node --check transport-fare-grids.js
           node --check transport-isere-zonal-fares.js
-          node --check transport-tripgo.js
           node --check transport-mission-hub.js
           node --check transport-national-gtfs-journeys.js
           node --check transport-gtfs-loader.js
@@ -609,15 +607,10 @@ jobs:
           }
 
           const {makeProviders}=require('./transport-mission-hub.js');
-          const tripgoStub={CPTripGo:{plan:async()=>[],getKey:()=> 'test-key'},CPSwissTransport:{plan:async()=>[]}};
-          const providerDefault=makeProviders(tripgoStub,{fetcher:async()=>({})});
-          assert.equal(providerDefault.tripgo.enabled(),false,'TripGo désactivé sans accord explicite');
-          assert.equal(providerDefault.swiss.enabled({from:{lat:46.2,lon:6.1},to:{lat:46.3,lon:6.2}}),true,'Suisse disponible indépendamment de TripGo');
-          const independent=makeProviders({CPTripGo:{plan:async()=>[],getKey:()=>''},CPRegionalRouting:{plan:async()=>({itineraries:[]}),supportsPublic:()=>true},CPSncfFallback:{plan:async()=>({itineraries:[]})}},{fetcher:async()=>({})});
-          assert.equal(independent.tripgo.enabled(),false,'TripGo non requis');
-          assert.equal(independent.regional.enabled({from:{lat:45.2,lon:5.7},to:{lat:45.1,lon:5.8}}),true,'Mobilites M sans TripGo');
-          assert.equal(independent.sncf.enabled({fromName:'Lyon',toName:'Chambery'}),true,'SNCF sans TripGo');
-          assert.equal(makeProviders(tripgoStub,{allowTripGo:true,fetcher:async()=>({})}).tripgo.enabled(),true,'TripGo uniquement sur activation explicite');
+          const providers=makeProviders({CPSwissTransport:{plan:async()=>[]},CPRegionalRouting:{plan:async()=>({itineraries:[]}),supportsPublic:()=>true},CPSncfFallback:{plan:async()=>({itineraries:[]})}},{fetcher:async()=>({})});
+          assert.equal(providers.swiss.enabled({from:{lat:46.2,lon:6.1},to:{lat:46.3,lon:6.2}}),true,'Suisse disponible');
+          assert.equal(providers.regional.enabled({from:{lat:45.2,lon:5.7},to:{lat:45.1,lon:5.8}}),true,'Mobilités M disponible sans fournisseur tiers');
+          assert.equal(providers.sncf.enabled({fromName:'Lyon',toName:'Chambery'}),true,'SNCF disponible sans fournisseur tiers');
 
           const hs={provider:'Cars Région Haute-Savoie',mode:'Bus',kind:'transit',line:'Y81',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(hs)?.amount,1.70,'Haute-Savoie Y81 : 1,70 €');
@@ -847,18 +840,7 @@ jobs:
             console.log('Tarif GTFS officiel embarqué TCL (Fares V1) vérifié sur l’archive publiée : 2,10 € confirmé, ambiguïtés F1/F2/7601 correctement sans prix');
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
-      - name: Vérifier la présence de TripGo
-        env:
-          CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
-        run: |
-          if [ -n "$CP_TRIPGO_KEY" ]; then
-            echo 'TripGo : secret configuré (valeur masquée)'
-          else
-            echo '::warning::TripGo : CP_TRIPGO_KEY absent ou vide ; diagnostic sans TripGo'
-          fi
       - name: Diagnostic réel
-        env:
-          CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
         run: node scripts/diagnostic-transports-reel.cjs
       - name: Contrôler la cohérence des résultats tarifaires
         run: |
