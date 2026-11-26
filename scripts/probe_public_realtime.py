@@ -49,6 +49,9 @@ def probe(r):
                         result['status']='invalid_gtfs_rt_header'
                     else:
                         result['entity_count']=len(feed.entity)
+                        result['trip_updates']=sum(e.HasField('trip_update') for e in feed.entity)
+                        result['vehicle_positions']=sum(e.HasField('vehicle') for e in feed.entity)
+                        result['alerts']=sum(e.HasField('alert') for e in feed.entity)
                         result['gtfs_rt_version']=feed.header.gtfs_realtime_version
                         stamp=feed.header.timestamp if feed.header.HasField('timestamp') else None
                         result['feed_timestamp']=stamp
@@ -72,4 +75,4 @@ pathlib.Path('realtime-probes.json').write_text(json.dumps(results,ensure_ascii=
 print('Probe results:',dict(Counter(r['status'] for r in results)))
 print('Payload hints:',dict(Counter(r.get('payload_hint','none') for r in results)))
 for r in results:
-    print(json.dumps({k:r.get(k) for k in ('dataset','title','format','http','status','payload_hint')},ensure_ascii=False))
+    print(json.dumps({k:r.get(k) for k in ('dataset','title','format','http','status','payload_hint','entity_count','trip_updates','vehicle_positions','alerts','age_seconds')},ensure_ascii=False))
