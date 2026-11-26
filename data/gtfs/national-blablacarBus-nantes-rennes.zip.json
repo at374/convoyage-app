@@ -1,0 +1,29 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-nantes-rennes.zip",
+  "sha256": "c6e53714ca30e5962be56f6692b1832e4f1c3269071c64a49265295e10cf8a9d",
+  "bytes": 11974,
+  "bounds": [
+    47.05,
+    -2.05,
+    48.3,
+    -1.2
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "Static GTFS slice for nantes-rennes; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 75,
+    "trips": 75,
+    "stops": 37,
+    "fares": false,
+    "bounds": [
+      47.05,
+      -2.05,
+      48.3,
+      -1.2
+    ],
+    "lastServiceDate": "2027-01-04"
+  }
+}
