@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/validate-aura-neighbours.yml'
       - 'scripts/build_national_gtfs_aura.py'
+      - 'scripts/audit_aura_neighbour_links.py'
 permissions:
   contents: read
 jobs:
@@ -36,6 +37,7 @@ jobs:
           for corridor in lyon-dijon bourg-besancon grenoble-gap clermont-bourges clermont-millau; do
             python scripts/build_national_gtfs_aura.py --input /tmp/source.zip --operator "$OPERATOR" --region "$corridor" --source-url "$url" --out /tmp/validated
           done
+          python scripts/audit_aura_neighbour_links.py /tmp/validated
       - uses: actions/upload-artifact@v4
         with:
           name: gtfs-aura-neighbours-${{ matrix.operator }}
