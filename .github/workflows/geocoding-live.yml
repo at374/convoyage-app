@@ -6,12 +6,25 @@ on:
     paths:
       - 'geo.js'
       - 'tests/geo-adresse-repli.test.cjs'
+      - 'tests/platform-address-normalization.test.cjs'
+      - 'server/hiflow-sync-deploy/hiflow-vendor/sync-core.js'
+      - 'server/driiveme-sync-deploy/driiveme-vendor/sync-core.js'
       - '.github/workflows/geocoding-live.yml'
 jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run platform address normalization tests
+        run: node --test tests/platform-address-normalization.test.cjs
+      - name: Run address geocoding regression tests
+        run: |
+          node --test tests/geo-adresse-repli.test.cjs
+          node --test tests/transport-geocode-missing.test.cjs
       - name: Query official geocoder
         run: |
           python3 - <<'PY'
