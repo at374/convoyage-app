@@ -2,6 +2,8 @@
 import json, pathlib, sys, urllib.request, urllib.error, urllib.parse, time
 from collections import Counter
 import xml.etree.ElementTree as ET
+from google.transit import gtfs_realtime_pb2
+from google.protobuf.message import DecodeError
 data = json.loads(pathlib.Path('realtime-candidates.json').read_text())
 limit = int(sys.argv[1]) if len(sys.argv)>1 else 30
 # Only official catalogue URLs, HTTPS, no redirects to non-HTTPS or private hosts.
@@ -39,6 +41,21 @@ def probe(r):
                     result['json_root_keys']=list(obj)[:20] if isinstance(obj,dict) else []
                 except (ValueError,UnicodeError):
                     result['status']='invalid_json'
+            elif sample:
+                try:
+                    feed=gtfs_realtime_pb2.FeedMessage()
+                    feed.ParseFromString(sample)
+                    if not feed.IsInitialized() or feed.header.gtfs_realtime_version not in ('1.0','2.0'):
+                        result['status']='invalid_gtfs_rt_header'
+                    else:
+                        result['entity_count']=len(feed.entity)
+                        result['gtfs_rt_version']=feed.header.gtfs_realtime_version
+                        stamp=feed.header.timestamp if feed.header.HasField('timestamp') else None
+                        result['feed_timestamp']=stamp
+                        result['age_seconds']=int(time.time()-stamp) if stamp else None
+                        result['status']='gtfs_rt_parsed' if stamp and -60<=result['age_seconds']<=300 else 'gtfs_rt_freshness_unconfirmed'
+                except DecodeError:
+                    result['status']='invalid_protobuf'
     except urllib.error.HTTPError as e:
         result.update(http=e.code,status='auth_required_or_forbidden' if e.code in (401,403) else 'http_error')
     except (OSError,ValueError) as e:
@@ -48,6 +65,8 @@ results=[]
 # Sequential requests avoid bursts against the shared public proxy.
 for item in items:
     results.append(probe(item))
+    if results[-1].get('http')==429:
+        break
     time.sleep(1)
 pathlib.Path('realtime-probes.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
 print('Probe results:',dict(Counter(r['status'] for r in results)))
