@@ -1012,7 +1012,7 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
  const providers=H.makeProviders(root,{federationFeedLoader:async request=>{
   loaded.push({id:request.id,dates:request.serviceDates});
   const original=feeds[request.id],files={...original.files,
-   'calendar_dates.txt':'service_id,date,exception_type\\n'+request.serviceDates.map(day=>'S,'+day.replaceAll('-','')+',1').join('\\n')};
+   'calendar_dates.txt':'service_id,date,exception_type\n'+request.serviceDates.map(day=>'S,'+day.replaceAll('-','')+',1').join('\n')};
   return {...original,files,index:indexer.buildIndex(files),indexServiceDates:request.serviceDates};
  }});
  const provider=providers.interNetwork;
