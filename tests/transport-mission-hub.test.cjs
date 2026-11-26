@@ -357,7 +357,7 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  // Les 8 premiers ont une marche impossible (arrêt inaccessible) ; les suivants sont réalisables.
  const BAD={lat:45.9500,lon:6.1300};
  const router={calls:0,route:async(a,b)=>{router.calls++;if(Math.abs(a.lat-BAD.lat)<1e-6||Math.abs(b.lat-BAD.lat)<1e-6)return {status:'unavailable'};
-  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b]};}};
+  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b],endpointsMatched:true};}};
  const js=[];for(let i=0;i<8;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i),at(7,i+20),BAD,STOP2,{line:'K'+i})]});
  for(let i=0;i<6;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,30+i),at(7,50+i),STOP1,STOP2,{line:'G'+i})]});
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
@@ -993,3 +993,60 @@ test('le navigateur charge la fédération GTFS après index/loader et avant le 
  assert.ok(index>=0&&loader>index&&federation>loader&&hub>federation,
   'les dépendances doivent être chargées dans cet ordre');
 });
+
+
+test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironnais',async()=>{
+ const indexer=require('../transport-gtfs-index.js');
+ const federation=require('../transport-gtfs-federation.js');
+ const date='20261127';
+ const makeFeed=(id,network,side)=>{
+  const files={
+   'agency.txt':'agency_id,agency_name,agency_timezone\nA,'+network+',Europe/Paris',
+   'stops.txt':side==='first'
+    ?'stop_id,stop_name,stop_lat,stop_lon\nA,Annecy Gare,45.9000,6.1200\nX,Arrêt correspondance,45.5000,5.7000'
+    :'stop_id,stop_name,stop_lat,stop_lon\nX,Arrêt correspondance,45.5005,5.7005\nB,Voiron Gare,45.3600,5.5900',
+   'routes.txt':'route_id,agency_id,route_short_name\nR,A,'+network,
+   'trips.txt':'trip_id,route_id,service_id\nT,R,S',
+   'stop_times.txt':side==='first'
+    ?'trip_id,stop_id,stop_sequence,arrival_time,departure_time\nT,A,1,09:00:00,09:00:00\nT,X,2,10:00:00,10:00:00'
+    :'trip_id,stop_id,stop_sequence,arrival_time,departure_time\nT,X,1,10:10:00,10:10:00\nT,B,2,11:00:00,11:00:00',
+   'calendar_dates.txt':'service_id,date,exception_type\nS,'+date+',1'
+  };
+  return {files,index:indexer.buildIndex(files),indexServiceDates:['2026-11-27'],
+   source:{datasetId:id,resourceId:id,network}};
+ };
+ const loaded=[];
+ const feeds={
+  sibra_annecy:makeFeed('sibra_annecy','Sibra','first'),
+  mreso_voironnais:makeFeed('mreso_voironnais','M Réso — Pays Voironnais','second')
+ };
+ const root={
+  CPGTFSLoader:{loadResource:async()=>{throw new Error('le test doit utiliser le chargeur injecté');}},
+  CPGTFSIndex:indexer,
+  CPGTFSTime:require('../transport-gtfs-time.js'),
+  CPGTFSFederation:federation
+ };
+ const providers=H.makeProviders(root,{federationFeedLoader:async request=>{
+  loaded.push(request.id);
+  assert.deepEqual(request.serviceDates,['2026-11-27']);
+  return feeds[request.id];
+ }});
+ const provider=providers.interNetwork;
+ assert.ok(provider,'le fournisseur inter-réseaux est enregistré');
+ const task={from:{lat:45.9000,lon:6.1200},to:{lat:45.3600,lon:5.5900},
+  earliestDeparture:at(8,0,'2026-11-27'),latestArrival:at(12,0,'2026-11-27')};
+ assert.equal(provider.enabled(task),true,'Annecy et Voiron sont dans deux réseaux distincts');
+ const rows=await provider.run(task);
+ assert.deepEqual(loaded.sort(),['mreso_voironnais','sibra_annecy']);
+ assert.equal(rows.length,1,'une correspondance horaire réelle est construite');
+ assert.equal(rows[0].legs.length,2);
+ assert.equal(rows[0].legs[0].provider,'Sibra');
+ assert.equal(rows[0].legs[1].provider,'M Réso — Pays Voironnais');
+ assert.equal(rows[0].legs[0].toPoint.lat,45.5);
+ assert.equal(rows[0].legs[1].fromPoint.lat,45.5005);
+ assert.ok(rows[0].missing.some(x=>/GTFS local non confirmé/.test(x)),
+  'les horaires statiques ne sont jamais déclarés confirmés en temps réel');
+ assert.equal(provider.enabled({...task,to:{lat:45.9,lon:6.12}}),false,
+  'une mission dans le même réseau ne déclenche pas le fédérateur inter-réseaux');
+});
+
