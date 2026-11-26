@@ -25,13 +25,15 @@ test('Mobilités M réel (fixture 30/10) : réseau M Réso, arrêts géolocalis�
  assert.equal(ride.provider,'M Réso - Métropole Grenobloise');assert.ok(ride.fromPoint&&ride.toPoint);assert.equal(ride.line,'C1');
 });
 
-test('Valhalla réel (fixture 30/10) accepté comme marche calculée',async()=>{
+test('Valhalla réel (fixture 30/10) : géométrie décalée de plus de 10 m refusée pour un GPS exact',async()=>{
  const [a,b]=valhallaFixture.request.locations;
  const route=W.validateValhalla(valhallaFixture.response,a,b);
- const j={source:'x',sources:['x'],legs:[{...bus(at(8,0),at(8,30),{lat:b.lat,lon:b.lon},STOP2),kind:'transit'}].map(l=>({...l,fromPoint:{lat:b.lat,lon:b.lon}}))};
+ assert.equal(route.endpointsMatched,false,'la fixture finit à plus de 10 m du point GPS demandé');
+ assert.ok(route.endGapMeters>10&&route.endGapMeters<=50);
+ const j={source:'x',sources:['x'],legs:[{...bus(at(8,0),at(8,30),{lat:b.lat,lon:b.lon},STOP2),kind:'transit',fromPoint:{lat:b.lat,lon:b.lon}}]};
  const router={route:async()=>route};
  const done=await H.completeWalks(j,{from:a,to:STOP2},router);
- assert.equal(done.legs[0].kind,'walk');assert.equal(done.legs[0].walkSource,'valhalla');assert.equal(done.legs[0].distanceMeters,260);
+ assert.equal(done.legs.some(l=>l.kind==='walk'),false,'ne pas présenter une marche approximative comme accès GPS exact');
 });
 
 test('Suisse : sections walk retirées, bateaux exclus, retards conservés',()=>{
