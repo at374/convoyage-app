@@ -498,11 +498,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
   const transportPointRequests = new Map();
+  // Évite de relancer le géocodage d'une adresse sans résultat à chaque réveil GPS.
+  // Une nouvelle tentative est autorisée après 5 min ; un point trouvé reste en cache local.
+  const transportPointRetryAt = new Map();
+  const TRANSPORT_POINT_RETRY_MS = 5 * 60000;
   async function pointsMission(m, onPoint) {
     let n = 0;
     await Promise.all(['origin', 'destination'].map(async cote => {
       const cle = G.cleAdresse(m, cote);
-      if (!cle || G.POINTS[cle]) return;
+      if (!cle || G.POINTS[cle] || Date.now() < (transportPointRetryAt.get(cle) || 0)) return;
       try {
         if (!transportPointRequests.has(cle)) {
           const request = Promise.resolve().then(() => G.chercherPoint(m, cote, u => fetch(u)))
@@ -511,11 +515,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         }
         const r = await transportPointRequests.get(cle);
         if (r && r.trouve) {
+          transportPointRetryAt.delete(cle);
           G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++;
           ecrireLocal('cp_gps', gpsMem);
           if (onPoint) onPoint(cote);
-        }
-      } catch (_) { /* One missing address cannot block the other endpoint. */ }
+        } else transportPointRetryAt.set(cle, Date.now() + TRANSPORT_POINT_RETRY_MS);
+      } catch (_) {
+        transportPointRetryAt.set(cle, Date.now() + TRANSPORT_POINT_RETRY_MS);
+        /* One missing address cannot block the other endpoint. */
+      }
     }));
     return n > 0;
   }
