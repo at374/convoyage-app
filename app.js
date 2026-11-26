@@ -3686,7 +3686,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const oldTimer = transportPrefetchTimers.get(prefetchKey);
       if (oldTimer) clearInterval(oldTimer);
       const tickPrefetch = () => {
-        if (!transportDetailButton.isConnected || $('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) {
+        // La fiche peut être refermée : le pré-calcul doit continuer tant que
+        // l'application et le bouton de la mission existent encore dans le DOM.
+        if (!transportDetailButton.isConnected || $('btnTransportsMission') !== transportDetailButton) {
           clearInterval(timer); transportPrefetchTimers.delete(prefetchKey); return;
         }
         if (transportDetailButton.dataset.cpPrefetchStarted === 'true') {
