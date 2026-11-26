@@ -300,7 +300,7 @@ async function completeWalks(j,task,router){
  if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
  const call=async(a,b)=>{
   if(!router||!a||!b)return null;
-  try{const r=await router.route(a,b);return r&&r.status==='calculated'&&
+  try{const r=await router.route(a,b);return r&&r.status==='calculated'&&r.endpointsMatched!==false&&
    finite(r.durationSeconds)&&r.durationSeconds>=0&&finite(r.distanceMeters)&&r.distanceMeters>=0?r:null;}catch(_){return null;}
  };
  // Ne jamais qualifier de « réalisable » une marche moteur sans durée, distance ou horaires cohérents.
@@ -384,7 +384,7 @@ async function walkOnly(task,router,maxKm){
  if(!from||!to||!router)return null;
  if(meters(from,to)>limit)return null; // la marche réelle est toujours au moins aussi longue
  let r=null;try{r=await router.route(from,to);}catch(_){}
- if(!r||r.status!=='calculated'||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
+ if(!r||r.status!=='calculated'||r.endpointsMatched===false||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
  const margin=marginFor(task);
  const deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  // Avec deux bornes (jonction), partir le plus tard possible tout en arrivant
