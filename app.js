@@ -796,7 +796,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   // Suivi d'arrivée à la livraison (missions acceptées de l'agenda) : le GPS n'est lu que pendant la fenêtre de la mission et tant que l'application est ouverte.
   // Arrivée = présence de 60 s dans 300 m de l'adresse de livraison (800 m si seule la ville est connue). Les transports retour / jonction partent alors de arrivée + 15 min.
-  let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false; const suiviDedans = new Map();
+  let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false, suiviAcquisitionEnCours = false, suiviDernierePosition = null; const suiviDedans = new Map();
   function missionsASuivre(quand) {
     const now = Number.isFinite(quand) ? quand : Date.now();
     return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
@@ -961,23 +961,52 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     document.dispatchEvent(new CustomEvent('cp-arrivee', { detail: { key: t.key } }));
     suiviMaj();
   }
+  // Acquisition ponctuelle et adaptative : pas de watch GPS haute précision en continu.
+  // En route : position basse consommation toutes les 5 min (échantillons persistés à 10 min).
+  // À moins de 2 km du point de prise en charge/livraison : précision renforcée brièvement, toutes les 60 s.
+  const SUIVI_GPS_INTERVALLE_ROUTE_MS = 5 * 60000;
+  const SUIVI_GPS_INTERVALLE_APPROCHE_MS = 60 * 1000;
+  function suiviParametresAcquisition() {
+    const pos = suiviDernierePosition;
+    if (!pos) return {near:false,interval:SUIVI_GPS_INTERVALLE_ROUTE_MS};
+    let near = false;
+    const store = lireLocal(SUIVI_CONVOYAGE_KEY,{});
+    for (const {m,t} of missionsASuivre()) {
+      const state = store[t.key];
+      const target = state?.status === 'en_route' ? G.coordonnees(m,'destination') : G.coordonnees(m,'origin');
+      if (target && Number.isFinite(Number(target.lat)) && Number.isFinite(Number(target.lng)) &&
+          G.volOiseauKm({lat:pos.coords.latitude,lng:pos.coords.longitude},target)*1000 <= 2000) { near = true; break; }
+    }
+    return {near,interval:near?SUIVI_GPS_INTERVALLE_APPROCHE_MS:SUIVI_GPS_INTERVALLE_ROUTE_MS};
+  }
+  function suiviProgrammerProchaineAcquisition(delay) {
+    clearTimeout(suiviTimer);
+    suiviTimer = setTimeout(suiviMaj,delay);
+  }
   function suiviMaj() {
-    clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
-    const actif = !suiviRefus && navigator.geolocation && missionsASuivre().length > 0;
-    // Le GPS fourni par la plateforme est parfois le centre de la ville (2 km de l'adresse réelle) : on cherche le point officiel de l'adresse de livraison avant de comparer.
-    for (const { m } of missionsASuivre()) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
+    clearTimeout(suiviTimer); suiviTimer = null;
+    const missions = missionsASuivre();
+    const actif = !suiviRefus && navigator.geolocation && missions.length > 0;
+    for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
-    if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
-    if (suiviWatch !== null) return;
-    suiviWatch = navigator.geolocation.watchPosition(suiviTraiter, e => {
-      if (e && e.code === 1) { suiviRefus = true; if (suiviWatch !== null) navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
-    }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 60000 });
+    if (!actif) { suiviAcquisitionEnCours = false; suiviWatch = null; suiviDedans.clear(); return; }
+    if (suiviAcquisitionEnCours) return;
+    suiviAcquisitionEnCours = true;
+    const params = suiviParametresAcquisition();
+    navigator.geolocation.getCurrentPosition(pos => {
+      suiviAcquisitionEnCours = false; suiviWatch = null; suiviDernierePosition = pos;
+      suiviTraiter(pos);
+      suiviProgrammerProchaineAcquisition(suiviParametresAcquisition().interval);
+    }, e => {
+      suiviAcquisitionEnCours = false; suiviWatch = null;
+      if (e && e.code === 1) { suiviRefus = true; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
+      else suiviProgrammerProchaineAcquisition(params.near ? 2 * 60000 : SUIVI_GPS_INTERVALLE_ROUTE_MS);
+    }, { enableHighAccuracy: params.near, maximumAge: params.near ? 0 : 2 * 60000, timeout: params.near ? 15000 : 20000 });
   }
   if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => {
-    // Ne pas arrêter watchPosition quand la PWA passe en arrière-plan : Android peut
-    // continuer à fournir des positions selon ses règles batterie/localisation.
-    // Les navigateurs peuvent toutefois suspendre le JavaScript en arrière-plan ;
-    // un service natif Android reste nécessaire pour une garantie écran éteint.
+    // Aucun watcher haute précision ne reste actif en arrière-plan. Au retour, une
+    // acquisition ponctuelle relance le suivi ; un service Android natif sera requis
+    // pour les relevés garantis écran éteint, avec cadence basse consommation.
     if (!document.hidden) {
       suiviReprise = true;
       setTimeout(() => { suiviReprise = false; }, 20000);
