@@ -1,0 +1,29 @@
+{
+  "operator": "sncf",
+  "file": "national-sncf-toulouse-bordeaux.zip",
+  "sha256": "8e9324fb761647e56ef3b4145464c70822f5f3884beed244f522ee84e91d3a2d",
+  "bytes": 616867,
+  "bounds": [
+    43.45,
+    -0.85,
+    45.02,
+    1.7
+  ],
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "scope": "Static GTFS slice for toulouse-bordeaux; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 64,
+    "trips": 5309,
+    "stops": 1091,
+    "fares": false,
+    "bounds": [
+      43.45,
+      -0.85,
+      45.02,
+      1.7
+    ],
+    "lastServiceDate": "2027-04-30"
+  }
+}
