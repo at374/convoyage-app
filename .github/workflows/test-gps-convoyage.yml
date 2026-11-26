@@ -1,0 +1,23 @@
+name: GPS convoyage tracking tests
+
+on:
+  push:
+    branches: [feature/gps-convoyage-auto]
+    paths: ['app.js', 'tests/transport-scooter.test.cjs', '.github/workflows/test-gps-convoyage.yml']
+  pull_request:
+    branches: [main]
+    paths: ['app.js', 'tests/transport-scooter.test.cjs', '.github/workflows/test-gps-convoyage.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  gps-convoyage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app.js
+      - run: node --test tests/transport-scooter.test.cjs
