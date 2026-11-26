@@ -864,3 +864,19 @@ test('cache piéton : ne conserve pas une géométrie dont les extrémités ne c
  assert.equal(second.endpointsMatched,false);
  assert.equal(cached.stats().misses,2,'route non concordante doit être retentée, pas réutilisée comme valide');
 });
+
+
+
+test('cache piéton v2 : ignore les anciennes entrées sans preuve de correspondance GPS',async()=>{
+ const oldKey='cp_marches_v1',newKey='cp_marches_v2';
+ const legacy={[oldKey]:JSON.stringify({'45.9,6.12,45.992,6.12':{t:Date.now(),d:600,m:800,g:[HOME,MISSION]}})};
+ const reads=[];
+ const storage={getItem:k=>(reads.push(k),legacy[k]||null),setItem:(k,v)=>{legacy[k]=v;}};
+ const router={route:async(a,b)=>({status:'calculated',distanceMeters:800,durationSeconds:600,
+  from:{...a},to:{...b},geometry:[a,b],endpointsMatched:true})};
+ const cached=H.cachedRouter(router,{storage});
+ const result=await cached.route(HOME,MISSION);
+ assert.equal(reads[0],newKey,'le cache de l’ancienne version n’est jamais lu');
+ assert.equal(result.endpointsMatched,true);
+ assert.equal(cached.stats().misses,1);
+});
