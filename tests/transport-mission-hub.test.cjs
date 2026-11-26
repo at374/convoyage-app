@@ -951,3 +951,26 @@ test('le moteur conserve un départ matin compatible même si 35 courses antéri
  assert.ok(results.every(j=>Date.parse(j.legs?.[0]?.departure)>=Date.parse(task.earliestDeparture)-60000),
   'aucune course incompatible ne doit consommer le plafond des 30 résultats');
 });
+
+test('les six flux AURA du manifeste (Sibra, Ondéa, M Réso et Star’t) sont raccordés',async()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','gtfs','manifest.json'),'utf8'));
+ const ids=['ondea-grand-lac','sibra-annecy','mreso-grenoble','mreso-gresivaudan','mreso-voironnais','start-thonon'];
+ const loaded=[];
+ const root={
+  CPGTFSLoader:{loadResource:async resource=>{loaded.push(resource.url);return {files:{},index:{}};}},
+  CPGTFSIndex:{nearbyDirectTrips:()=>[]}
+ };
+ const providers=H.makeProviders(root);
+ for(const id of ids){
+  const entry=manifest.networks[id],key=id.replace(/-/g,'_');
+  assert.ok(entry?.file&&Array.isArray(entry.bounds)&&entry.bounds.length===4,id+' doit exister dans le manifeste');
+  const provider=providers['local_'+key];
+  assert.ok(provider,id+' doit être raccordé au moteur de mission');
+  const [a,b,c,d]=entry.bounds,point={lat:(a+c)/2,lon:(b+d)/2};
+  const task={from:point,to:{lat:point.lat+0.001,lon:point.lon+0.001},latestArrival:at(10,0,'2026-11-27')};
+  assert.equal(provider.enabled(task),true,id+' doit être actif dans sa zone');
+  await provider.run(task);
+  assert.ok(loaded.at(-1).endsWith('/'+entry.file),id+' doit charger son ZIP officiel');
+ }
+});
