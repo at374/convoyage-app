@@ -2422,7 +2422,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // garantie par les timeouts déjà en place, pas une estimation inventée.
   // 23/11/2026 (Laurent : « 4 ou 5 minutes », bien au-delà du budget de 150 s d'un seul appel) : les variantes
   // d'heure ci-dessus existent pour des moteurs qui ne renvoient que les 5 à 10 trajets les plus proches d'un
-  // instant donné (OTP2, TripGo…) — répéter l'appel avec une heure cible différente permet de couvrir toute la
+  // instant donné (OTP2…) — répéter l'appel avec une heure cible différente permet de couvrir toute la
   // journée. Correspondances entre réseaux et SNCF/FlixBus/BlaBlaCar Bus (GTFS) n'ont pas cette limite : ils
   // parcourent déjà TOUTE la fenêtre donnée en un seul appel (crossNetworkTrips/loadAndSearch, avec leur propre
   // logique de bornage — voir scanWindow dans local_correspondances). Les relancer pour chaque variante
