@@ -251,6 +251,10 @@ test('suivi convoyage : ETA recalculée toutes les 5 min sans accélérer les re
  assert.ok(app.includes('SUIVI_CONVOYAGE_ETA_INTERVALLE_MS = 5 * 60000'));
  assert.ok(block.indexOf('suiviConvoyageEstimerArrivee(m,t,here,ts,state)') < block.indexOf('if (ts - Number(state.lastSampleAt || 0) < SUIVI_CONVOYAGE_INTERVALLE_MS) return'));
  assert.ok(block.includes('state.etaAttemptAt = new Date(ts).toISOString()'));
+ const recordStart=app.indexOf('function suiviConvoyageEnregistrer');
+ const recordEnd=app.indexOf('async function suiviConvoyageEstimerArrivee',recordStart);
+ const recordBlock=app.slice(recordStart,recordEnd);
+ assert.equal((recordBlock.match(/suiviConvoyageEstimerArrivee\(m,t,here,ts,state\)/g)||[]).length,1);
  assert.ok(block.includes('state.etaAttemptAt || state.etaCheckedAt ||'));
  assert.ok(!block.includes('state.etaCheckedAt || state.departedAt'));
 });
