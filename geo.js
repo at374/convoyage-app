@@ -160,7 +160,7 @@
     const mail = m.mail_info?.[cote === 'origin' ? 'depart' : 'arrivee']?.adresse;
     const candidates = [m[cote + '_address'], p.address, p.street, m[pre + '_address'], mail]
       .filter(value => typeof value === 'string')
-      .map(value => value.replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').trim())
+      .map(value => value.replace(/\\+(?=['’])/g, '').replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').trim())
       .filter(Boolean);
     const city = norm(v);
     const a = candidates.find(value => !city || norm(value).replace(/\b(?:\d{5}|\d{2})\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() !== city) || '';
