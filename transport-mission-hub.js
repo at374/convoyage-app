@@ -2307,12 +2307,12 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
   // 3) Les autres (8 au plus, les plus utiles d'abord) reçoivent leurs marches et s'affichent dès qu'ils sont prêts.
-  const toWalk=[];
+  const toWalk=[],queuedBySignature=new Map();
   const immediateRejection=s.task.afterMissedTransport?/départ avant|horaires incohérents|annulée/:
    /arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/;
   for(const j of clean){
-   const key=signature(j),known=key&&s.bySignature.get(key);
-   if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];
+   const key=signature(j),known=key&&(s.bySignature.get(key)||queuedBySignature.get(key));
+   if(known){known.sources=[...new Set([...(known.sources||[known.source]),...(j.sources||[j.source])])];
     // 22/11/2026 (Laurent : le bouton « Tous les horaires » manque sur certaines lignes d'un trajet, alors
     // qu'il existe pour d'autres lignes identiques ailleurs) : quand le MÊME trajet est retrouvé par plusieurs
     // moteurs (ex. OpenTripPlanner ET le moteur GTFS de correspondances), seul le premier arrivé était gardé —
@@ -2330,6 +2330,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    if(quick.reasons.some(r=>immediateRejection.test(r))){
     if(key)s.bySignature.set(key,quick);s.items.push(quick);continue;
    }
+   if(key)queuedBySignature.set(key,j);
    toWalk.push({j,key,quick});
   }
   const isReturn=Number.isFinite(ms(s.task.earliestDeparture))&&!Number.isFinite(ms(s.task.latestArrival));

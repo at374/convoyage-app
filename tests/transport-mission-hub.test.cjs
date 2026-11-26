@@ -258,7 +258,7 @@ test('performance : doublons entre moteurs et trajets hors délai sans calcul de
  const many=[];for(let i=0;i<12;i++)many.push(mk(7,i*2,'L'+i));// 12 trajets distincts, tous à l'heure
  const late=mk(9,10,'TARD');// arrive 9:30 > 9:30-15
  const providers={
-  a:{name:'A',enabled:()=>true,run:async()=>[...many,late]},
+  a:{name:'A',enabled:()=>true,run:async()=>[...many,{...mk(7,0,'L0'),source:'A2',sources:['A2']},late]},
   b:{name:'B',enabled:()=>true,run:async()=>new Promise(r=>setTimeout(()=>r([{...mk(7,0,'L0'),source:'B',sources:['B']}]),30))}
  };
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:H.cachedRouter(router),onUpdate:(l,v)=>updates.push(v.total)});
@@ -268,7 +268,7 @@ test('performance : doublons entre moteurs et trajets hors délai sans calcul de
  // Arrêts identiques : avec le cache de marches (comme dans l'application), 12 trajets ne coûtent que 2 requêtes réelles.
  assert.ok(router.calls.length<=3,'appels marche réels : '+router.calls.length);
  const all=[...v.picks.map(p=>p.journey),...v.others];
- assert.ok(all.some(j=>j.sources.includes('A')&&j.sources.includes('B')),'doublon fusionné avec les deux sources');
+ assert.ok(all.some(j=>j.sources.includes('A')&&j.sources.includes('A2')&&j.sources.includes('B')),'doublons fusionnés avec les trois sources');
  // 14/11/2026 : les 12 trajets partagent les deux mêmes arrêts → tous reçoivent leurs marches (2 couples de points).
  assert.ok(!all.some(j=>/quota/.test(j.statusDetail)),'mêmes arrêts : aucun trajet laissé sans marche');
  assert.ok(all.some(j=>j.legs[0].line==='TARD'&&/marge insuffisante|arrivée après/.test(j.statusDetail)));
