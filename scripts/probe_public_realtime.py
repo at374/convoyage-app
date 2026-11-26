@@ -77,6 +77,8 @@ for item in items:
     time.sleep(1)
 pathlib.Path('realtime-probes.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))
 print('Probe results:',dict(Counter(r['status'] for r in results)))
+print('Static GTFS associations:',sum(bool(r.get('static_gtfs_candidates')) for r in results))
+print('Distinct datasets probed:',len({r.get('dataset') for r in results}))
 print('Payload hints:',dict(Counter(r.get('payload_hint','none') for r in results)))
 for r in results:
     print(json.dumps({k:r.get(k) for k in ('dataset','title','format','http','status','payload_hint','entity_count','trip_updates','vehicle_positions','alerts','age_seconds')},ensure_ascii=False))
