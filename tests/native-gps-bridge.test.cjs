@@ -19,3 +19,15 @@ test('pont GPS Android : le suivi natif est séparé du suivi navigateur', () =>
   assert.match(src, /window\.CPNatif\.demarrerSuiviGps\(plat, plng/);
   assert.match(src, /else window\.CPNatif\.arreterSuiviGps\(\)/);
 });
+
+test('pré-calcul transport : lance retour et jonction à quinze minutes de la livraison puis masque le panneau', () => {
+  const src = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+  assert.match(src, /const transportPrefetchTimers = new Map\(\)/);
+  assert.match(src, /const remaining = finish\.t - Date\.now\(\)/);
+  assert.match(src, /remaining > 15 \* 60000 \|\| remaining < 0/);
+  assert.match(src, /const timer = setInterval\(tickPrefetch, 30000\)/);
+  assert.match(src, /transportDetailButton\.click\(\)/);
+  assert.match(src, /prefetchPanel\.dataset\.cpPrefetched = 'true'/);
+  assert.match(src, /prefetchPanel\.style\.display = 'none'/);
+  assert.match(src, /existing\.dataset\.cpPrefetched === 'true'/);
+});
