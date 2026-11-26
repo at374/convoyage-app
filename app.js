@@ -796,7 +796,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   }
   // Suivi d'arrivée à la livraison (missions acceptées de l'agenda) : le GPS n'est lu que pendant la fenêtre de la mission et tant que l'application est ouverte.
   // Arrivée = présence de 60 s dans 300 m de l'adresse de livraison (800 m si seule la ville est connue). Les transports retour / jonction partent alors de arrivée + 15 min.
-  let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false; const suiviDedans = new Map();
+  // GPS basse consommation : une lecture ponctuelle toutes les 10 minutes, jamais un watchPosition continu.
+  let suiviTimer = null, suiviRefus = false, suiviReprise = false, suiviLectureEnCours = false; const suiviDedans = new Map();
   function missionsASuivre(quand) {
     const now = Number.isFinite(quand) ? quand : Date.now();
     return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
@@ -877,18 +878,29 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     suiviMaj();
   }
   function suiviMaj() {
-    clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
+    clearTimeout(suiviTimer);
     const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
-    // Le GPS fourni par la plateforme est parfois le centre de la ville (2 km de l'adresse réelle) : on cherche le point officiel de l'adresse de livraison avant de comparer.
+    // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
     for (const { m } of missionsASuivre()) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
-    if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
-    if (suiviWatch !== null) return;
-    suiviWatch = navigator.geolocation.watchPosition(suiviTraiter, e => {
-      if (e && e.code === 1) { suiviRefus = true; if (suiviWatch !== null) navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
-    }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 60000 });
+    if (!actif) { suiviDedans.clear(); return; }
+    // Une seule acquisition GPS, puis extinction du capteur jusqu'au prochain cycle.
+    if (!suiviLectureEnCours) {
+      suiviLectureEnCours = true;
+      navigator.geolocation.getCurrentPosition(pos => {
+        suiviLectureEnCours = false;
+        if (!document.hidden) suiviTraiter(pos);
+      }, e => {
+        suiviLectureEnCours = false;
+        if (e && e.code === 1) { suiviRefus = true; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
+      }, { enableHighAccuracy: true, maximumAge: 2 * 60000, timeout: 25000 });
+    }
+    suiviTimer = setTimeout(suiviMaj, 10 * 60000);
   }
-  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) { suiviReprise = true; setTimeout(() => { suiviReprise = false; }, 20000); suiviMaj(); } });
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { clearTimeout(suiviTimer); suiviTimer = null; suiviDedans.clear(); }
+    else { suiviReprise = true; setTimeout(() => { suiviReprise = false; }, 20000); suiviMaj(); }
+  });
   if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
   // Préparation à l'avance (application ouverte) : de 12 h à 0 h avant la prise en charge d'une mission ACCEPTÉE de l'agenda, les fichiers d'horaires utiles
   // (aller, jonction, retour) sont téléchargés d'avance (sans être lus, pour ne pas figer l'écran) et gardés sur le téléphone : « Visualisation des transports » démarre sans attente réseau.
