@@ -27,7 +27,6 @@ Aucune recherche manuelle n'est nécessaire. Les anciens blocs, moteur par moteu
 | `swiss-transport-api.js` | Ajoute les coordonnées des arrêts (x = latitude, y = longitude, d'après la documentation officielle), l'opérateur, la catégorie et le retard |
 | `regional-routing.js` | Ajoute les coordonnées des arrêts et le nom du réseau (Mobilités M / OTP) |
 | `sncf-fallback.js` | Ajoute les coordonnées des gares |
-| `transport-tripgo.js` | Ajoute le type de véhicule (`modeInfo`) |
 | `style.css` | Cartes du hub aux couleurs du thème (clair et sombre) |
 | `tests/transport-mission-hub.test.cjs` (nouveau) | 15 tests, dont 4 sur des réponses réelles enregistrées |
 | `tests/browser/transport-hub-mobile.cjs` (nouveau) | Vraie application dans Chromium, format Pixel 7 |
