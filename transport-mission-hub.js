@@ -1047,7 +1047,7 @@ function makeProviders(r,opts={}){
   };
   for(const [id,name,file,bounds] of localNetworks){
    P['local_'+id]={name:name+' GTFS',
-    enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
+    enabled:task=>!!queryWindow(task)&&!!inBounds(pt(task.from),bounds)&&!!inBounds(pt(task.to),bounds),
     disabledReason:'trajet hors zone du réseau local ou horaires manquants',
     run:async(task,signal)=>{
      const w=queryWindow(task),when=ms(w.when);
