@@ -213,8 +213,9 @@ async function runSync() {
   const passes = listePassesNationale();
   const cur0 = (await lireCurseur(SUPABASE_URL, SERVICE_KEY, USER_ID)) % passes.length;
   const cyclePrecedent = await lireCycle(SUPABASE_URL, SERVICE_KEY, USER_ID);
-  const cycleStartedAt = cur0 === 0 || !cyclePrecedent?.cycle_started_at ? new Date().toISOString() : cyclePrecedent.cycle_started_at;
-  let cycleFailed = cur0 === 0 ? false : !!cyclePrecedent?.failed;
+  const cycleStartedAt = cur0 === 0 ? new Date().toISOString() : (cyclePrecedent?.cycle_started_at || null);
+  // Après installation/migration en milieu de rotation, le premier tour est volontairement non purgeable.
+  let cycleFailed = cur0 === 0 ? false : (!cyclePrecedent?.cycle_started_at || !!cyclePrecedent.failed);
   // Ne jamais chevaucher la fin du tour : le dernier lot peut être plus petit (ex. 2 sur 4).
   const aLire = passes.slice(cur0, Math.min(cur0 + LOT, passes.length));
 
