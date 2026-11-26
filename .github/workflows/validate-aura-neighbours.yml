@@ -60,3 +60,19 @@ jobs:
           path: /tmp/validated/
           if-no-files-found: error
           retention-days: 7
+
+  integration:
+    needs: extract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: gtfs-aura-neighbours-*
+          merge-multiple: true
+          path: data/gtfs
+      - name: Test actual corridor archives with existing journey engine
+        run: node --test tests/aura-neighbour-integration.test.cjs
