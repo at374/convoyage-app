@@ -284,8 +284,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const [missions, alertes, reglages, factures] = await Promise.all([api.missions(), api.alertes(), api.reglages(), api.factures()]);
       if (!api.connecte || generation !== generationChargementMissions) return;
       etat.facturesServeur = factures !== null; if (factures) etat.factures = factures;   // V96
-      try { etat.sources = await api.sourcesEtat(); } catch (_) { etat.sources = null; }   // V114
+      let sources = null;
+      try { sources = await api.sourcesEtat(); } catch (_) {}   // V114
       if (!api.connecte || generation !== generationChargementMissions) return;
+      etat.sources = sources;
       const alertesNouv = seulesNouvelles(alertes);
       const avant = new Set(etat.alertes.map(a => a.id));
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
@@ -297,6 +299,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       etat.chargeLeDejaVu = true;
       if (!silencieux) toast('Missions à jour');
     } catch (e) {
+      if (generation !== generationChargementMissions) return;
       etat.erreur = String(e.message || e); majPastille();
       if (!api.connecte) return verrouillerEcran();
       if (!silencieux) toast('Hors connexion : dernières données affichées');
