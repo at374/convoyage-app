@@ -253,7 +253,7 @@ test('fluidité : recherches des jours non affichés différées, pas de redessi
  assert.ok(src.includes('host.__cpFp===fp'));
  assert.ok(app.includes('t.lazy=transportDays[t.label]!==activeDay'));
  assert.ok(app.includes('startDayLabels(day)'));
- assert.ok(app.includes('Date.now()-dernierDefilement<250'));
+ assert.ok(app.includes('performance.now()-dernierDefilement<250'));
  assert.ok(app.includes('tasks.map(({lazy,...r})=>r)'));
 });
 test('classement : meilleur compromis = arrive le plus tôt, propositions triées par départ',()=>{
