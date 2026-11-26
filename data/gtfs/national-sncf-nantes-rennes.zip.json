@@ -1,0 +1,29 @@
+{
+  "operator": "sncf",
+  "file": "national-sncf-nantes-rennes.zip",
+  "sha256": "cde3c5a72b87ff9a194d9d148525cf90ba73f533d57e5d6177d1ed9dbeaac598",
+  "bytes": 229577,
+  "bounds": [
+    47.05,
+    -2.05,
+    48.3,
+    -1.2
+  ],
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "scope": "Static GTFS slice for nantes-rennes; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "keepsCompleteTrips": true,
+  "details": {
+    "routes": 46,
+    "trips": 2800,
+    "stops": 438,
+    "fares": false,
+    "bounds": [
+      47.05,
+      -2.05,
+      48.3,
+      -1.2
+    ],
+    "lastServiceDate": "2027-04-30"
+  }
+}

@@ -75,7 +75,8 @@ for(const [slug,bounds,from,to] of [
  ['paris-marseille',[43.10,2.15,49.05,5.85],{lat:48.8443,lon:2.373},marseille],
  ['marseille-toulouse',[43.05,1.25,44.25,5.65],marseille,{lat:43.611,lon:1.454}],
  ['toulouse-bordeaux',[43.45,-0.85,45.02,1.7],{lat:43.611,lon:1.454},{lat:44.8262,lon:-0.5564}],
- ['bordeaux-nantes',[44.65,-2.0,47.44,0.55],{lat:44.8262,lon:-0.5564},{lat:47.2176,lon:-1.5418}]
+ ['bordeaux-nantes',[44.65,-2.0,47.44,0.55],{lat:44.8262,lon:-0.5564},{lat:47.2176,lon:-1.5418}],
+ ['nantes-rennes',[47.05,-2.05,48.30,-1.20],{lat:47.2176,lon:-1.5418},{lat:48.1035,lon:-1.6726}]
 ]){
 test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet',async()=>{
  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
@@ -118,7 +119,7 @@ test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet
     assert.equal(corridor.enabled(reverse),true);
     assert.ok((await corridor.run(reverse)).length>0,operator+' Marseille → Paris');
    }
-   if(['marseille-toulouse','toulouse-bordeaux','bordeaux-nantes'].includes(slug)){
+   if(['marseille-toulouse','toulouse-bordeaux','bordeaux-nantes','nantes-rennes'].includes(slug)){
     const reverse={...task,from:to,to:from};
     assert.equal(corridor.enabled(reverse),true);
     for(const [direction,candidates] of [[task,trips],[reverse,await corridor.run(reverse)]]){
