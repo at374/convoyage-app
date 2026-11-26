@@ -986,3 +986,8 @@ test('un itinéraire piéton dont le moteur signale des extrémités GPS non app
  assert.equal(H.assess(completed,task).feasible,false);
  assert.equal(await H.walkOnly({...task,to:{lat:HOME.lat+0.001,lon:HOME.lon}},router,3),null);
 });
+
+test('TripGo retiré : aucun fournisseur de mission même si un ancien adaptateur global existe',()=>{
+ const providers=H.makeProviders({CPTripGo:{plan:async()=>({itineraries:[]}),getKey:()=> 'legacy-key'}});
+ assert.equal(Object.hasOwn(providers,'tripgo'),false);
+});
