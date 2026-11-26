@@ -100,8 +100,8 @@ jobs:
             .then(()=>{throw Error('Oversized archive must be rejected')},e=>assert.match(e.message,/safe mobile cap/));
           // Départ matinal : une arrivée avant la limite doit conserver un départ à l'aube.
           const morningFiles={...files,
-            'trips.txt':'route_id,service_id,trip_id\\nr1,s1,early\\nr1,s1,late\\n',
-            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\\nearly,05:40:00,05:40:00,a,1\\nearly,07:10:00,07:10:00,b,2\\nlate,08:00:00,08:00:00,a,1\\nlate,10:00:00,10:00:00,b,2\\n'
+            'trips.txt':'route_id,service_id,trip_id\nr1,s1,early\nr1,s1,late\n',
+            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nearly,05:40:00,05:40:00,a,1\nearly,07:10:00,07:10:00,b,2\nlate,08:00:00,08:00:00,a,1\nlate,10:00:00,10:00:00,b,2\n'
           };
           const morningIndex=indexer.buildIndex(morningFiles);
           const morning=national.search({...args,files:morningFiles,index:morningIndex,latestArrival:'07:30',maxResults:20});
