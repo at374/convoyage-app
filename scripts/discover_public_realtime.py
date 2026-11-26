@@ -1,5 +1,6 @@
 """Inventory official realtime endpoints; discovery is not proof of access."""
-import json, urllib.request, pathlib
+import json, urllib.request, pathlib, unicodedata
+from collections import Counter
 URL = 'https://transport.data.gouv.fr/api/datasets'
 with urllib.request.urlopen(URL, timeout=60) as response:
     datasets = json.load(response)
@@ -20,5 +21,18 @@ for ds in datasets:
         seen.add(key)
         out.append({'dataset':ds.get('slug'),'title':ds.get('title'),'territory':ds.get('territory'),'region':ds.get('region'),'resource_id':resource.get('id'),'format':fmt,'url':url,'status':'discovered_not_validated'})
 assert out, 'No matching realtime resources found'
+def normalize(value):
+    return ''.join(c for c in unicodedata.normalize('NFKD',str(value or '').lower()) if not unicodedata.combining(c))
+def priority(row):
+    region=normalize(row.get('region'))
+    if 'auvergne' in region or 'rhone-alpes' in region or region.strip()=='84':
+        return 0
+    if any(x in region for x in ('bourgogne','franche-comte','provence','occitanie','nouvelle-aquitaine','centre-val de loire')) or region.strip() in ('27','93','76','75','24'):
+        return 1
+    return 2
+for row in out:
+    row['geographic_priority']=priority(row)
+out.sort(key=lambda row:(row['geographic_priority'],str(row.get('dataset')),row['url']))
+print('Geographic priorities:',dict(Counter(row['geographic_priority'] for row in out)))
 pathlib.Path('realtime-candidates.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
 print('Public realtime candidates:',len(out))
