@@ -201,24 +201,6 @@ function fromOJP(entries,{origin,destination}={}){
   return journey('OJP Suisse (opentransportdata.swiss)',legs,{});
  }).filter(Boolean);
 }
-function tripgoMode(m){return m==='wa_wal'?'walk':/train|rail/.test(m)?'Train':/tram|lrt/.test(m)?'Tram':/metro|subway/.test(m)?'Métro':/coach/.test(m)?'Car':/bus/.test(m)?'Bus':'Transport';}
-function fromTripGo(answer){
- return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
-  const legs=[];
-  for(const l of it.legs||[]){
-   if(/^stationary_/.test(l.mode))continue;
-   const mode=/flixbus|blablacar|eurolines|ouibus/i.test((l.line||'')+' '+(l.provider||''))?'Car':tripgoMode(l.modeInfo||l.mode);
-   if(mode==='walk')legs.push(leg({kind:'walk',mode:'Marche',from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,
-    departure:l.departure,arrival:l.arrival,distanceMeters:l.distanceMeters,
-    durationSeconds:(ms(l.arrival)-ms(l.departure))/1000,walkSource:'provider'}));
-   else legs.push(leg({mode,line:l.line||l.serviceShortName,provider:l.provider||'TripGo',from:l.from,to:l.to,
-    fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival,realtime:l.realtimeReported,ticketUrl:l.ticketWebsiteURL,
-    // Billet transmis par TripGo pour cette portion (jamais le coût global estimé « moneyCost »).
-    fare:l.ticket?{amount:l.ticket.amount,currency:l.ticket.currency,source:'Prix transmis par TripGo'+(l.ticket.name?' ('+l.ticket.name+')':'')+' pour '+(l.provider||'l’opérateur')}:null}));
-  }
-  return journey('TripGo',legs,{alerts:it.alerts,realtime:it.evidence?.realtimeReported===true});
- });
-}
 function fromRegional(itineraries,source='Mobilités M'){
  const map={WALK:'walk',BUS:'Bus',TRAM:'Tram',SUBWAY:'Métro',RAIL:'Train'};
  return (Array.isArray(itineraries)?itineraries:[]).map(it=>journey(source,(it.legs||[]).map(l=>{
@@ -1962,13 +1944,6 @@ function makeProviders(r,opts={}){
   },
   timeoutMs:(Number(opts.otpTimeoutMs)||30000)*2+10000
  };
- if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
-  disabledReason:'TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle',
-  run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
-   const deadline=ms(task.latestArrival);
-   const answer=await r.CPTripGo.plan({from:pt(task.from),to:pt(task.to),when:w.when,arriveBy:w.arriveBy,signal,fetcher,
-    ...(!w.arriveBy&&Number.isFinite(deadline)&&deadline>ms(w.when)?{latestArrival:new Date(deadline).toISOString()}:{})});
-   return fromTripGo(answer);}};
  if(r.CPSwissTransport&&typeof r.CPSwissTransport.plan==='function')P.swiss={name:'Suisse',
   enabled:task=>inSwissArea(pt(task.from))||inSwissArea(pt(task.to)),disabledReason:'trajet hors zone suisse et Grand Genève',
   run:async task=>{const w=queryWindow(task);if(!w)return [];const f=pt(task.from),t=pt(task.to);
