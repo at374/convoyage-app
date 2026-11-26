@@ -880,14 +880,31 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = null;
     const missions = missionsASuivre();
-    const actif = !suiviRefus && !document.hidden && !!navigator.geolocation && missions.length > 0;
+    const natif = window.CPNatif && typeof window.CPNatif.demarrerSuiviGps === 'function';
+    const actif = !suiviRefus && !document.hidden && (natif || !!navigator.geolocation) && missions.length > 0;
     // Toujours reprogrammer le prochain contrôle : une mission peut être synchronisée après le démarrage de l'application.
-    if (!suiviRefus && !document.hidden && navigator.geolocation) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
+    if (!suiviRefus && !document.hidden && (natif || navigator.geolocation)) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
     for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
+    // Android : le service natif continue écran éteint ; les points sont mis en file locale puis traités au retour dans l'application.
+    if (natif) {
+      try {
+        if (missions.length && !suiviRefus) window.CPNatif.demarrerSuiviGps();
+        else window.CPNatif.arreterSuiviGps();
+        const raw = window.CPNatif.prendrePointsSuiviGps();
+        const points = JSON.parse(raw || '[]');
+        if (Array.isArray(points)) for (const p of points) {
+          const lat = Number(p.lat), lng = Number(p.lng), accuracy = Number(p.accuracy), timestamp = Number(p.timestamp);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(timestamp)) continue;
+          suiviTraiter({ timestamp, coords: { latitude: lat, longitude: lng, accuracy: Number.isFinite(accuracy) ? accuracy : 9999, speed: null } });
+        }
+      } catch (_) { }
+      if (!actif) suiviDedans.clear();
+      return;
+    }
     if (!actif) { suiviDedans.clear(); return; }
-    // Une seule acquisition GPS basse consommation, puis extinction du capteur jusqu'au prochain cycle.
+    // Web : une seule acquisition basse consommation, puis extinction du capteur jusqu'au prochain cycle.
     if (!suiviLectureEnCours) {
       suiviLectureEnCours = true;
       navigator.geolocation.getCurrentPosition(pos => {
