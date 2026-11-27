@@ -2141,6 +2141,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       // Détecter une correspondance réellement dépassée sur l'aller et repartir d'une position GPS fraîche.
       // La position n'est gardée qu'en mémoire pendant cette fiche, sans suivi continu ni écriture dans l'agenda.
       let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteAt=0,liveDelayPlan=null,liveRerouteStatus=null;
+      let missedConnectionTimer=null,missedConnectionCandidate=null;
       const missedConnectionDeparture=view=>{
         const now=Date.now();
         for(const item of Array.isArray(view?.picks)?view.picks:[]){
@@ -2148,7 +2149,18 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             Number.isFinite(Date.parse(leg.departure||''))&&Number.isFinite(Date.parse(leg.arrival||'')));
           for(let i=1;i<legs.length;i++){
             const prior=Date.parse(legs[i-1].arrival),depart=Date.parse(legs[i].departure),arrive=Date.parse(legs[i].arrival);
-            if(depart<=now&&depart>=now-45*60000&&arrive>now&&prior<=depart)return legs[i].departure;
+            if(prior>depart||arrive<=now)continue;
+            if(depart>now&&depart-now<=90*60000){
+              if(missedConnectionCandidate!==legs[i].departure){
+                clearTimeout(missedConnectionTimer);missedConnectionCandidate=legs[i].departure;
+                missedConnectionTimer=setTimeout(()=>{
+                  missedConnectionCandidate=null;missedConnectionTimer=null;
+                  maybeStartLiveReroute('Aller',view);
+                },depart-now+1000);
+              }
+              continue;
+            }
+            if(depart<=now&&depart>=now-45*60000)return legs[i].departure;
           }
         }
         return null;
