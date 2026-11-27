@@ -615,10 +615,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   const bk = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const adrHtml = m => ((m.platform === 'DriiveMe' || m.platform === 'Hiflow') && (m.origin_address || m.destination_address)) ? bk('bkLieu', 'LIEUX', (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(adrNet(m.origin_address)) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(adrNet(m.destination_address)) + '</div>' : '')) : '';
   const sugTexte = z => { const p = String(z.t || '').split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean); if (p.length >= 3) { const dm = p[0].match(/^(.+?\(\s*\d+\s*km\s*\))\s*(.+)$/); const tete = dm ? 'Départ : <b>' + esc(dm[1]) + '</b><br>Arrivée : <b>' + esc(dm[2]) + '</b>' : '<b>' + esc(p[0]) + '</b>'; return tete + '<br>' + esc(p.slice(1, -1).join(' · ')) + ' · <b>' + esc(p[p.length - 1].replace(/\s+,/, ',')) + '</b>'; } return esc(p.join(' · ')); };
-  // V227 : plaque W (garage) — dessin de la nouvelle plaque rose quand la fiche de la plateforme l'exige.
-  const RE_PLAQUE_W = /plaques?[^a-z0-9]{0,3}(?:de\s+|type\s+|d['’]immatriculation\s+)?WW?\b|\bW[\s-]*garage|\bWW\b|immatriculation\s+(?:de\s+)?WW?\b|plaques?\s+(?:garage|professionnelle)/i;
-  const compHtml = m => { try { const v = vehObj(m); const c = v && typeof v === 'object' && Array.isArray(v.competences) ? v.competences.filter(Boolean) : []; return c.length ? '<div class="carte"><b>🧩 Compétences requises</b>' + c.map(s => '<p>' + esc(s) + '</p>').join('') + '</div>' : ''; } catch (_) { return ''; } };   // V235 : bloc « Compétences requises » lu dans la fiche Hiflow (APK 2.12)
-  const plaqueW = m => { try { if (!RE_PLAQUE_W.test(JSON.stringify({ ...m, suites: null }))) return ''; return '<div class="plaqueW" title="Plaque W (garage) exigée"><svg viewBox="0 0 520 110" width="150" height="32" role="img" aria-label="Plaque W garage"><rect x="2" y="2" width="516" height="106" rx="14" fill="#f0559f" stroke="#a8326f" stroke-width="3"/><path d="M16 2H62V108H16A14 14 0 0 1 2 94V16A14 14 0 0 1 16 2Z" fill="#1b3fbf"/><text x="32" y="88" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#fff" text-anchor="middle">F</text><text x="292" y="82" font-family="Arial,sans-serif" font-size="72" font-weight="800" fill="#111" text-anchor="middle">W-123-AA</text></svg></div>'; } catch (_) { return ''; } };
+  const plaqueW = m => globalThis.CPPlaqueW ? globalThis.CPPlaqueW.render(m) : '';
   const prixKm = (m, r) => { const km = Number(m.distance_km), f = Number(m.fee); if (!Number.isFinite(km) || km <= 0 || !Number.isFinite(f) || m.fee === null) return ''; return '<div class="prixKm">' + (f / km).toFixed(2).replace('.', ',') + ' € /km</div>'; };
   const sugListe = m => Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []);
   // V227 : on ne garde que les suites possibles LE MÊME JOUR, après la mission (celles des jours d'après sont dans « Multi Jours »).
@@ -639,7 +636,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
-    return bk('bkVeh', titreVeh(m), '<div>🚗 ' + esc(type || 'inconnu') + '</div><div class="ve ' + cl + '">' + ic + ' Énergie : ' + esc(en || 'inconnue') + '</div>');
+    return bk('bkVeh', titreVeh(m), '<div>🚗 ' + esc(type || 'inconnu') + '</div><div class="ve ' + cl + '">' + ic + ' Énergie : ' + esc(en || 'inconnue') + '</div>' + plaqueW(m));
   };
   // Prix : on mémorise le dernier prix vu de chaque mission ; s'il change, flèche et ancien prix.
   const prixVar = m => {
@@ -656,7 +653,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   function carteMission(m, i, extra, datesHtml) {
     const r = renta(m), reste = m.kind === 'acceptee' ? null : heuresRestantes(m);
     return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
-      <div class="haut"><span>${plaqueW(m)}<span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${' <span class="verif">' + esc(verifPast(m)) + '</span>'}</span>
+      <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${' <span class="verif">' + esc(verifPast(m)) + '</span>'}</span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${prixKm(m, r)}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>${adrHtml(m)}
       <div class="meta">${datesHtml || bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : arriveeTxt(m))}
@@ -1697,7 +1694,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">Masquer de l’Agenda</button>' : ''}
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       ${m.kind === 'acceptee' ? agendaDateBlocks(m) : bkDates(m, arriveeTxt(m))}
-      ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
+      ${vehHtml(m)}${repriseHtml(m)}${compHtml(m)}
       ${blocKm(m, false)}
       <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet voiture">🚗 Visualisation trajet voiture</button>
       <button id="btnTransportsMission" class="second" type="button" style="width:100%;margin-top:8px;background:#cdeaff;color:#123d72;border:1px solid #70b7eb;font-weight:600" aria-label="Visualisation des transports aller, jonction mission et retour">🚌 Visualisation des transports<span style="display:block;font-size:.9em;font-weight:500;margin-top:3px">Aller / Jonction mission / Retour</span></button>
