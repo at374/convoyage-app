@@ -459,7 +459,7 @@ test('jonction impossible : aucune requête fournisseur ni routage piéton',asyn
 });
 
 test('jonction à pied : départ calculé pour arriver exactement avec 15 minutes de marge',async()=>{
- const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
+ const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION],endpointsMatched:true})};
  const task={from:HOME,to:STOP1,earliestDeparture:at(8,0),latestArrival:at(9,0)};
  const walk=await H.walkOnly(task,router,3);
  assert.ok(walk);
@@ -468,7 +468,7 @@ test('jonction à pied : départ calculé pour arriver exactement avec 15 minute
  assert.equal(H.assess(walk,task).feasible,true);
 });
 test('jonction à pied : rejeter la marche si la livraison est trop tardive',async()=>{
- const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
+ const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION],endpointsMatched:true})};
  const task={from:HOME,to:STOP1,earliestDeparture:at(8,40),latestArrival:at(9,0)};
  assert.equal(await H.walkOnly(task,router,3),null);
 });
