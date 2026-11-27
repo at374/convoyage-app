@@ -2374,14 +2374,28 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // Une correspondance dont le départ est passé pendant que son arrivée reste future déclenche
       // une nouvelle recherche depuis un GPS ponctuel. Aucun suivi en arrière-plan ni stockage GPS.
       let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteStatus=null,liveDelayPlan=null;
+      const missedLegTime=value=>{
+        if(typeof value==='string'){const parsed=Date.parse(value);if(Number.isFinite(parsed))return parsed;}
+        if(typeof value==='number'&&Number.isFinite(value)&&value>0)return value<1e11?value*1000:value;
+        return NaN;
+      };
       const missedConnection=view=>{
-        const now=Date.now(),windowMs=45*60000;
-        for(const item of Array.isArray(view?.picks)?view.picks:[]){
-          const legs=(item?.journey?.legs||[]).filter(leg=>leg&&leg.kind!=='walk'&&leg.kind!=='scooter'&&
-            Number.isFinite(Date.parse(leg.departure||''))&&Number.isFinite(Date.parse(leg.arrival||'')));
+        const now=Date.now();
+        const journeys=[...(Array.isArray(view?.picks)?view.picks.map(item=>item?.journey):[]),
+          ...(Array.isArray(view?.others)?view.others:[])].filter(Boolean);
+        for(const journey of journeys){
+          const legs=(journey.legs||[]).map(leg=>{
+            if(!leg||typeof leg!=='object')return null;
+            const mode=String(leg.kind||leg.mode||leg.type||'').toLowerCase();
+            if(['walk','walking','foot','marche','scooter'].includes(mode))return null;
+            const departure=missedLegTime(leg.departure??leg.startTime??leg.start_time??leg.departureTime??leg.departure_time);
+            const arrival=missedLegTime(leg.arrival??leg.endTime??leg.end_time??leg.arrivalTime??leg.arrival_time);
+            return Number.isFinite(departure)&&Number.isFinite(arrival)?{departure,arrival}:null;
+          }).filter(Boolean);
           for(let i=1;i<legs.length;i++){
-            const previousArrival=Date.parse(legs[i-1].arrival),departure=Date.parse(legs[i].departure),arrival=Date.parse(legs[i].arrival);
-            if(departure<=now&&departure>=now-windowMs&&arrival>now&&previousArrival<=departure)return legs[i].departure;
+            const previousArrival=legs[i-1].arrival,departure=legs[i].departure;
+            if(previousArrival>departure)continue;
+            if(departure<=now&&departure>=now-45*60000)return new Date(departure).toISOString();
           }
         }
         return null;
@@ -2649,10 +2663,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 liveRerouteStatus ||= document.createElement('p');
                 if(!liveRerouteStatus.isConnected){
                   liveRerouteStatus.className='doux cp-live-reroute-status';
-                  liveRerouteStatus.setAttribute('role','status');liveRerouteStatus.setAttribute('aria-live','polite');
-                  transportDestinations.Aller.appendChild(liveRerouteStatus);
+                  liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');
+                  liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
+                  panel.insertBefore(liveRerouteStatus,transportDestinations.Aller||null);
                 }
                 liveRerouteStatus.textContent='Correspondance manquée (départ '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(missed))+'). Actualisation depuis votre position…';
+                toast('⚠ Correspondance manquée : recherche d’un trajet actualisé depuis ta position.');
                 requestLiveReroute();
               }
             }
