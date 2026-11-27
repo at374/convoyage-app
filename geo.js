@@ -220,6 +220,10 @@
         const q = [mots, x.v].filter(Boolean).join(' ');
         if (!essais.some(e => e.q === q && e.sansCP)) essais.push({q, commune:false, sansCP:true});
       }
+      const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
+      const rueDemandee = numero ? motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]) : '';
+      const voieOK = v => !!v && motsVoie(v) === rueDemandee;
+      const communeOK = p => [p.city,p.municipality,p.oldcity].some(v => v && norm(v) === norm(x.v));
       let meilleur = null;
       for (const es of essais) {
         // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
@@ -235,12 +239,8 @@
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
           if (numero && (precision !== 'adresse' || String(f.properties.housenumber || '').match(/^\d+/)?.[0] !== numero[1])) continue;
-          if (numero && f.properties.street) {
-            const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
-            const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]);
-            const trouvee = motsVoie(f.properties.street);
-            if (demandee && trouvee && demandee !== trouvee && !demandee.startsWith(trouvee+' ')) continue;
-          }
+          if (numero && precision === 'rue' && (!voieOK(f.properties.street || f.properties.name) || !communeOK(f.properties))) continue;
+          if (numero && precision === 'adresse' && f.properties.street && !voieOK(f.properties.street)) continue;
           if (precision === 'adresse' || !x.a) return { cle, trouve: true, point };
           if (!meilleur || (meilleur.precision === 'ville' && precision === 'rue')) meilleur = point;
         }
@@ -270,7 +270,10 @@
           }
         }
       }
-      if (numero) return { cle, trouve: false };
+      if (numero) {
+        if (meilleur && meilleur.precision === 'rue') return { cle, trouve: true, point: meilleur };
+        return { cle, trouve: false };
+      }
       if (meilleur) return { cle, trouve: true, point: meilleur };
       if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
     }

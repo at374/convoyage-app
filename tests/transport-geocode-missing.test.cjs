@@ -41,6 +41,18 @@ test('faubourg avec numéro : vérifie exactement le numéro IGN retourné',asyn
  assert.equal(wrong.trouve,false,'un numéro voisin ne doit pas remplacer le 25 demandé');
 });
 
+test('adresse numérotée : si le numéro est absent, le géocodeur ne garde que la rue avec précision rue',async()=>{
+ const m={to_city:'Annecy',to_department:'74',to_address:"94 avenue d'Aix-les-Bains"};
+ const result=await geo.chercherPoint(m,'destination',async url=>{
+  const streetOnly=url.includes('type=street');
+  return {ok:true,json:async()=>({features:[{geometry:{coordinates:[6.083469,45.870166]},properties:{
+   score:0.9,type:streetOnly?'street':'street',street:"Avenue d'Aix-les-Bains",name:"Avenue d'Aix-les-Bains",city:'Annecy'
+  }}]})};
+ });
+ assert.equal(result.trouve,true,'le repli officiel sur la voie doit rester disponible');
+ assert.equal(result.point.precision,'rue','une voie sans numéro vérifié ne doit jamais être affichée comme adresse exacte');
+});
+
 test('rue sans numéro : un bâtiment voisin ne remplace pas le début de rue',async()=>{
  const m={to_city:'Voiron',to_department:'38',to_address:'Rue Louis Armand'};
  const urls=[];
