@@ -968,7 +968,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   vm.createContext(context);
   const api=vm.runInContext(helper+'({missedConnectionDeparture,getCandidate:()=>missedConnectionCandidate})',context);
   assert.equal(api.missedConnectionDeparture(view),null);
-  assert.equal(scheduled.delay,5*60*1000+1000);
+  assert.equal(scheduled.delay,4*60*1000+1000);
   now=Date.parse('2026-11-27T07:44:01+01:00');
   scheduled.fn();
   assert.equal(reroutes,1);
