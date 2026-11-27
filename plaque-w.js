@@ -6,12 +6,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const normaliser = value => String(value == null ? '' : value)
-    .normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '')
-    .replace(/[\\u00a0\\u202f]/g, ' ')
-    .replace(/[\\u2010-\\u2015\\u2212]/g, '-')
-    .toLowerCase().replace(/\\s+/g, ' ').trim();
-  const POSITIF = /\\bplaques?\\s+(?:(?:d[' ]immatriculation|de garage|garage|professionnelles?)\\s+)?w\\b|\\bw[ -]?garage\\b|\\bimmatriculation\\s+(?:de\\s+)?w\\b|\\bplaques?\\s+professionnelles?\\b|\\bplaques?\\s+garage\\b/;
-  const NEGATIF = /\\b(?:non\\s+(?:requise?|obligatoire|necessaire|demandee?|exigee?)|pas\\s+(?:de\\s+)?(?:plaque\\s+w|besoin\\s+de\\s+plaque)|sans\\s+plaque\\s+w|plaque\\s+w\\s+(?:facultative|non\\s+requise?|non\\s+obligatoire|pas\\s+(?:requise?|obligatoire|necessaire|exigee?))|aucune\\s+plaque\\s+w)\\b/;
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u00a0\u202f]/g, ' ')
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+  const POSITIF = /\bplaques?\s+(?:(?:d[' ]immatriculation|de garage|garage|professionnelles?)\s+)?w\b|\bw[ -]?garage\b|\bimmatriculation\s+(?:de\s+)?w\b|\bplaques?\s+professionnelles?\b|\bplaques?\s+garage\b/;
+  const NEGATIF = /\b(?:non\s+(?:requise?|obligatoire|necessaire|demandee?|exigee?)|pas\s+(?:de\s+)?(?:plaque\s+w|besoin\s+de\s+plaque)|sans\s+plaque\s+w|plaque\s+w\s+(?:facultative|non\s+requise?|non\s+obligatoire|pas\s+(?:requise?|obligatoire|necessaire|exigee?))|aucune\s+plaque\s+w)\b/;
   const parseVehicle = mission => {
     let vehicle = mission && mission.vehicle;
     if (typeof vehicle === 'string') {
