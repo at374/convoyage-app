@@ -368,7 +368,7 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  s.dispose();
 });
 
-test('cache piéton v3 : conserve les coordonnées exactes et sépare les adresses proches',async()=>{
+test('cache piéton v4 : conserve les coordonnées exactes et sépare les adresses proches',async()=>{
  const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
  const base=fakeRouter(),r1=H.cachedRouter(base,{storage});
  await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);
@@ -1057,3 +1057,18 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
   'une mission dans le même réseau ne déclenche pas le fédérateur inter-réseaux');
 });
 
+
+ test('cache piéton v4 : ne fabrique pas les extrémités et ignore le cache v3',async()=>{
+ const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
+ const shifted={...STOP1,lat:STOP1.lat+0.00003};
+ const router={route:async(a,b)=>({status:'calculated',distanceMeters:100,durationSeconds:80,geometry:[shifted,b],endpointsMatched:true})};
+ await H.cachedRouter(router,{storage}).route(STOP1,STOP2);
+ const base=fakeRouter(),cached=H.cachedRouter(base,{storage});
+ const result=await cached.route(STOP1,STOP2);
+ assert.equal(result.cached,true);assert.deepEqual(result.geometry[0],shifted);
+ await cached.route({...STOP1,lat:STOP1.lat+0.00000001},STOP2);
+ assert.equal(base.calls.length,1,'coordonnées distinctes même sous un dixième de mètre');
+ store.set('cp_marches_v3',store.get('cp_marches_v4'));store.delete('cp_marches_v4');
+ const fresh=fakeRouter();await H.cachedRouter(fresh,{storage}).route(STOP1,STOP2);
+ assert.equal(fresh.calls.length,1,'ancien cache ignoré');
+ });
