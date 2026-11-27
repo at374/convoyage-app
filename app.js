@@ -2374,6 +2374,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // Une correspondance dont le départ est passé pendant que son arrivée reste future déclenche
       // une nouvelle recherche depuis un GPS ponctuel. Aucun suivi en arrière-plan ni stockage GPS.
       let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteStatus=null,liveDelayPlan=null;
+      let missedConnectionTimer=null,missedConnectionCandidate=null;
       const missedLegTime=value=>{
         if(typeof value==='string'){const parsed=Date.parse(value);if(Number.isFinite(parsed))return parsed;}
         if(typeof value==='number'&&Number.isFinite(value)&&value>0)return value<1e11?value*1000:value;
@@ -2406,8 +2407,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const section=transportDestinations.Aller;
         if(!liveRerouteStatus&&section){
           liveRerouteStatus=document.createElement('p');liveRerouteStatus.className='doux cp-live-reroute-status';
-          liveRerouteStatus.setAttribute('role','status');liveRerouteStatus.setAttribute('aria-live','polite');
-          section.appendChild(liveRerouteStatus);
+          liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');
+          liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
+          panel.insertBefore(liveRerouteStatus,section||null);
         }
         const status=liveRerouteStatus;
         if(status){status.textContent='Correspondance dépassée. Recherche d’une position GPS récente…';status.querySelector('button')?.remove();}
@@ -2436,6 +2438,48 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         },()=>fail('La position GPS est indisponible ou son autorisation est refusée.'),{
           enableHighAccuracy:true,maximumAge:20000,timeout:12000
         });
+      };
+      const showMissedConnection=(label,view)=>{
+        if(label!=='Aller'||liveRerouteAttempted||liveRerouteRunning||!panel.isConnected)return;
+        const missed=missedConnection(view);
+        if(!missed)return;
+        liveRerouteStatus ||= document.createElement('p');
+        if(!liveRerouteStatus.isConnected){
+          liveRerouteStatus.className='doux cp-live-reroute-status';
+          liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');
+          liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
+          panel.insertBefore(liveRerouteStatus,transportDestinations.Aller||null);
+        }
+        liveRerouteStatus.textContent='Correspondance manquée (départ '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(missed))+'). Actualisation depuis votre position…';
+        toast('⚠ Correspondance manquée : recherche d’un trajet actualisé depuis ta position.');
+        requestLiveReroute();
+      };
+      const scheduleUpcomingMissedConnection=(label,view)=>{
+        if(label!=='Aller'||liveRerouteAttempted||liveRerouteRunning)return;
+        const now=Date.now(),journeys=[...(Array.isArray(view?.picks)?view.picks.map(item=>item?.journey):[]),
+          ...(Array.isArray(view?.others)?view.others:[])].filter(Boolean);
+        for(const journey of journeys){
+          const legs=(journey.legs||[]).map(leg=>{
+            if(!leg||typeof leg!=='object')return null;
+            const mode=String(leg.kind||leg.mode||leg.type||'').toLowerCase();
+            if(['walk','walking','foot','marche','scooter'].includes(mode))return null;
+            const departure=missedLegTime(leg.departure??leg.startTime??leg.start_time??leg.departureTime??leg.departure_time);
+            const arrival=missedLegTime(leg.arrival??leg.endTime??leg.end_time??leg.arrivalTime??leg.arrival_time);
+            return Number.isFinite(departure)&&Number.isFinite(arrival)?{departure,arrival}:null;
+          }).filter(Boolean);
+          for(let i=1;i<legs.length;i++){
+            const departure=legs[i].departure;
+            if(legs[i-1].arrival>departure||departure<=now||departure-now>90*60000)continue;
+            const candidate=String(departure);
+            if(missedConnectionCandidate===candidate)return;
+            clearTimeout(missedConnectionTimer);missedConnectionCandidate=candidate;
+            missedConnectionTimer=setTimeout(()=>{
+              missedConnectionTimer=null;missedConnectionCandidate=null;
+              showMissedConnection(label,view);
+            },departure-now+1000);
+            return;
+          }
+        }
       };
       const startTransportHub=()=>{
         const Hub=window.CPTransportHub;
@@ -2657,21 +2701,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 startTransportHub();
               }
             }
-            if(label==='Aller'&&!liveRerouteAttempted&&!liveRerouteRunning){
-              const missed=missedConnection(view);
-              if(missed&&Date.parse(pickupDate||'')>Date.now()){
-                liveRerouteStatus ||= document.createElement('p');
-                if(!liveRerouteStatus.isConnected){
-                  liveRerouteStatus.className='doux cp-live-reroute-status';
-                  liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');
-                  liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
-                  panel.insertBefore(liveRerouteStatus,transportDestinations.Aller||null);
-                }
-                liveRerouteStatus.textContent='Correspondance manquée (départ '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(missed))+'). Actualisation depuis votre position…';
-                toast('⚠ Correspondance manquée : recherche d’un trajet actualisé depuis ta position.');
-                requestLiveReroute();
-              }
-            }
+            scheduleUpcomingMissedConnection(label,view);
+            showMissedConnection(label,view);
             let host=hubHosts[label];
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
               const path=transportDestinations[label].querySelector('.cp-transport-route');
