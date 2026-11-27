@@ -382,12 +382,12 @@ async function run(){
   });
   assert.deepEqual(tadHeading,{text:'Résultats de transport à la demande',visible:true});
 
-  const bookedRequired=flexPanel.locator('details').filter({hasText:'TAD 31'});
+  const bookedRequired=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 31'});
   await bookedRequired.locator('summary').click();
   assert.match(await bookedRequired.innerText(),/Préavis minimum : 60 min/);
   assert.match(await bookedRequired.innerText(),/04 00 00 00 00/);
   assert.equal(await bookedRequired.getByRole('link',{name:/Réserver/}).getAttribute('href'),'https://reservation.example/');
-  const unknownNotice=flexPanel.locator('details').filter({hasText:'TAD 32'});
+  const unknownNotice=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 32'});
   await unknownNotice.locator('summary').click();
   assert.match(await unknownNotice.innerText(),/Conditions de réservation à vérifier/);
   assert.doesNotMatch(await flexPanel.innerText(),/Réalisable/);
