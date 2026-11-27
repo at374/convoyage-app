@@ -11,7 +11,7 @@ test('normalise casse, accents, espaces Unicode et tirets', () => {
   assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W professionnelle obligatoire'] } }), true);
 });
 test('refuse les exigences explicitement non requises et les drapeaux false', () => {
-  assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W non obligatoire'] } }), false);
+  assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W non obligatoire'] } }), false);\n  assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W non exigée'] } }), false);\n  assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W pas requise'] } }), false);
   assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W obligatoire'], plaque_w_required: false } }), false);
 });
 test('lit vehicle sérialisé en JSON et rend le SVG original une seule fois', () => {
