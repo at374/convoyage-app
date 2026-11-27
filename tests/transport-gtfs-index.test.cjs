@@ -7,7 +7,7 @@ assert.deepEqual(parseCSV('\uFEFFservice_id,end_date     \nS,20261231     \n'),[
 assert.throws(()=>parseCSV('a\n"unfinished'),/Unclosed/);
 const index=buildIndex({
  'stops.txt':'stop_id,stop_name\nS1,Annecy\nS2,Albertville\n',
- 'routes.txt':'route_id,route_short_name\nR1,Y51\n',
+ 'routes.txt':'route_id,route_short_name,route_type\nR1,Y51,700\n',
  'trips.txt':'route_id,service_id,trip_id\nR1,WK,T1\n',
  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,11:48:00,11:48:00,S2,2\nT1,10:30:00,10:30:00,S1,1\n'
 });
@@ -76,6 +76,7 @@ const nearby=nearbyDirectTrips(calendar,doorIndex,'2026-10-29',
  {lat:45.901,lon:6.122},{lat:45.675,lon:6.390});
 assert.equal(nearby.length,1);
 assert.equal(nearby[0].line,'Y51');
+assert.equal(nearby[0].routeType,700,'le type GTFS étendu est conservé jusqu’au résultat porte-à-porte');
 assert.equal(nearby[0].accessVerified,false);
 assert.equal(nearby[0].serviceConfirmed,false);
 assert.equal(nearbyDirectTrips(calendar,doorIndex,'2026-10-30',

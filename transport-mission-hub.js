@@ -152,16 +152,28 @@ function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
  return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:
   {...row,gtfsFare:row.gtfsFare||one(row)});
 }
+function gtfsRouteType(routeType){
+ return routeType===null||routeType===undefined||routeType===''?NaN:Number(routeType);
+}
+function gtfsBoat(routeType){
+ const type=gtfsRouteType(routeType);
+ // GTFS base Ferry, extended Water Transport / Ferry / Water Taxi.
+ return type===4||type===1000||type===1200||type===1502;
+}
 function gtfsMode(routeType){
- const type=Number(routeType);
- if(type===0||type===5)return 'Tram';
- if(type===1||type===109)return 'Métro';
- if(type===2||type===100)return 'Train';
- if(type===3||type===11)return 'Bus';
- if(type===4||type===1000)return 'Bateau';
- if(type===6||type===7)return 'Funiculaire';
- if(type===12)return 'Monorail';
- return 'Bus';
+ const type=gtfsRouteType(routeType);
+ if(type===0||type===5||(type>=900&&type<=907))return 'Tram';
+ if(type===1||(type>=400&&type<=404))return 'Métro';
+ if(type===405||type===12)return 'Monorail';
+ if(type===2||(type>=100&&type<=117))return 'Train';
+ if(type===3||(type>=700&&type<=716))return 'Bus';
+ if(type===11||(type>=800&&type<=899))return 'Trolleybus';
+ if(type>=200&&type<=209)return 'Car';
+ if(type===6||(type>=1300&&type<=1307))return 'Téléphérique';
+ if(type===7||type===1400)return 'Funiculaire';
+ if(type===1100)return 'Avion';
+ if(type>=1500&&type<=1507)return 'Taxi';
+ return 'Transport';
 }
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
@@ -183,7 +195,7 @@ function fromGTFS(rows,network='Réseau local'){
   if(!previous||score<previous.score)bestDirect.set(key,{r,score});
  }
  selected.push(...[...bestDirect.values()].map(x=>x.r));
- return selected.filter(r=>Number(r.routeType)!==4&&!(Array.isArray(r.legs)&&r.legs.some(l=>Number(l.routeType)===4))).map(r=>{
+ return selected.filter(r=>!gtfsBoat(r.routeType)&&!(Array.isArray(r.legs)&&r.legs.some(l=>gtfsBoat(l.routeType)))).map(r=>{
   const raw=Array.isArray(r.legs)&&r.legs.length?r.legs:[{line:r.line,network:r.network,from:r.originStop?.name||r.from,to:r.destinationStop?.name||r.to,departure:r.departure,arrival:r.arrival}];
   const legs=raw.map((l,i)=>{
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
@@ -1046,7 +1058,9 @@ function makeProviders(r,opts={}){
    const [id,name,file]=entry,key=id+'|'+serviceDates.join(',');
    let promise=federationCache.get(key);
    if(!promise){
-    const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+    // Prefer the exact feature-branch archive so an older GitHub Pages copy
+    // cannot silently shadow the latest validated GTFS dataset.
+    const urls=[...new Set([base+file,deployedBase?deployedBase+file:null,
      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,
      'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
     const resource={id,datasetId:id,network:name,format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};

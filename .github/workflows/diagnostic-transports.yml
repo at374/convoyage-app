@@ -1,4 +1,4 @@
-name: Diagnostic réel des transports (15 axes AURA–Suisse)
+name: Diagnostic réel des transports (20 axes de couverture AURA–Suisse)
 # Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
 # TripGo retiré du produit. Publie docs/diagnostic-serveur.json sur la branche source.
 on:
@@ -11,11 +11,13 @@ on:
       - 'scripts/moteurs_regionaux_paires.py'
       - 'scripts/test-pedestrian-hub.cjs'
       - 'transport-mission-hub.js'
+      - 'index.html'
       - 'transport-gtfs-federation.js'
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-loader.js'
       - 'tests/transport-mission-hub.test.cjs'
+      - 'tests/transport-gtfs-index.test.cjs'
       - 'tests/transport-gtfs-federation.test.cjs'
       - 'transport-fare-grids.js'
       - 'transport-coverage.js'
@@ -62,7 +64,7 @@ jobs:
           python3 scripts/build_national_gtfs_aura.py --help >/dev/null
           python3 scripts/test_national_gtfs_aura.py
       - name: Tester le secours de recherche des gares routières nationales
-        run: node --test tests/national-stop-fallback.test.cjs tests/transport-mission-hub.test.cjs tests/transport-gtfs-federation.test.cjs tests/transport-walking.test.cjs tests/national-journeys-real-slice.test.cjs
+        run: node --test tests/national-stop-fallback.test.cjs tests/transport-mission-hub.test.cjs tests/transport-gtfs-federation.test.cjs tests/transport-gtfs-index.test.cjs tests/transport-walking.test.cjs tests/national-journeys-real-slice.test.cjs
       - name: Tester les trajets nationaux GTFS sans prix inventés
         run: |
           node --check transport-national-gtfs-journeys.js

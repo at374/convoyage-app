@@ -905,6 +905,46 @@ Les autres réseaux Hauts-de-France et Grand Est sont bien présents dans le hub
 - Les correspondances ne sont jamais déclarées confirmées sur la seule base du GTFS. Les deux arrêts de correspondance conservent leurs coordonnées distinctes afin que `completeWalks` calcule ensuite la vraie marche entre eux et vérifie le temps disponible. Les tarifs restent inconnus tant qu'aucune grille officielle ne les établit.
 - Les recherches dont le départ est avant 06 h interrogent les deux conventions de service GTFS : départ rattaché à la veille (28:xx) et départ rattaché au jour civil (04:xx). Les recherches limitées par une heure d'arrivée sans heure de départ conservent aussi les départs du matin.
 - Les types de lignes GTFS sont conservés (bus, tram, métro, train, funiculaire, etc.) et les traversées en bateau sont écartées.
-- Un test d'intégration a été ajouté dans `tests/transport-mission-hub.test.cjs` : liaison Sibra Annecy → M Réso Pays Voironnais, coordonnées d'arrêts distinctes, horaires, recherche arrivée-seulement et recherche avant 06 h.
+- Un test d'intégration avec deux fixtures GTFS synthétiques a été ajouté dans `tests/transport-mission-hub.test.cjs` : scénario Sibra Annecy → M Réso Pays Voironnais, coordonnées d'arrêts distinctes, horaires, recherche arrivée-seulement et recherche avant 06 h. Ce test valide le raccordement logiciel, pas l'existence d'une desserte réelle entre ces deux réseaux.
 - Commits : raccordement `3f75c0a1c67174e369c43c647ce883621af53f17` ; correction jour de service `3dc93cdf848ba23c6149c5df6d6c73ffe24b8bf6` ; recherche des deux conventions avant 06 h `33e094a0dd5f7381ed1c947c4f3ff3f4cd4fa550` ; test d'intégration `f180c61ce8eeac73bc515dcd952b6406503848a0` ; fixture calendrier `40971431797659bddd1f008e8de6fae1025ee6ae` ; types de ligne GTFS `a385ec975b4725fe7b0eaecf666f40876647d6e1` et `db77a089e82963f4ee66ad60d0877cff47c13f8b`.
 - Validation restante : exécution GitHub Actions du workflow diagnostic, contrôle réel des flux Sibra/M Réso et essai porte-à-porte sur appareil Android. Le statut CI du dernier commit n'a pas encore remonté de résultat dans l'API consultée ; aucune validation Android n'est revendiquée.
+
+
+## Axe de diagnostic réel Annecy → Voiron — 26/11/2026
+
+- Ajout de l'axe `annecy-voiron` dans `transport-coverage.js` avec les coordonnées GPS des gares Annecy et Voiron.
+- Il est inclus dans `AXES_COUVERTURE` et sera exécuté par le diagnostic réel serveur avec les autres axes ; le titre du workflow a été corrigé pour indiquer les 20 axes de couverture.
+- Cet axe doit vérifier les moteurs nationaux (notamment SNCF), les réseaux locaux concernés et le nouveau fournisseur inter-réseaux. Le résultat réel reste à obtenir : l'ajout d'un axe de test n'est pas une preuve qu'un itinéraire existe.
+- Commits : axe `06d1ff6f8488209813b1bc4090c22dd946bd8c73` ; titre workflow `195e77497779034f2d8dc1a8ff556cacc7b12a85`.
+
+
+## Diagnostic national : axe Annecy–Voiron et retrait des métriques TripGo — 26/11/2026
+
+- L'axe `annecy-voiron` a été ajouté aux 20 axes `AXES_COUVERTURE` pour lancer un contrôle réel des horaires et correspondances avec les moteurs actuellement raccordés. Le diagnostic charge maintenant explicitement `transport-gtfs-federation.js` avant le hub.
+- L'inventaire `transport-coverage.js` ne présente plus TripGo comme une source, ni comme une solution de secours pour J'y bus, TAM, Cars Région ou les cars longue distance. Les prix commerciaux FlixBus/BlaBlaCar restent « à confirmer » tant qu'une source de billet vérifiable ne les fournit pas.
+- Le script de diagnostic ne calcule plus de métriques TripGo inexistantes ; il se concentre sur les trajets, prix officiels, marches, faisabilité et moteurs actifs.
+- Les instructions Android et l'architecture documentaire indiquent désormais de ne pas configurer de clé TripGo.
+- Commits : axe `06d1ff6f8488209813b1bc4090c22dd946bd8c73` ; workflow 20 axes `195e77497779034f2d8dc1a8ff556cacc7b12a85` ; chargement fédération diagnostic `d19fce873474d1ad98305e752fbdf6c1ca23637d` ; inventaire sans TripGo `455e21dfc547612242a2c0d1c4888393595140bc` / `bdeafa9b97ead1573f1cdd84bc47ba78babcbb60` ; diagnostic sans métriques TripGo `1413144713a829d78188d43fbaa613272a8c56ed` ; guide transports `dc615d890ca562aa524842ad4f2955127997415f`.
+- Le diagnostic réel, le résultat Annecy–Voiron et les essais Android restent à exécuter/consulter. Aucun résultat CI n'est revendiqué à ce stade.
+
+
+## Correction des codes GTFS étendus — 26/11/2026
+
+- Audit du tableau officiel Google GTFS Extended Route Types : les codes 700–716 sont des bus, 800–899 des trolleybus, 900–907 des tramways, 1000/1200 des transports sur l'eau, 1100 l'aérien, 1300–1307 les remontées mécaniques, 1400 les funiculaires ; 200–209 désignent les autocars.
+- Correction de `gtfsMode` et `gtfsBoat` dans `transport-mission-hub.js` : les anciens intervalles excluaient à tort les bus étendus (700–799) et classaient mal les bateaux (1000–1099). Désormais seuls les types eau (4, 1000, 1200, 1502) sont écartés.
+- Test unitaire étendu aux catégories bus, trolleybus, train régional (106), tram, métro, monorail, autocar, téléphérique, funiculaire et avion ; contrôle d'exclusion des types ferry/eau.
+- Cache navigateur Android/Web du hub renouvelé dans `index.html`.
+- Référence normative : https://developers.google.com/transit/gtfs/reference/extended-route-types
+- Commits : mapping `055646cc6d9a9f83400864cd74ab5b7cde8030e4` ; test `bb0f0c432bc97b9aef2abc64e6efe8bee93ea3cf` ; cache navigateur `441bf1384060476a2a65b26c55e3624db34a35bc`.
+- Les tests CI et la vérification sur Android restent en attente de résultats observables.
+
+
+## Durcissement final de la fédération GTFS et CI — 26/11/2026
+
+- Les archives inter-réseaux privilégient désormais l'URL exacte de la branche `feature/transports-aura-suisse` avant la copie GitHub Pages, pour éviter qu'une archive Pages plus ancienne soit choisie alors qu'elle reste téléchargeable.
+- Les fixtures d'intégration Sibra/M Réso incluent maintenant `route_type` (champ GTFS obligatoire) et vérifient explicitement les recherches avec heure d'arrivée seule et avant 06 h.
+- Le mapping des modes est aligné sur la table GTFS étendue officielle : les bus 700–716 ne sont plus éliminés, les trolleybus 800–899 et tramways 900–907 sont reconnus ; l'eau (4, 1000, 1200, 1502) seule est écartée. Les codes absents restent « Transport » et ne deviennent plus faussement « Tram ».
+- `tests/transport-gtfs-index.test.cjs` vérifie aussi que le code étendu (ex. bus 700) survit jusqu'aux candidats porte-à-porte. Le workflow diagnostic lance maintenant ce test et se déclenche lorsque ce test, le hub ou `index.html` changent.
+- Cache navigateur Android/Web du hub actualisé : `hub-20261126-gtfs-route-types-2`.
+- Commits : priorité d'archives `d71e38095dcc60ad4f2457f588244629bd27f77e` ; mapping `055646cc6d9a9f83400864cd74ab5b7cde8030e4` ; test modes `bb0f0c432bc97b9aef2abc64e6efe8bee93ea3cf` ; route_type manquant `59da38fe58722194dbf91f6f65f3799ee5e33190` ; fixtures valides `2caa21df160444168ac8af0c320615835b5751b6` ; test index `c2a211df3a3c4e6824d8422c5a8858466eab0584` ; CI `07c22afe7158af5203dfff6fc35c84adf45584f2` et déclenchement `7842458aac65c00e2e67aa85845c685de2e3b636`.
+- À la dernière lecture, l'API de statut GitHub ne retournait encore aucun statut ni run exploitable ; aucune réussite CI n'est affirmée.

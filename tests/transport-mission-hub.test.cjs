@@ -995,7 +995,7 @@ test('le navigateur charge la fédération GTFS après index/loader et avant le 
 });
 
 
-test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironnais',async()=>{
+test('fédération GTFS : fixture Sibra Annecy vers M Réso Voironnais via makeProviders',async()=>{
  const indexer=require('../transport-gtfs-index.js');
  const federation=require('../transport-gtfs-federation.js');
  const date='20261127';
@@ -1005,7 +1005,7 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
    'stops.txt':side==='first'
     ?'stop_id,stop_name,stop_lat,stop_lon\nA,Annecy Gare,45.9000,6.1200\nX,Arrêt correspondance,45.5000,5.7000'
     :'stop_id,stop_name,stop_lat,stop_lon\nX,Arrêt correspondance,45.5005,5.7005\nB,Voiron Gare,45.3600,5.5900',
-   'routes.txt':'route_id,agency_id,route_short_name\nR,A,'+network,
+   'routes.txt':'route_id,agency_id,route_short_name,route_type\nR,A,'+network+',3',
    'trips.txt':'trip_id,route_id,service_id\nT,R,S',
    'stop_times.txt':side==='first'
     ?'trip_id,stop_id,stop_sequence,arrival_time,departure_time\nT,A,1,09:00:00,09:00:00\nT,X,2,10:00:00,10:00:00'
@@ -1040,7 +1040,7 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
  const rows=await provider.run(task);
  assert.deepEqual(loaded.map(x=>x.id).sort(),['mreso_voironnais','sibra_annecy']);
  assert.deepEqual(loaded[0].dates,['2026-11-27']);
- assert.equal(rows.length,1,'une correspondance horaire réelle est construite');
+ assert.equal(rows.length,1,'une correspondance horaire issue des deux flux de test est construite');
  assert.equal(rows[0].legs.length,2);
  assert.equal(rows[0].legs[0].provider,'Sibra');
  assert.equal(rows[0].legs[1].provider,'M Réso — Pays Voironnais');
@@ -1072,3 +1072,20 @@ test('fédération GTFS : la fiche mission relie Sibra Annecy à M Réso Voironn
  const fresh=fakeRouter();await H.cachedRouter(fresh,{storage}).route(STOP1,STOP2);
  assert.equal(fresh.calls.length,1,'ancien cache ignoré');
  });
+
+
+test('normalisation GTFS conserve les modes de ligne et écarte toutes les catégories bateau',()=>{
+ const origin={name:'Départ',lat:45.9,lon:6.1},destination={name:'Arrivée',lat:45.8,lon:6.2};
+ const row=routeType=>({routeType,network:'Réseau test',line:'L1',tripId:'T',
+  departure:at(8,0),arrival:at(9,0),originStop:origin,destinationStop:destination});
+ for(const [type,expected] of [[0,'Tram'],[1,'Métro'],[2,'Train'],[3,'Bus'],[200,'Car'],
+  [401,'Métro'],[405,'Monorail'],[700,'Bus'],[800,'Trolleybus'],[900,'Tram'],
+  [106,'Train'],[1300,'Téléphérique'],[1400,'Funiculaire'],[1100,'Avion']]){
+  const journeys=H.fromGTFS([row(type)]);
+  assert.equal(journeys.length,1,'type GTFS '+type);
+  assert.equal(journeys[0].legs[0].mode,expected,'type GTFS '+type);
+ }
+ for(const type of [4,1000,1200,1502])assert.equal(H.fromGTFS([row(type)]).length,0,'bateau GTFS '+type);
+ assert.equal(H.fromGTFS([row(null)])[0].legs[0].mode,'Transport','un type absent reste non classé plutôt que Tram');
+});
+
