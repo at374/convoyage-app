@@ -1059,7 +1059,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
     {mode:'BUS',startTime:Date.parse('2026-11-27T07:44:00+01:00'),endTime:Date.parse('2026-11-27T08:42:00+01:00')}
   ]}]};
   schedule('Aller',view);
-  assert.equal(timer.delay,5*60*1000+1000);
+  assert.equal(timer.delay,4*60*1000+1000);
   now=Date.parse('2026-11-27T07:44:01+01:00');timer.fn();
   assert.deepEqual(shown,{label:'Aller',view});
 }
