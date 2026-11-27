@@ -226,6 +226,8 @@ async function run(){
   await page.waitForFunction(()=>[...document.querySelectorAll('.cp-transport-evidence')].some(node=>node.textContent.includes('Jonction régionale : 4 proposition')));
   await release('12');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
+  // The official provider request and late geocoding resolve asynchronously; wait for its C11 leg before snapshotting.
+  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('C11'),null,{timeout:15000});
   const openGtfsAgenda=()=>page.locator('[data-gtfs-agenda] > summary').click();
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await openGtfsAgenda();
