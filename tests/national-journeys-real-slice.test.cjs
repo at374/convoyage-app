@@ -108,6 +108,13 @@ test('Annecy → Voiron : recherche réelle avant 15 h avec correspondances',{sk
   radiusMeters:3000,maxResults:20,includeTransfers:true
  });
  assert.ok(rows.length>0,'aucun trajet Annecy–Voiron trouvé dans la tranche SNCF publiée');
+ const transfers=rows.filter(row=>Array.isArray(row.legs)&&row.legs.length>=2);
+ assert.ok(transfers.length>0,'aucune correspondance Annecy–Voiron trouvée avant 14:45');
+ t.diagnostic('Correspondances trouvées: '+JSON.stringify(transfers.slice(0,3).map(row=>({
+  departure:row.departure,arrival:row.arrival,legs:row.legs.map(leg=>({
+   line:leg.line,departure:leg.departure,arrival:leg.arrival,from:leg.from,to:leg.to
+  }))
+ }))));
  for(const row of rows){
   assert.ok(row.departure>='05:00:00','départ hors fenêtre');
   assert.ok(row.arrival<='14:45:00','arrivée ferroviaire hors fenêtre');
