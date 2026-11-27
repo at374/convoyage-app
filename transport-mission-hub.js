@@ -1736,7 +1736,7 @@ function card(doc,j,labels,expanded=false,loadDaySchedules=null){
   link.title='Acheter le billet ou consulter le prix : '+t.label;link.setAttribute('aria-label','Acheter le billet sur '+t.label);
   if(link.addEventListener)link.addEventListener('click',e=>e.stopPropagation());s.appendChild(link);}
  s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+Math.max(1,Math.round((l.durationSeconds||0)/60))+' min':(l.line?' '+l.line:''))).join(' › ')));
- s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
+ s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · '+(j.lateArrival?'retard '+durationText(j.latenessMinutes):'avance '+signedDurationText(j.slackMinutes))+' (marge '+durationText(j.marginMinutes)+')':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);
  // Le détail et les polylignes SVG sont construits uniquement à la première ouverture.
