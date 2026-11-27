@@ -990,6 +990,9 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   assert.equal(api.missedConnectionDeparture(additional),null);
   assert.equal(api.getCandidate(),otherDeparture);
   assert.match(app,/Recherche d’une position GPS récente/);
+  assert.match(app,/cp-missed-connection-banner/);
+  assert.match(app,/setAttribute\('role','alert'\)/);
+  assert.match(app,/toast\('⚠ Correspondance manquée/);
   assert.match(app,/startTransportHub\(\);/);
   assert.match(app,/target\.plannedArrivalDeadline=pickupDate\|\|target\.latestArrival/);
   assert.match(app,/target\.allowJustifiedDelay=true/);
