@@ -3376,6 +3376,7 @@ function render(host,v){
   host.appendChild(info);
   }
  }
+ 
  // A GTFS-Flex window describes where/when a TAD can be REQUESTED.
  // It must never appear among ranked scheduled routes until a real booking
  // and concrete pickup/drop-off times are confirmed by the operator.
@@ -3418,6 +3419,7 @@ function render(host,v){
    host.appendChild(group);
   }
  }
+
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' écarté'+(v.hidden.tooEarly>1?'s':'')+' de la sélection'+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
  if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');
