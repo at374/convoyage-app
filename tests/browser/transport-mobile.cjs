@@ -384,12 +384,12 @@ async function run(){
 
   const bookedRequired=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 31'});
   await bookedRequired.locator('summary').evaluate(node=>node.click());assert.equal(await bookedRequired.evaluate(node=>node.open),true);
-  assert.match(await bookedRequired.innerText(),/Préavis minimum : 60 min/);
-  assert.match(await bookedRequired.innerText(),/04 00 00 00 00/);
+  assert.match(await bookedRequired.evaluate(node=>node.textContent),/Préavis minimum : 60 min/);
+  assert.match(await bookedRequired.evaluate(node=>node.textContent),/04 00 00 00 00/);
   assert.equal(await bookedRequired.getByRole('link',{name:/Réserver/}).getAttribute('href'),'https://reservation.example/');
   const unknownNotice=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 32'});
   await unknownNotice.locator('summary').evaluate(node=>node.click());assert.equal(await unknownNotice.evaluate(node=>node.open),true);
-  assert.match(await unknownNotice.innerText(),/Conditions de réservation à vérifier/);
+  assert.match(await unknownNotice.evaluate(node=>node.textContent),/Conditions de réservation à vérifier/);
   assert.doesNotMatch(await flexPanel.innerText(),/Réalisable/);
   assert.equal(await flexPanel.locator('.cp-hub-card').count(),0,'Unbooked windows stay outside ranked journeys');
   await page.locator('#fermer').click();
