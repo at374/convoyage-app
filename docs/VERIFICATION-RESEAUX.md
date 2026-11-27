@@ -2,7 +2,7 @@
 
 Généré le 2026-11-27 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**474 / 475 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**479 / 480 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -335,6 +335,8 @@ Généré le 2026-11-27 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | mobigo_bfc_jura (samedi) | mobigo-bfc-jura.zip | 208 | OK | 2026-11-28 19:10:00 retrouvée (3 départs proposés) |
 | mobigo_bfc_jura (dimanche) | mobigo-bfc-jura.zip | 208 | OK | 2026-11-29 16:45:00 retrouvée (2 départs proposés) |
 | mobigo_bfc_jura (semaine) | mobigo-bfc-jura.zip | 208 | OK | 2026-11-30 17:20:00 retrouvée (5 départs proposés) |
+| mobigo_bfc_saone_et_loire (samedi) | mobigo-bfc-saone-et-loire.zip | 500 | OK | 2026-11-28 07:05:00 retrouvée (3 départs proposés) |
+| mobigo_bfc_saone_et_loire (semaine) | mobigo-bfc-saone-et-loire.zip | 500 | OK | 2026-11-30 07:35:00 retrouvée (6 départs proposés) |
 | zou_express_nord (samedi) | zou-express-nord.zip | 691 | OK | 2026-11-28 09:59:38 retrouvée (3 départs proposés) |
 | zou_express_nord (dimanche) | zou-express-nord.zip | 691 | OK | 2026-11-29 09:59:38 retrouvée (3 départs proposés) |
 | zou_express_nord (semaine) | zou-express-nord.zip | 691 | OK | 2026-11-30 07:05:46 retrouvée (4 départs proposés) |
@@ -446,6 +448,9 @@ Généré le 2026-11-27 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | star_rennes (samedi) | star-rennes.zip | 29483 | OK | 2026-11-28 06:02:34 retrouvée (533 départs proposés) |
 | star_rennes (dimanche) | star-rennes.zip | 29483 | OK | 2026-11-29 06:02:30 retrouvée (312 départs proposés) |
 | star_rennes (semaine) | star-rennes.zip | 29483 | OK | 2026-11-30 06:02:34 retrouvée (543 départs proposés) |
+| naolib_nantes (samedi) | naolib-nantes.zip | 41917 | OK | 2026-11-28 10:29:00 retrouvée (5 départs proposés) |
+| naolib_nantes (dimanche) | naolib-nantes.zip | 41917 | OK | 2026-11-29 12:50:00 retrouvée (1 départs proposés) |
+| naolib_nantes (semaine) | naolib-nantes.zip | 41917 | OK | 2026-11-30 12:36:00 retrouvée (15 départs proposés) |
 | tbm_bordeaux (samedi) | tbm-bordeaux.zip | 23894 | OK | 2026-11-28 06:03:01 retrouvée (140 départs proposés) |
 | tbm_bordeaux (dimanche) | tbm-bordeaux.zip | 23894 | OK | 2026-11-29 06:29:01 retrouvée (90 départs proposés) |
 | tbm_bordeaux (semaine) | tbm-bordeaux.zip | 23894 | OK | 2026-11-30 06:07:00 retrouvée (80 départs proposés) |
