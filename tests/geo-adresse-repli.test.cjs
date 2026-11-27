@@ -76,3 +76,17 @@ test('recherche de secours : voie seule puis numéro exact dans la bonne commune
  assert.ok(urls.some(u=>u.includes('&type=street')));
  assert.ok(urls.some(u=>u.includes('&type=housenumber')));
 });
+
+test('géocodage national : rejette commune homonyme de rue et mauvais suffixe',async()=>{
+ const m={to_city:'Annecy',to_department:'74',destination_address:"94 bis avenue d'Aix-les-Bains, 74000 Annecy"};
+ let calls=0;
+ const r=await G.chercherPoint(m,'destination',async()=>{
+  calls++;
+  const properties={score:0.9,type:'housenumber',street:"Avenue d'Aix-les-Bains",city:calls===1?'Chambéry':'Annecy',housenumber:calls===2?'94':'94 bis'};
+  return {ok:true,json:async()=>({features:[{geometry:{coordinates:[6.1,45.8+calls/100]},properties}]})};
+ });
+ assert.ok(calls>=3);
+ assert.equal(r.point.precision,'adresse');
+ assert.ok(Math.abs(r.point.lat-45.83)<1e-8);
+ assert.ok(r.cle.startsWith('geo-v3|'));
+});
