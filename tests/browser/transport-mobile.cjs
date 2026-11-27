@@ -191,7 +191,7 @@ async function run(){
    // exclude the Grenoble card itself from the browser regression.
   assert.ok(current,'Synthetic Grenoble mission is visible in Agenda; cards='+JSON.stringify(cards)+'; pageErrors='+JSON.stringify(errors));
   await page.locator('.mission[data-i="'+current.index+'"]').click();
-  await page.locator('#btnTransportsMission').waitFor();
+  try{await page.locator('#btnTransportsMission').waitFor();}catch(error){throw new Error(error.message+'; pageErrors='+JSON.stringify(errors)+'; agenda='+String(await page.locator('#ecran').innerText()).slice(0,2400));}
   assert.equal(await page.locator('#btnVol').count(),1,'Car and public-transport buttons remain separate');
   const buttonColour=await page.locator('#btnTransportsMission').evaluate(e=>getComputedStyle(e).backgroundColor);
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
