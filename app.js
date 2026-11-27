@@ -2371,6 +2371,58 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       let transportHub=null;
       const hubHosts={};
+      // Une correspondance dont le départ est passé pendant que son arrivée reste future déclenche
+      // une nouvelle recherche depuis un GPS ponctuel. Aucun suivi en arrière-plan ni stockage GPS.
+      let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteStatus=null;
+      const missedConnection=view=>{
+        const now=Date.now(),windowMs=45*60000;
+        for(const item of Array.isArray(view?.picks)?view.picks:[]){
+          const legs=(item?.journey?.legs||[]).filter(leg=>leg&&leg.kind!=='walk'&&leg.kind!=='scooter'&&
+            Number.isFinite(Date.parse(leg.departure||''))&&Number.isFinite(Date.parse(leg.arrival||'')));
+          for(let i=1;i<legs.length;i++){
+            const previousArrival=Date.parse(legs[i-1].arrival),departure=Date.parse(legs[i].departure),arrival=Date.parse(legs[i].arrival);
+            if(departure<=now&&departure>=now-windowMs&&arrival>now&&previousArrival<=departure)return legs[i].departure;
+          }
+        }
+        return null;
+      };
+      const requestLiveReroute=()=>{
+        if(liveRerouteRunning||liveReroutePosition||!panel.isConnected)return;
+        liveRerouteRunning=true;liveRerouteAttempted=true;
+        const section=transportDestinations.Aller;
+        if(!liveRerouteStatus&&section){
+          liveRerouteStatus=document.createElement('p');liveRerouteStatus.className='doux cp-live-reroute-status';
+          liveRerouteStatus.setAttribute('role','status');liveRerouteStatus.setAttribute('aria-live','polite');
+          section.appendChild(liveRerouteStatus);
+        }
+        const status=liveRerouteStatus;
+        if(status){status.textContent='Correspondance dépassée. Recherche d’une position GPS récente…';status.querySelector('button')?.remove();}
+        const fail=message=>{
+          liveRerouteRunning=false;
+          if(!status||!status.isConnected)return;
+          status.textContent=message+' Le trajet précédent reste affiché et non confirmé. ';
+          const retry=document.createElement('button');retry.type='button';retry.className='second';
+          retry.textContent='Réessayer avec le GPS';retry.onclick=requestLiveReroute;status.appendChild(retry);
+        };
+        const geo=window.navigator?.geolocation;
+        if(!geo?.getCurrentPosition){fail('La position GPS n’est pas accessible.');return;}
+        geo.getCurrentPosition(position=>{
+          const coords=position?.coords,lat=Number(coords?.latitude),lon=Number(coords?.longitude),accuracy=Number(coords?.accuracy);
+          if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(accuracy)||accuracy>150||
+             Math.abs(lat)>90||Math.abs(lon)>180||(lat===0&&lon===0)){
+            fail('La position GPS reçue est trop imprécise pour recalculer le trajet.');
+            return;
+          }
+          liveReroutePosition={lat,lon,accuracy,capturedAt:Date.now()};
+          liveRerouteRunning=false;
+          if(status?.isConnected)status.textContent='Position GPS précise reçue. Recherche des prochains transports depuis '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date())+'…';
+          const route=transportDestinations.Aller?.querySelector('.cp-transport-route');
+          if(route)route.textContent='Position GPS actuelle → adresse exacte de prise en charge';
+          startTransportHub();
+        },()=>fail('La position GPS est indisponible ou son autorisation est refusée.'),{
+          enableHighAccuracy:true,maximumAge:20000,timeout:12000
+        });
+      };
       const startTransportHub=()=>{
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
@@ -2490,6 +2542,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
         }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',earliestDeparture:deliveryStartIso||deliveryDate,...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(deliveryStartIso),windowEndMs:deliveryEndMs}:{})});
+        if(liveReroutePosition&&Date.now()-liveReroutePosition.capturedAt<5*60000){
+          // Rebaser uniquement l'aller : départ réel, GPS obtenu à l'instant et même marge minimale de 15 min.
+          // Les autres directions gardent leurs fenêtres d'origine.
+          const target=tasks.find(task=>task.label==='Aller');
+          if(target&&Date.parse(target.latestArrival||'')>Date.now()){
+            target.from={lat:liveReroutePosition.lat,lon:liveReroutePosition.lon};
+            target.fromName='Position GPS actuelle';target.earliestDeparture=new Date().toISOString();
+            target.approximateEndpoint=false;target.marginMinutes=securityMarginMin;target.allowShortMargin=false;
+          }
+        }
         const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
@@ -2528,6 +2590,19 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
+            if(label==='Aller'&&!liveRerouteAttempted&&!liveRerouteRunning){
+              const missed=missedConnection(view);
+              if(missed&&Date.parse(pickupDate||'')>Date.now()){
+                liveRerouteStatus ||= document.createElement('p');
+                if(!liveRerouteStatus.isConnected){
+                  liveRerouteStatus.className='doux cp-live-reroute-status';
+                  liveRerouteStatus.setAttribute('role','status');liveRerouteStatus.setAttribute('aria-live','polite');
+                  transportDestinations.Aller.appendChild(liveRerouteStatus);
+                }
+                liveRerouteStatus.textContent='Correspondance manquée (départ '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(missed))+'). Actualisation depuis votre position…';
+                requestLiveReroute();
+              }
+            }
             let host=hubHosts[label];
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
               const path=transportDestinations[label].querySelector('.cp-transport-route');
