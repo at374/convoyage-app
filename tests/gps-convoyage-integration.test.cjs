@@ -64,3 +64,15 @@ test('GPS T-15 : la recherche complète des transports se déclenche même aprè
   assert.match(app, /\$\('feuille'\)\.hidden = true/);
   assert.match(app, /setInterval\(viderPrefetchLivraison, 30000\)/);
 });
+
+
+test('GPS convoyage : aucun réveil permanent hors mission, reprise à la prochaine fenêtre et cadence espacée', () => {
+  assert.match(app, /function delaiAvantProchainSuivi\(now = Date\.now\(\)\)/);
+  assert.match(app, /function actualiserSuiviApresSynchro\(\)/);
+  assert.match(app, /actualiserSuiviApresSynchro\(\);/);
+  assert.match(app, /const echantillonDu = force \|\| suiviDerniereLectureAt === 0 \|\| elapsed >= SUIVI_CONVOYAGE_INTERVALLE_MS/);
+  assert.match(app, /missions\.length \? \(echantillonDu \? SUIVI_CONVOYAGE_INTERVALLE_MS : Math\.max\(1000,[\s\S]*: delaiAvantProchainSuivi\(\)/);
+  assert.match(app, /SUIVI_CONVOYAGE_INTERVALLE_MS = 10 \* 60000/);
+  assert.doesNotMatch(app, /navigator\.geolocation\.watchPosition/);
+  assert.match(app, /!\['annulee','terminee','cancelled','canceled','completed'\]/);
+});
