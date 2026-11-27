@@ -98,3 +98,18 @@ test('recherche arrivée avant 07:30 : conserve les départs matinaux et exclut 
    'le départ 05:40 arrivant 07:10 est conservé, celui arrivant 10:00 est exclu');
  }finally{indexer.nearbyDirectTrips=original;}
 });
+
+
+test('Annecy → Voiron : recherche réelle avant 15 h avec correspondances',{skip:!fs.existsSync(zip)},async t=>{
+ const {journeys:rows}=await journeys.loadAndSearch({
+  operator:'sncf',resource:{url:'https://example.org/national-sncf-aura.zip',format:'GTFS'},fetcher,
+  from:{lat:45.902,lon:6.121},to:{lat:45.363,lon:5.591},
+  date:'2026-11-16',earliestDeparture:'05:00:00',latestArrival:'14:45:00',
+  radiusMeters:3000,maxResults:20,includeTransfers:true
+ });
+ assert.ok(rows.length>0,'aucun trajet Annecy–Voiron trouvé dans la tranche SNCF publiée');
+ for(const row of rows){
+  assert.ok(row.departure>='05:00:00','départ hors fenêtre');
+  assert.ok(row.arrival<='14:45:00','arrivée ferroviaire hors fenêtre');
+ }
+});
