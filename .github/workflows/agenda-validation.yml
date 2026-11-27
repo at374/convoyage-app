@@ -2,7 +2,7 @@ name: Agenda JavaScript validation
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "feature/transports-aura-suisse"]
   push:
     branches: [main, "feature/agenda-transports-summary", "feature/transports-aura-suisse"]
 
