@@ -984,3 +984,19 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   assert.match(delayed.status,/justificatif/);
   assert.match(delayed.statusDetail,/correspondance manquée/);
 }
+
+
+// A justified late pickup shifts the estimated delivery by the same mission duration,
+// then recalculates both the return and the next-mission connection from that new delivery time.
+{
+  const fs=require('node:fs'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  assert.ok(app.includes("const originalDuration=Date.parse(transportDelivery||'')-Date.parse(transportPickup||'')"));
+  assert.ok(app.includes("liveDelayPlan={pickupAt:new Date(pickupMs).toISOString(),deliveryAt:new Date(pickupMs+originalDuration).toISOString()}"));
+  assert.ok(app.includes("tasks.push({...retourBase,label:'Retour décalé',earliestDeparture:shiftedDelivery"));
+  assert.ok(app.includes("label:'Jonction décalée'"));
+  assert.ok(app.includes("Recalcul du retour et de la mission suivante"));
+  const hub=fs.readFileSync(path.join(__dirname,'..','transport-mission-hub.js'),'utf8');
+  assert.ok(hub.includes("'retard '+durationText(j.latenessMinutes)"));
+  assert.ok(hub.includes('Retard accepté sous justificatif'));
+}
