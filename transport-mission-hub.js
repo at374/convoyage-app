@@ -15,6 +15,16 @@ const GENEVA={lat:46.2044,lon:6.1432};
 // de l'aéroport (sécurité puis douane française) : la consigne s'affiche sur cette marche uniquement (19/11/2026).
 const P21_POINT={lat:46.237722,lon:6.117667};
 function nearP21(p){return !!p&&Math.abs(p.lat-P21_POINT.lat)<0.004&&Math.abs(p.lon-P21_POINT.lon)<0.006;}
+// 27/11/2026 (Laurent : la marche piétonne vers/depuis P21 était calculée (Valhalla/OSM) jusqu'au point GPS réel
+// du parking, en suivant la route douanière — or cette route est interdite aux piétons (seule la voiture y passe).
+// retaillerP21 ci-dessous ne retaille que les ITINÉRAIRES AVEC TRANSPORT (j.legs d'un moteur transit) ; quand la
+// marche est calculée directement par completeWalks()/walkOnly() (approche, sortie, ou trajet 100% piéton, sans
+// arrêt de transport entre les deux), rien ne l'arrêtait avant le point GPS réel. On fait donc terminer/démarrer
+// TOUTE marche touchant P21 devant le terminal (côté suisse), jamais au point GPS du parking lui-même ; les
+// trajets en VOITURE ne sont jamais concernés (ils continuent normalement par la route douanière).
+// Coordonnées officielles de l'arrêt TPG « Genève-Aéroport, Terminal » (OFT-DIDOK 92775) : 46.230837, 6.109664.
+const GENEVE_AEROPORT_TERMINAL={lat:46.230837,lon:6.109664};
+function pointMarcheP21(p){return nearP21(p)?GENEVE_AEROPORT_TERMINAL:p;}
 // Pour P21 (secteur France), l'arrêt passagers est « Genève-Aéroport, Terminal » : au-delà, le bus continue parfois
 // un arrêt de trop derrière la douane (ex. Grand-Saconnex, Fret), chemin non praticable à pied (signalé le 19/11/2026).
 function sansAccents(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'');}
@@ -394,6 +404,8 @@ async function completeWalks(j,task,router,scooter,regional){
  // Keep provider warnings (e.g. GTFS schedules without live confirmation) through walking enrichment.
  const legs=j.legs.slice(),missing=Array.isArray(j.missing)?j.missing.slice():[];
  const from=pt(task.from),to=pt(task.to);
+ // La marche réelle (approche/sortie ci-dessous) s'arrête devant le terminal pour P21 : cf. pointMarcheP21 ci-dessus.
+ const walkFrom=pointMarcheP21(from),walkTo=pointMarcheP21(to);
  const transit=legs.filter(l=>l.kind!=='walk');
  if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
  const lastRide=transit.at(-1),lastLeg=legs.at(-1),providerEnd=pt(lastLeg.toPoint);
@@ -553,9 +565,9 @@ async function completeWalks(j,task,router,scooter,regional){
  const first=legs[0];
  if(!from)missing.push('point GPS de départ inconnu');
  else if(!first.fromPoint)missing.push('position du début de la marche ou de l’arrêt inconnue');
- else if(meters(from,first.fromPoint)>SAME_POINT_M){
+ else if(meters(walkFrom,first.fromPoint)>SAME_POINT_M){
   const dep=ms(first.departure);
-  const w=Number.isFinite(dep)?await footLeg(from,first.fromPoint,task.fromName||'Adresse de départ',first.from,{endMs:dep}):null;
+  const w=Number.isFinite(dep)?await footLeg(walkFrom,first.fromPoint,task.fromName||'Adresse de départ',first.from,{endMs:dep}):null;
   if(w&&w.length)legs.unshift(...w);
   else missing.push('marche depuis l’adresse exacte de départ non calculée');
  }
@@ -585,9 +597,9 @@ async function completeWalks(j,task,router,scooter,regional){
  const last=legs[legs.length-1];
  if(!to)missing.push('point GPS d’arrivée inconnu');
  else if(!last.toPoint)missing.push('position de la fin de la marche ou de l’arrêt inconnue');
- else if(meters(last.toPoint,to)>SAME_POINT_M){
+ else if(meters(last.toPoint,walkTo)>SAME_POINT_M){
   const arr=ms(last.arrival);
-  const w=Number.isFinite(arr)?await footLeg(last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',{startMs:arr}):null;
+  const w=Number.isFinite(arr)?await footLeg(last.toPoint,walkTo,last.to,task.toName||'Adresse d’arrivée',{startMs:arr}):null;
   if(w&&w.length)legs.push(...w);
   else missing.push('marche jusqu’à l’adresse exacte d’arrivée non calculée');
  }
@@ -626,7 +638,8 @@ function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEnt
  return {route,stats:()=>({hits,misses,stored:Object.keys(saved).length,...(router.stats?router.stats():{})}),dispose:()=>router.dispose?.()};
 }
 async function walkOnly(task,router,maxKm){
- const from=pt(task.from),to=pt(task.to),limit=(finite(maxKm)&&maxKm>0?maxKm:3)*1000;
+ // Trajet 100 % piéton touchant P21 : s'arrête devant le terminal, jamais au point GPS du parking (cf. pointMarcheP21).
+ const from=pointMarcheP21(pt(task.from)),to=pointMarcheP21(pt(task.to)),limit=(finite(maxKm)&&maxKm>0?maxKm:3)*1000;
  if(!from||!to||!router)return null;
  if(meters(from,to)>limit)return null; // la marche réelle est toujours au moins aussi longue
  let r=null;try{r=await router.route(from,to);}catch(_){}
@@ -2297,7 +2310,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    return (j.source||j.sources?.[0]||'?')+' : véhicule '+(vehicleLeg?.departure?new Date(vehicleLeg.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—')+
     ' → départ retenu (après marche) '+(j.departure?new Date(j.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—');
   });
-  return {task:s.task,...ranked,alternatives,hidden:{tooEarly:tooEarly.length,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,percent,remainingMs,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
+  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,percent,remainingMs,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},durationsMs:{...s.durationsMs},done:s.pending===0,
   // 20/11/2026 (demande Laurent) : pouvoir suggérer la trottinette électrique quand des trajets sont écartés
   // uniquement pour une marche trop longue — seulement si l'option n'est pas déjà activée dans les Réglages.
   scooterEnabled:!!(scooter&&scooter.enabled),
@@ -2475,6 +2488,10 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    const abort=()=>request.abort();
    requests.add(request);
    let requestTimer;
+   // 23/11/2026 (Laurent : « cherche encore, optimise ») : pour distinguer enfin téléchargement/calcul lents
+   // d'un simple appel réellement bloqué, le temps RÉEL de chaque moteur (succès ou échec) est désormais mesuré
+   // et affiché dans « Détail par moteur » — plus besoin de deviner où va le temps à la prochaine remontée.
+   const startedAt=Date.now();
    const bounded=new Promise((resolve,reject)=>{
     requestTimer=setTimeout(()=>{reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)'));abort();},limitMs);
     Promise.resolve().then(()=>p.run(variant,request.signal)).then(resolve,reject);
@@ -2488,6 +2505,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    }).catch(e=>{
     if(!disposed)state[label].errors[p.name]=String(e&&e.message||e).slice(0,140);
    }).finally(()=>{if(disposed)return;state[label].pending--;
+    (state[label].durationsMs=state[label].durationsMs||{})[p.name]=Date.now()-startedAt;
     const idx=state[label].deadlines.indexOf(activeDeadline);if(idx>=0)state[label].deadlines.splice(idx,1);emit(label);});
   }
   const directDeadline=Date.now()+enrichmentMs;
@@ -3307,7 +3325,10 @@ function render(host,v){
  const consulted=Object.entries(v.received||{}).filter(([n])=>!errs.some(([e])=>e===n));
  if(v.done&&(errs.length||consulted.length)){
   const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés ('+(errs.length+consulted.length)+')'));
-  for(const [n,e] of errs)d.appendChild(el(doc,'div',null,'❌ '+n+' : '+e));
+  // 23/11/2026 (Laurent : « cherche encore, optimise ») : durée réelle de chaque moteur (succès ou échec), pour
+  // voir enfin où va le temps (téléchargement + calcul) sans avoir à deviner depuis un simple ressenti utilisateur.
+  const dureeTxt=n=>{const ms=v.durationsMs&&v.durationsMs[n];return Number.isFinite(ms)?' ('+(ms>=1000?Math.round(ms/1000)+' s':Math.round(ms)+' ms')+')':'';};
+  for(const [n,e] of errs)d.appendChild(el(doc,'div',null,'❌ '+n+' : '+e+dureeTxt(n)));
   for(const [n,count] of consulted){
    // 21/11/2026 : diagnostic temporaire — détail du téléchargement GTFS affiché seulement quand un
    // moteur local renvoie 0 proposition, pour voir en direct où ça bloque (taille du flux, candidats bruts).
@@ -3328,7 +3349,7 @@ function render(host,v){
     // distinguer enfin « le code n'est pas encore en ligne », « dbg absent » et « kept vide » au lieu de deviner.
     if(dbg&&Array.isArray(dbg.kept)&&dbg.kept.length)detail+=' [départs retenus : '+dbg.kept.map(t=>{const d=new Date(t);return Number.isFinite(d.getTime())?d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'?';}).join(', ')+']';
    }
-   d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail));
+   d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail+dureeTxt(n)));
   }
   host.appendChild(d);
  }

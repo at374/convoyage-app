@@ -101,6 +101,41 @@ test('trajet à pied : proposé ≤ 3 km de marche réelle, refusé si le chemin
  const far=fakeRouter();assert.equal(await H.walkOnly({...task,to:STOP2},far,3),null);assert.equal(far.calls.length,0,'pas de requête inutile');
 });
 
+// 27/11/2026 (Laurent : « terminer tous les trajets de marche piétons devant le terminal de l'aéroport de
+// Genève côté Suisse » — on ne peut pas marcher jusqu'au parking P21 en passant par la route douanière,
+// réservée aux voitures) : toute marche (calculée directement, pas via un arrêt de transport) touchant le
+// point GPS de P21 (secteur France) doit s'arrêter/démarrer devant le terminal, jamais au point GPS réel du
+// parking.
+const P21_GPS={lat:46.237722,lon:6.117667},TERMINAL_GENEVE={lat:46.230837,lon:6.109664};
+const FERNEY={lat:46.2250,lon:6.1097};// adresse quelconque proche, hors zone P21 (~650 m du terminal)
+
+test('walkOnly : marche vers/depuis P21 (secteur France) s’arrête devant le terminal, pas au parking',async()=>{
+ const versP21=fakeRouter();
+ const j1=await H.walkOnly({label:'Aller',from:FERNEY,to:P21_GPS,latestArrival:at(9,0)},versP21,3);
+ assert.ok(j1,'marche calculée (distance réduite au terminal, pas au parking)');
+ assert.deepEqual(versP21.calls[0][1],TERMINAL_GENEVE,'destination = terminal, jamais le point GPS du parking');
+ const depuisP21=fakeRouter();
+ const j2=await H.walkOnly({label:'Retour',from:P21_GPS,to:FERNEY,latestArrival:at(9,0)},depuisP21,3);
+ assert.ok(j2);
+ assert.deepEqual(depuisP21.calls[0][0],TERMINAL_GENEVE,'origine = terminal, jamais le point GPS du parking');
+});
+
+test('completeWalks : approche/sortie vers P21 s’arrêtent devant le terminal (jamais la voiture, qui n’est pas concernée)',async()=>{
+ const STOP_ARRIVEE={lat:46.1800,lon:6.1000};
+ const sortie=fakeRouter();
+ const j1={source:'GTFS',sources:['GTFS'],legs:[bus(at(8,0),at(8,30),STOP1,STOP_ARRIVEE)]};
+ const x1=await H.completeWalks(j1,{label:'Aller',from:HOME,to:P21_GPS,latestArrival:at(9,30)},sortie);
+ const lastWalk=x1.legs.at(-1);
+ assert.equal(lastWalk.kind,'walk');
+ assert.deepEqual(sortie.calls.at(-1)[1],TERMINAL_GENEVE,'dernière marche arrêtée au terminal, pas au parking P21');
+ const approche=fakeRouter();
+ const j2={source:'GTFS',sources:['GTFS'],legs:[bus(at(8,0),at(8,30),STOP_ARRIVEE,STOP2)]};
+ const x2=await H.completeWalks(j2,{label:'Retour',from:P21_GPS,to:MISSION,latestArrival:at(9,30)},approche);
+ const firstWalk=x2.legs[0];
+ assert.equal(firstWalk.kind,'walk');
+ assert.deepEqual(approche.calls[0][0],TERMINAL_GENEVE,'première marche partie du terminal, pas du parking P21');
+});
+
 test('tarifs : EUR et CHF séparés, jamais convertis ; tarif manquant => Prix à confirmer + source',()=>{
  const mk=legs=>({legs});
  const p=H.priceOf(mk([{kind:'transit',provider:'TPG',fare:{amount:3,currency:'CHF',source:'tpg.ch'}},{kind:'transit',provider:'TAC',fare:{amount:1.6,currency:'EUR',source:'tac'}}]));
@@ -1243,4 +1278,24 @@ test('jonction : le temps restant inclut la marche directe après la fin des mot
   assert.equal(complete.percent,100);
   assert.equal(complete.remainingMs,0);
  }finally{session.dispose();}
+});
+test('la durée réelle de chaque moteur (succès et échec) est mesurée et exposée dans view() (23/11/2026 : « cherche encore, optimise » — distinguer où va le temps sans deviner)',async()=>{
+ const providers={
+  rapide:{name:'Rapide',enabled:()=>true,run:async()=>{await new Promise(r=>setTimeout(r,10));return [];}},
+  lent:{name:'Lent',enabled:()=>true,run:()=>new Promise(()=>{})}
+ };
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:fakeRouter(),timeoutMs:30});
+ await new Promise(r=>setTimeout(r,60));
+ const v=s.view('Aller');
+ assert.equal(v.done,true);
+ assert.ok(Number.isFinite(v.durationsMs.Rapide)&&v.durationsMs.Rapide>=10,'durée mesurée pour le moteur rapide');
+ assert.ok(Number.isFinite(v.durationsMs.Lent)&&v.durationsMs.Lent>=30,'durée mesurée aussi pour le moteur qui expire');
+ assert.match(v.errors.Lent,/délai fournisseur dépassé/);
+ s.dispose();
+});
+test('la durée réelle de chaque moteur est affichée dans le détail par moteur, succès et échec',()=>{
+ const hub=require('fs').readFileSync(__dirname+'/../transport-mission-hub.js','utf8');
+ assert.match(hub,/const dureeTxt=n=>\{const ms=v\.durationsMs&&v\.durationsMs\[n\];/);
+ assert.match(hub,/'❌ '\+n\+' : '\+e\+dureeTxt\(n\)/);
+ assert.match(hub,/'✅ '\+n\+' : '\+count\+.*detail\+dureeTxt\(n\)/);
 });
