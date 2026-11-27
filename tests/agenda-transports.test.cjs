@@ -948,3 +948,39 @@ assert.equal(vm.runInContext("transportParisDate('2026-07-30T13:30')",context),'
 console.log('PASS: Agenda click refreshes visible mission, uses new button, confirms chosen time, focuses validation errors, reports render failure, preserves deadline and handles DST');
 
 }
+
+
+// A missed live connection must trigger a current-position reroute, and delayed arrival options
+// remain a separate list with an explicit shifted pickup proposal and a required justification.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const source=app.slice(app.indexOf('      const missedConnection=view=>'),app.indexOf('      const requestLiveReroute=',app.indexOf('      const missedConnection=view=>')));
+  const context={Date};vm.createContext(context);
+  const now=Date.now(),depart=new Date(now-2*60000).toISOString(),arrive=new Date(now+40*60000).toISOString();
+  const previous={kind:'transit',departure:new Date(now-12*60000).toISOString(),arrival:new Date(now-5*60000).toISOString()};
+  const walk={kind:'walk',departure:new Date(now-5*60000).toISOString(),arrival:new Date(now-3*60000).toISOString()};
+  const missed={kind:'transit',departure:depart,arrival:arrive};
+  const call=legs=>vm.runInContext(source+';missedConnection({picks:[{journey:{legs}}]})',context);
+  assert.equal(call([previous,walk,missed]),depart,'missed connecting train is detected across an intervening walk leg');
+  assert.equal(call([previous,{...missed,departure:new Date(now+5*60000).toISOString()}]),null,'future connection does not trigger recovery');
+  assert.equal(call([previous,{...missed,departure:new Date(now-60*60000).toISOString()}]),null,'stale journeys do not trigger a new GPS request');
+  assert.ok(app.includes('lateAlternativesOnly:true'));
+  assert.ok(app.includes("transportDestinations['Aller retard']=section"));
+  assert.ok(app.includes("target.fromName='Position GPS actuelle'"));
+  assert.ok(app.includes("target.earliestDeparture=new Date().toISOString()"));
+  const hubSource=fs.readFileSync(path.join(__dirname,'..','transport-mission-hub.js'),'utf8');
+  assert.ok(hubSource.includes('s.task.lateAlternativesOnly||ms(j.legs[j.legs.length-1]?.arrival)>ms(s.task.plannedArrivalDeadline)'));
+  const hub=require('../transport-mission-hub.js');
+  const task={earliestDeparture:'2026-11-27T07:50:00+01:00',latestArrival:'2026-11-27T23:59:00+01:00',
+    plannedArrivalDeadline:'2026-11-27T08:30:00+01:00',allowJustifiedDelay:true,marginMinutes:15};
+  const journey={legs:[{kind:'transit',mode:'Train',departure:'2026-11-27T08:00:00+01:00',
+    arrival:'2026-11-27T09:15:00+01:00',from:'A',to:'B'}]};
+  const delayed=hub.assess(journey,task,()=>null);
+  assert.equal(delayed.feasible,false,'late transport is not represented as punctual');
+  assert.equal(delayed.lateArrival,true);
+  assert.equal(delayed.latenessMinutes,45);
+  assert.equal(delayed.adjustedPickup,'2026-11-27T08:30:00.000Z','proposed pickup shifts to arrival plus the 15-minute safety margin');
+  assert.match(delayed.status,/justificatif/);
+  assert.match(delayed.statusDetail,/correspondance manquée/);
+}
