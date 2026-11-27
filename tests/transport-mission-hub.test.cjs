@@ -1281,15 +1281,21 @@ test('jonction : le temps restant inclut la marche directe après la fin des mot
 });
 test('la durée réelle de chaque moteur (succès et échec) est mesurée et exposée dans view() (23/11/2026 : « cherche encore, optimise » — distinguer où va le temps sans deviner)',async()=>{
  const providers={
-  rapide:{name:'Rapide',enabled:()=>true,run:async()=>{await new Promise(r=>setTimeout(r,10));return [];}},
+  rapide:{name:'Rapide',enabled:()=>true,run:async()=>{await new Promise(r=>setTimeout(r,5));return [];}},
   lent:{name:'Lent',enabled:()=>true,run:()=>new Promise(()=>{})}
  };
- const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:fakeRouter(),timeoutMs:30});
- await new Promise(r=>setTimeout(r,60));
- const v=s.view('Aller');
+ // Attendre la fin via onUpdate (pas un délai fixe) : un délai fixe devient incertain sous charge CPU
+ // (centaines d'autres tests du fichier exécutés juste avant), rendant ce test parfois faussement en échec.
+ // Marge généreuse (5 ms / 200 ms) pour la même raison : sous charge, quelques dizaines de ms de gigue sur
+ // un minuteur ne doivent pas faire basculer le moteur rapide dans le délai du moteur lent.
+ let finish;
+ const done=new Promise(resolve=>{finish=resolve;});
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:fakeRouter(),timeoutMs:200,
+  onUpdate:(label,view)=>{if(label==='Aller'&&view.done)finish(view);}});
+ const v=await done;
  assert.equal(v.done,true);
- assert.ok(Number.isFinite(v.durationsMs.Rapide)&&v.durationsMs.Rapide>=10,'durée mesurée pour le moteur rapide');
- assert.ok(Number.isFinite(v.durationsMs.Lent)&&v.durationsMs.Lent>=30,'durée mesurée aussi pour le moteur qui expire');
+ assert.ok(Number.isFinite(v.durationsMs.Rapide)&&v.durationsMs.Rapide>=5,'durée mesurée pour le moteur rapide');
+ assert.ok(Number.isFinite(v.durationsMs.Lent)&&v.durationsMs.Lent>=150,'durée mesurée aussi pour le moteur qui expire');
  assert.match(v.errors.Lent,/délai fournisseur dépassé/);
  s.dispose();
 });
