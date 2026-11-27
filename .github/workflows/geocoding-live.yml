@@ -54,4 +54,18 @@ jobs:
                           if p.get('type') == 'housenumber' and str(p.get('housenumber')) == '94' and norm(p.get('street', '')) == 'avenue d aix les bains' and p.get('citycode') == '74010':
                               matches.append(f)
           assert matches, 'No verified exact address returned'
+          for query, required_type, predicate, label in [
+              ("25 faubourg des Balmettes Annecy", "housenumber",
+               lambda p: str(p.get("housenumber", "")) == "25" and "faubourg" in norm(p.get("street", "")) and "balmettes" in norm(p.get("street", "")) and p.get("citycode") == "74010",
+               "25 faubourg des Balmettes, Annecy"),
+              ("Rue Louis Armand Voiron", "street",
+               lambda p: p.get("citycode") == "38563" and "louis armand" in norm(p.get("name", p.get("street", ""))),
+               "Rue Louis Armand, Voiron"),
+          ]:
+              url = 'https://data.geopf.fr/geocodage/search?' + urllib.parse.urlencode({'q': query, 'limit': 10, 'type': required_type})
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  features = json.load(response)['features']
+              for f in features:
+                  print(label + ':', json.dumps({'properties': f['properties'], 'coordinates': f['geometry']['coordinates']}, ensure_ascii=False))
+              assert any(f['properties'].get('type') == required_type and predicate(f['properties']) for f in features), 'No verified IGN result for ' + label
           PY

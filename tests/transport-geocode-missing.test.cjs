@@ -28,6 +28,32 @@ test('adresse de rue sans numéro : le géocodeur reçoit aussi les champs to_ad
  assert.ok(geo.cleAdresse(from,'origin'));
 });
 
+test('faubourg avec numéro : vérifie exactement le numéro IGN retourné',async()=>{
+ const m={to_city:'Annecy',to_department:'74',to_address:'25 faubourg des Balmettes'};
+ const exact=await geo.chercherPoint(m,'destination',fakeFetch(45.9,6.12,'housenumber',{
+  housenumber:'25',street:'faubourg des Balmettes',city:'Annecy'
+ }));
+ assert.equal(exact.trouve,true);
+ assert.equal(exact.point.precision,'adresse');
+ const wrong=await geo.chercherPoint(m,'destination',fakeFetch(45.9,6.12,'housenumber',{
+  housenumber:'26',street:'faubourg des Balmettes',city:'Annecy'
+ }));
+ assert.equal(wrong.trouve,false,'un numéro voisin ne doit pas remplacer le 25 demandé');
+});
+
+test('rue sans numéro : un bâtiment voisin ne remplace pas le début de rue',async()=>{
+ const m={to_city:'Voiron',to_department:'38',to_address:'Rue Louis Armand'};
+ const urls=[];
+ const result=await geo.chercherPoint(m,'destination',async url=>{
+  urls.push(url);
+  return {ok:true,json:async()=>({features:[{geometry:{coordinates:[5.579257,45.381682]},properties:{
+   score:0.9,type:'housenumber',housenumber:'12',street:'Rue Louis Armand',city:'Voiron'
+  }}]})};
+ });
+ assert.equal(result.trouve,false,'un point de bâtiment ne représente pas la rue sans numéro');
+ assert.ok(urls[0].includes('type=street'),'la requête prioritaire doit cibler le tronçon de rue');
+});
+
 test('service d adresses sans résultat : aucun point inventé',async()=>{
  const m={from_city:'Viviers-du-Lac',origin:{city:'Viviers-du-Lac',zip:'73420'}};
  const r=await geo.chercherPoint(m,'origin',async()=>({ok:true,json:async()=>({features:[]})}));

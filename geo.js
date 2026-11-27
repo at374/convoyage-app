@@ -200,12 +200,20 @@
       // Route Douanière, 01210 Ferney-Voltaire » n'était pas trouvée) : 1) adresse complète ; 2) sans nom de lieu avant « – » ou « , » ;
       // 3) la voie seule avec code postal et commune ; 4) la commune seule. La précision rendue dit ce qui a vraiment été trouvé.
       const sansLieu = String(x.a || '').split(/\s[–—-]\s/).pop().replace(/^secteur\s+\S+\s+/i, '').replace(/\(.*?\)/g, ' ').trim();
-      const voie = sansLieu.replace(/^.*?\b((?:route|rue|avenue|chemin|boulevard|bd|impasse|allée|allee|place|quai|zone|zi|za|rond-point)\b.*)$/i, '$1');
+      const voie = sansLieu.replace(/^.*?\b((?:route|rue|avenue|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg|zone|zi|za|rond-point)\b.*)$/i, '$1');
+      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg)\b/i);
+      const rueSansNumero = !numero && aAdresseRue(m, cote);
       const essais = [];
-      const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
-      ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
-      if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
-      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
+      const ajoute = (q, commune, type) => {
+        if (q && !essais.some(e => e.q === q && e.commune === !!commune && e.type === type))
+          essais.push({q,commune:!!commune,type});
+      };
+      ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a, rueSansNumero ? 'street' : undefined);
+      if (x.a) {
+        ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' '), false, rueSansNumero ? 'street' : undefined);
+        ajoute([voie, x.cp, x.v].filter(Boolean).join(' '), false, rueSansNumero ? 'street' : undefined);
+        ajoute([x.cp, x.v].filter(Boolean).join(' '), true);
+      }
       if (numero && x.cp) essais.push({ q: [sansLieu.replace(/\b\d{5}\b/g, ''), x.v].filter(Boolean).join(' '), commune: false, sansCP: true });
       if (numero) {
         const mots = norm(sansLieu.replace(/\b\d{5}\b/g, '')).replace(/\bd\s+(?=\w)/g, '').trim();
@@ -216,12 +224,14 @@
       for (const es of essais) {
         // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
         // (data.geopf.fr/geocodage) — même moteur, mêmes paramètres et même format de réponse GeoJSON (iso-fonctionnel).
-        const r = await fetchFn('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(es.q) + (x.cp && !es.sansCP ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
+        const r = await fetchFn('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(es.q) + (x.cp && !es.sansCP ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.type ? '&type=' + encodeURIComponent(es.type) : es.commune ? '&type=municipality' : ''));
         if (!r || !r.ok) throw new Error('service adresses');
         const j = await r.json(), f = j && j.features && j.features[0];
         if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
           const t = f.properties.type, [lng, lat] = f.geometry.coordinates;
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+          // Without a requested house number, a building hit is not a valid substitute for the start of the street.
+          if (rueSansNumero && t === 'housenumber') continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
           if (numero && (precision !== 'adresse' || String(f.properties.housenumber || '').match(/^\d+/)?.[0] !== numero[1])) continue;
