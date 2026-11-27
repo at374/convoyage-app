@@ -4,7 +4,7 @@ name: Diagnostic réel des transports (20 axes de couverture AURA–Suisse)
 on:
   workflow_dispatch:
   push:
-    branches: [feature/transports-aura-suisse]
+    branches: [feature/transports-aura-suisse, fix/national-morning-arrival-validation-current]
     paths:
       - '.github/workflows/diagnostic-transports.yml'
       - 'scripts/diagnostic-transports-reel.cjs'
@@ -872,7 +872,6 @@ jobs:
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
       - name: Diagnostic réel
-        env:
         run: node scripts/diagnostic-transports-reel.cjs
       - name: Contrôler la cohérence des résultats tarifaires
         run: |
@@ -925,6 +924,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Publier le rapport
+        if: github.ref_name == 'feature/transports-aura-suisse'
         shell: bash
         run: |
           set -euo pipefail

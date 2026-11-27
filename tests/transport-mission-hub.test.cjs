@@ -79,6 +79,23 @@ test('correspondance : marche réelle recalculée, trop courte signalée',async(
  assert.ok(x.legs.some(l=>l.kind==='walk'&&l.from==='Gare'));
 });
 
+test('correspondance : seuil de sécurité de 5 minutes, 4 min 59 refusées et 5 min acceptées',async()=>{
+ const S3={lat:45.9500,lon:6.1200};
+ const task={label:'Jonction',from:STOP1,to:STOP2,earliestDeparture:at(7,50),latestArrival:at(10,0)};
+ const make=(minutes,seconds=0)=>{
+  const departure=new Date(Date.parse(at(8,20))+minutes*60000+seconds*1000).toISOString();
+  const arrival=new Date(Date.parse(departure)+20*60000).toISOString();
+  return {source:'t',sources:['t'],legs:[
+   bus(at(8,0),at(8,20),STOP1,S3,{toName:'Gare'}),
+   bus(departure,arrival,S3,STOP2,{fromName:'Gare'})
+  ]};
+ };
+ const short=H.assess(await H.completeWalks(make(4,59),task,fakeRouter()),task);
+ assert.equal(short.feasible,false,'4 min 59 ne doit pas être déclaré réalisable');
+ assert.match(short.statusDetail,/correspondance trop courte/);
+ const exact=H.assess(await H.completeWalks(make(5,0),task,fakeRouter()),task);
+ assert.equal(exact.feasible,true,'5 minutes pleines sont acceptées lorsque les arrêts sont identiques');
+});
 test('trajet à pied : proposé ≤ 3 km de marche réelle, refusé si le chemin réel dépasse le seuil',async()=>{
  const near={lat:45.9200,lon:6.1200};// 2,2 km à vol d’oiseau
  const task={label:'Aller',from:HOME,to:near,latestArrival:at(9,0)};
@@ -340,7 +357,7 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  // Les 8 premiers ont une marche impossible (arrêt inaccessible) ; les suivants sont réalisables.
  const BAD={lat:45.9500,lon:6.1300};
  const router={calls:0,route:async(a,b)=>{router.calls++;if(Math.abs(a.lat-BAD.lat)<1e-6||Math.abs(b.lat-BAD.lat)<1e-6)return {status:'unavailable'};
-  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b]};}};
+  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b],endpointsMatched:true};}};
  const js=[];for(let i=0;i<8;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i),at(7,i+20),BAD,STOP2,{line:'K'+i})]});
  for(let i=0;i<6;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,30+i),at(7,50+i),STOP1,STOP2,{line:'G'+i})]});
  const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
@@ -351,7 +368,7 @@ test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 
  s.dispose();
 });
 
-test('cache piéton v3 : conserve les coordonnées exactes et sépare les adresses proches',async()=>{
+test('cache piéton v4 : conserve les coordonnées exactes et sépare les adresses proches',async()=>{
  const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
  const base=fakeRouter(),r1=H.cachedRouter(base,{storage});
  await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);
@@ -442,7 +459,7 @@ test('jonction impossible : aucune requête fournisseur ni routage piéton',asyn
 });
 
 test('jonction à pied : départ calculé pour arriver exactement avec 15 minutes de marge',async()=>{
- const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
+ const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION],endpointsMatched:true})};
  const task={from:HOME,to:STOP1,earliestDeparture:at(8,0),latestArrival:at(9,0)};
  const walk=await H.walkOnly(task,router,3);
  assert.ok(walk);
@@ -451,7 +468,7 @@ test('jonction à pied : départ calculé pour arriver exactement avec 15 minute
  assert.equal(H.assess(walk,task).feasible,true);
 });
 test('jonction à pied : rejeter la marche si la livraison est trop tardive',async()=>{
- const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
+ const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION],endpointsMatched:true})};
  const task={from:HOME,to:STOP1,earliestDeparture:at(8,40),latestArrival:at(9,0)};
  assert.equal(await H.walkOnly(task,router,3),null);
 });
@@ -1040,6 +1057,21 @@ test('fédération GTFS : fixture Sibra Annecy vers M Réso Voironnais via makeP
   'une mission dans le même réseau ne déclenche pas le fédérateur inter-réseaux');
 });
 
+
+ test('cache piéton v4 : ne fabrique pas les extrémités et ignore le cache v3',async()=>{
+ const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
+ const shifted={...STOP1,lat:STOP1.lat+0.00003};
+ const router={route:async(a,b)=>({status:'calculated',distanceMeters:100,durationSeconds:80,geometry:[shifted,b],endpointsMatched:true})};
+ await H.cachedRouter(router,{storage}).route(STOP1,STOP2);
+ const base=fakeRouter(),cached=H.cachedRouter(base,{storage});
+ const result=await cached.route(STOP1,STOP2);
+ assert.equal(result.cached,true);assert.deepEqual(result.geometry[0],shifted);
+ await cached.route({...STOP1,lat:STOP1.lat+0.00000001},STOP2);
+ assert.equal(base.calls.length,1,'coordonnées distinctes même sous un dixième de mètre');
+ store.set('cp_marches_v3',store.get('cp_marches_v4'));store.delete('cp_marches_v4');
+ const fresh=fakeRouter();await H.cachedRouter(fresh,{storage}).route(STOP1,STOP2);
+ assert.equal(fresh.calls.length,1,'ancien cache ignoré');
+ });
 
 
 test('normalisation GTFS conserve les modes de ligne et écarte toutes les catégories bateau',()=>{

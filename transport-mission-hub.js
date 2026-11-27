@@ -12,7 +12,7 @@ const VERSION='hub-20261124-tad-results';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
 const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
-const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
+const SAFE_TRANSFER_MIN=5,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=300;
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 function pt(p){
@@ -353,11 +353,11 @@ async function completeWalks(j,task,router){
  return {...j,legs,missing};
 }
 // Cache des marches : partagé entre moteurs, directions et fiches (stockage local du téléphone, 30 jours).
-// Clés arrondies au 1/10 000 de degré (≈ 10 m) : deux arrêts « identiques » vus par deux moteurs partagent la marche.
-function cachedRouter(router,{storage=null,key='cp_marches_v3',ttlDays=30,maxEntries=400}={}){
+// Les coordonnées exactes et les extrémités réelles du tracé sont conservées.
+function cachedRouter(router,{storage=null,key='cp_marches_v4',ttlDays=30,maxEntries=400}={}){
  if(!router||typeof router.route!=='function')return router;
- // Keep endpoint identity at ~10 cm; never round before asking Valhalla.
- const id=(a,b)=>[a.lat.toFixed(6),a.lon.toFixed(6),b.lat.toFixed(6),b.lon.toFixed(6)].join(',');
+ const id=(a,b)=>JSON.stringify([a.lat,a.lon,b.lat,b.lon]);
+ const verified=(g,a,b)=>Array.isArray(g)&&g.length>0&&pt(g[0])&&pt(g[g.length-1])&&meters(g[0],a)<=10&&meters(g[g.length-1],b)<=10;
  const round=p=>({lat:Math.round(p.lat*1e4)/1e4,lon:Math.round(p.lon*1e4)/1e4});
  let saved={};try{saved=JSON.parse(storage?.getItem(key)||'{}')||{};}catch(_){saved={};}
  const now=Date.now(),ttl=ttlDays*86400000;
@@ -370,14 +370,14 @@ function cachedRouter(router,{storage=null,key='cp_marches_v3',ttlDays=30,maxEnt
   const k=id(a,b);
   if(memory.has(k)){hits++;return memory.get(k);}
   const s=saved[k];
-  if(s){hits++;const r=Promise.resolve({status:'calculated',provider:(router.mode==='bicycle'?'Valhalla vélo':'Valhalla pedestrian')+' / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
+  if(s&&verified(s.g,a,b)){hits++;const r=Promise.resolve({status:'calculated',provider:(router.mode==='bicycle'?'Valhalla vélo':'Valhalla pedestrian')+' / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
    geometry:s.g||null,steps:s.s||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
   misses++;
   const r=Promise.resolve(router.route({...a},{...b})).then(x=>{
    if(x&&x.status==='calculated'&&x.endpointsMatched===true){
-    const g=Array.isArray(x.geometry)?x.geometry.map((p,i,arr)=>i===0?{...a}:i===arr.length-1?{...b}:round(p))
+    const g=Array.isArray(x.geometry)?x.geometry.map((p,i,arr)=>i===0||i===arr.length-1?{...p}:round(p))
      .filter((_,i,arr)=>i%Math.max(1,Math.ceil(arr.length/40))===0||i===arr.length-1):null;
-    saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g,s:Array.isArray(x.steps)?x.steps.slice(0,25):undefined};persist();
+    if(verified(g,a,b)){saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g,s:Array.isArray(x.steps)?x.steps.slice(0,25):undefined};persist();}
    }else memory.delete(k);
    return x;
   });
@@ -390,7 +390,7 @@ async function walkOnly(task,router,maxKm){
  if(!from||!to||!router)return null;
  if(meters(from,to)>limit)return null; // la marche réelle est toujours au moins aussi longue
  let r=null;try{r=await router.route(from,to);}catch(_){}
- if(!r||r.status!=='calculated'||r.endpointsMatched===false||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
+ if(!r||r.status!=='calculated'||r.endpointsMatched!==true||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
  const margin=marginFor(task);
  const deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  // Avec deux bornes (jonction), partir le plus tard possible tout en arrivant
