@@ -361,7 +361,7 @@ async function run(){
   await page.locator('#cpTransportMissionDetails').evaluate(panel=>{
    const host=panel.ownerDocument.createElement('div');
    host.id='browser-flex-check';
-   panel.appendChild(host);
+   document.body.appendChild(host);
    window.CPTransportHub.render(host,{done:true,total:0,picks:[],others:[],errors:{},flexCandidates:[
     {kind:'gtfs-flex-candidate',network:'Réseau de test',line:'TAD 31',tripId:'flex-31',
      pickupWindow:{startSeconds:28800,endSeconds:32400},
