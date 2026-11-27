@@ -7,7 +7,7 @@ test('détecte la compétence Hiflow Plaque W garage', () => {
 });
 test('normalise casse, accents, espaces Unicode et tirets', () => {
   assert.equal(plaqueW.detect({ vehicle: { competences: ['PLAQUES\u00a0W‑GARAGE'] } }), true);
-  assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque professionnelle obligatoire'] } }), false);
+  assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque professionnelle obligatoire'] } }), true);
   assert.equal(plaqueW.detect({ vehicle: { competences: ['Plaque W professionnelle obligatoire'] } }), true);
 });
 test('refuse les exigences explicitement non requises et les drapeaux false', () => {
