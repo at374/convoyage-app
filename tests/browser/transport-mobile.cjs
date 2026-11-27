@@ -300,7 +300,7 @@ async function run(){
   const before=requests.length;
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
+  await page.waitForFunction(()=>[...document.querySelectorAll('.cp-transport-evidence')].some(node=>node.textContent.includes('Jonction régionale : 4 proposition')));
   assert.ok(requests.length>before,'Explicit refresh issues new regional requests');
   holdSibra=true;  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
