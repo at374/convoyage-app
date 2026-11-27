@@ -2921,7 +2921,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           previous?.remove();
           previous = document.createElement('div');
           previous.setAttribute('data-regional-slot', '');
-          (legacySources[direction]||transportDestinations[direction]||sourcePanel).appendChild(previous);
+          (transportDestinations[direction]||sourcePanel).appendChild(previous);
           render(previous,controller.signal);
         };
         regionalRefreshers.push(refresh);
