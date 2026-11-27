@@ -956,7 +956,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   const start=app.indexOf('      const missedConnectionDeparture=view=>');
   const end=app.indexOf('      const requestLiveReroute=',start);
   assert.ok(start>=0&&end>start);
-  const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\\n'+app.slice(start,end);
+  const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\n'+app.slice(start,end);
   let now=Date.parse('2026-11-27T07:40:00+01:00'),scheduled=null,reroutes=0;
   class FakeDate extends Date { static now(){return now;} }
   const view={picks:[{journey:{legs:[
