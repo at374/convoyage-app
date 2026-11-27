@@ -378,9 +378,12 @@ async function run(){
    const heading=node.querySelector('.cp-hub-tad-heading');
    if(!heading)return null;
    const style=getComputedStyle(heading),rect=heading.getBoundingClientRect();
-   return {text:heading.textContent.trim(),visible:style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0};
+   return {text:heading.textContent.trim(),display:style.display,visibility:style.visibility,
+    rect:{x:rect.x,y:rect.y,width:rect.width,height:rect.height},connected:heading.isConnected,
+    parentHidden:heading.closest('[hidden]')!==null};
   });
-  assert.deepEqual(tadHeading,{text:'Résultats de transport à la demande',visible:true});
+  assert.equal(tadHeading?.text,'Résultats de transport à la demande',JSON.stringify(tadHeading));
+  assert.ok(tadHeading.display!=='none'&&tadHeading.visibility!=='hidden'&&tadHeading.rect.width>0&&tadHeading.rect.height>0&&!tadHeading.parentHidden,JSON.stringify(tadHeading));
 
   const bookedRequired=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 31'});
   await bookedRequired.locator('summary').evaluate(node=>node.click());assert.equal(await bookedRequired.evaluate(node=>node.open),true);
