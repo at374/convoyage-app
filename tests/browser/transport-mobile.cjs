@@ -389,7 +389,9 @@ async function run(){
   await bookedRequired.locator('summary').evaluate(node=>node.click());assert.equal(await bookedRequired.evaluate(node=>node.open),true);
   assert.match(await bookedRequired.evaluate(node=>node.textContent),/Préavis minimum : 60 min/);
   assert.match(await bookedRequired.evaluate(node=>node.textContent),/04 00 00 00 00/);
-  assert.equal(await bookedRequired.getByRole('link',{name:/Réserver/}).getAttribute('href'),'https://reservation.example/');
+  const bookingLink=bookedRequired.locator('a[href="https://reservation.example/"]');
+  assert.equal(await bookingLink.count(),1,'TAD booking URL is rendered');
+  assert.equal(await bookingLink.isVisible(),true,'TAD booking URL is visible when details open');
   const unknownNotice=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 32'});
   await unknownNotice.locator('summary').evaluate(node=>node.click());assert.equal(await unknownNotice.evaluate(node=>node.open),true);
   assert.match(await unknownNotice.evaluate(node=>node.textContent),/Conditions de réservation à vérifier/);
