@@ -2373,7 +2373,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const hubHosts={};
       // Une correspondance dont le départ est passé pendant que son arrivée reste future déclenche
       // une nouvelle recherche depuis un GPS ponctuel. Aucun suivi en arrière-plan ni stockage GPS.
-      let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteStatus=null;
+      let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteStatus=null,liveDelayPlan=null;
       const missedConnection=view=>{
         const now=Date.now(),windowMs=45*60000;
         for(const item of Array.isArray(view?.picks)?view.picks:[]){
@@ -2556,6 +2556,31 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               latestArrival:parisIso(parisServiceDay(new Date().toISOString()),23,59),allowJustifiedDelay:true,lateAlternativesOnly:true};
             delete lateTask.windowKind;delete lateTask.windowStartMs;delete lateTask.windowEndMs;
             tasks.push(lateTask);
+            if(liveDelayPlan){
+              const shiftedDelivery=liveDelayPlan.deliveryAt;
+              if(dest&&homePt){
+                tasks.push({...retourBase,label:'Retour décalé',earliestDeparture:shiftedDelivery,plannedDeliveryAt:shiftedDelivery});
+              }
+              if(next&&nextOrigin2&&jonctionLatest){
+                tasks.push({label:'Jonction décalée',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison estimée '+formatParis(shiftedDelivery),
+                  toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',earliestDeparture:shiftedDelivery,
+                  latestArrival:jonctionLatest,marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),
+                  approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:false});
+              }
+              const addDelaySection=(label,title,after,pathText)=>{
+                if(transportDestinations[label])return;
+                const section=document.createElement('section');section.className='cp-transport-direction cp-transport-delayed';
+                section.dataset.transportDirection=label;
+                const heading=document.createElement('h3');heading.textContent=title;
+                const route=document.createElement('p');route.className='cp-transport-route';route.textContent=pathText;
+                section.append(heading,route);after.insertAdjacentElement('afterend',section);
+                transportDestinations[label]=section;transportDays[label]=transportDays[after.dataset.transportDirection]||transportDays.Aller;
+              };
+              if(dest&&homePt)addDelaySection('Retour décalé','03 bis · Retour avec livraison décalée',transportDestinations.Retour,
+                'Livraison estimée '+formatParis(shiftedDelivery)+' → '+homeName);
+              if(next&&nextOrigin2)addDelaySection('Jonction décalée','02 bis · Mission suivante avec livraison décalée',transportDestinations.Jonction,
+                'Livraison estimée '+formatParis(shiftedDelivery)+' → '+(next.origin_address||next.from_city||'Mission suivante'));
+            }
             if(!transportDestinations['Aller retard']){
               const section=document.createElement('section');section.className='cp-transport-direction cp-transport-late';
               section.dataset.transportDirection='Aller retard';
@@ -2607,6 +2632,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
+            if(label==='Aller retard'&&view.done&&!liveDelayPlan){
+              const candidate=(view.picks||[]).map(item=>item.journey).filter(j=>j?.lateArrival&&Number.isFinite(Date.parse(j.adjustedPickup||'')))
+                .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival))[0];
+              const pickupMs=candidate?Date.parse(candidate.adjustedPickup):NaN;
+              const originalDuration=Date.parse(transportDelivery||'')-Date.parse(transportPickup||'');
+              if(Number.isFinite(pickupMs)&&Number.isFinite(originalDuration)&&originalDuration>0){
+                liveDelayPlan={pickupAt:new Date(pickupMs).toISOString(),deliveryAt:new Date(pickupMs+originalDuration).toISOString()};
+                if(liveRerouteStatus?.isConnected)liveRerouteStatus.textContent='Retard estimé retenu : prise en charge proposée à '+formatParis(liveDelayPlan.pickupAt)+', livraison estimée à '+formatParis(liveDelayPlan.deliveryAt)+'. Recalcul du retour et de la mission suivante…';
+                startTransportHub();
+              }
+            }
             if(label==='Aller'&&!liveRerouteAttempted&&!liveRerouteRunning){
               const missed=missedConnection(view);
               if(missed&&Date.parse(pickupDate||'')>Date.now()){
