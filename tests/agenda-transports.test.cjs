@@ -955,7 +955,8 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
 {
   const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
   const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
-  const source=app.slice(app.indexOf('      const missedConnection=view=>'),app.indexOf('      const requestLiveReroute=',app.indexOf('      const missedConnection=view=>')));
+  const missedStart=app.indexOf('      const missedLegTime=value=>');
+  const source=app.slice(missedStart,app.indexOf('      const requestLiveReroute=',missedStart));
   const context={Date};
   const now=Date.now(),depart=new Date(now-2*60000).toISOString(),arrive=new Date(now+40*60000).toISOString();
   const previous={kind:'transit',departure:new Date(now-12*60000).toISOString(),arrival:new Date(now-5*60000).toISOString()};
@@ -965,6 +966,9 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   assert.equal(call([previous,walk,missed]),depart,'missed connecting train is detected across an intervening walk leg');
   assert.equal(call([previous,{...missed,departure:new Date(now+5*60000).toISOString()}]),null,'future connection does not trigger recovery');
   assert.equal(call([previous,{...missed,departure:new Date(now-60*60000).toISOString()}]),null,'stale journeys do not trigger a new GPS request');
+  assert.ok(app.includes("setAttribute('role','alert')"));
+  assert.ok(app.includes("setAttribute('aria-live','assertive')"));
+  assert.ok(app.includes("panel.insertBefore(liveRerouteStatus,transportDestinations.Aller||null)"));
   assert.ok(app.includes('lateAlternativesOnly:true'));
   assert.ok(app.includes("transportDestinations['Aller retard']=section"));
   assert.ok(app.includes("target.fromName='Position GPS actuelle'"));
@@ -999,4 +1003,63 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   const hub=fs.readFileSync(path.join(__dirname,'..','transport-mission-hub.js'),'utf8');
   assert.ok(hub.includes("'retard '+durationText(j.latenessMinutes)"));
   assert.ok(hub.includes('Retard accepté sous justificatif'));
+}
+
+
+// The feature branch consumes all journey modes and provider timestamp formats.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const start=app.indexOf('      const missedLegTime=value=>');
+  const end=app.indexOf('      const requestLiveReroute=',start);
+  assert.ok(start>=0&&end>start);
+  const code=app.slice(start,end);
+  const now=Date.parse('2026-11-27T07:46:00+01:00');
+  class FakeDate extends Date { static now(){return now;} }
+  const detect=view=>vm.runInNewContext(code+';missedConnection(view)',{Date:FakeDate,view});
+  const prior=Date.parse('2026-11-27T07:36:00+01:00'),missed=Date.parse('2026-11-27T07:44:00+01:00');
+  const expected='2026-11-27T06:44:00.000Z';
+  const formats=[
+    {kind:'transit',departure:new Date(prior).toISOString(),arrival:new Date(missed).toISOString()},
+    {kind:'walk',departure:new Date(prior).toISOString(),arrival:new Date(missed-60_000).toISOString()},
+    {kind:'transit',departure:new Date(missed).toISOString(),arrival:'2026-11-27T08:42:00+01:00'}
+  ];
+  assert.equal(detect({picks:[{journey:{legs:formats}}]}),expected,'ISO with transfer walk');
+  assert.equal(detect({others:[{legs:[
+    {mode:'RAIL',startTime:prior,endTime:missed},
+    {mode:'BUS',startTime:missed/1000,endTime:Date.parse('2026-11-27T08:42:00+01:00')/1000}
+  ]}]}),expected,'epoch milliseconds and seconds from different transport modes');
+  assert.equal(detect({picks:[{journey:{legs:[
+    {mode:'BUS',departure:new Date(prior).toISOString(),arrival:new Date(missed).toISOString()},
+    {mode:'WALK',departure:new Date(prior).toISOString(),arrival:new Date(missed-60_000).toISOString()},
+    {mode:'TRAIN',departure:new Date(missed).toISOString(),arrival:'2026-11-27T08:42:00+01:00'}
+  ]}}]}),expected,'skip WALK legs when connection is missed');
+}
+
+
+// A departure that was still upcoming when the search completed schedules one check at departure+1s.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const timeStart=app.indexOf('      const missedLegTime=value=>');
+  const timeEnd=app.indexOf('      const missedConnection=view=>',timeStart);
+  const scheduleStart=app.indexOf('      const scheduleUpcomingMissedConnection=',timeEnd);
+  const scheduleEnd=app.indexOf('      const startTransportHub=',scheduleStart);
+  assert.ok(timeStart>=0&&timeEnd>timeStart&&scheduleStart>timeEnd&&scheduleEnd>scheduleStart);
+  const code='let liveRerouteAttempted=false,liveRerouteRunning=false,missedConnectionTimer=null,missedConnectionCandidate=null;\n'+
+    app.slice(timeStart,timeEnd)+app.slice(scheduleStart,scheduleEnd);
+  let now=Date.parse('2026-11-27T07:40:00+01:00'),timer=null,shown=null;
+  class FakeDate extends Date { static now(){return now;} }
+  const context={Date:FakeDate,clearTimeout(){},setTimeout(fn,delay){timer={fn,delay};return 1;},
+    showMissedConnection(label,view){shown={label,view};}};
+  vm.createContext(context);
+  const schedule=vm.runInContext(code+';scheduleUpcomingMissedConnection',context);
+  const view={others:[{legs:[
+    {mode:'RAIL',startTime:Date.parse('2026-11-27T06:43:00+01:00'),endTime:Date.parse('2026-11-27T07:36:00+01:00')},
+    {mode:'BUS',startTime:Date.parse('2026-11-27T07:44:00+01:00'),endTime:Date.parse('2026-11-27T08:42:00+01:00')}
+  ]}]};
+  schedule('Aller',view);
+  assert.equal(timer.delay,4*60*1000+1000);
+  now=Date.parse('2026-11-27T07:44:01+01:00');timer.fn();
+  assert.deepEqual(shown,{label:'Aller',view});
 }
