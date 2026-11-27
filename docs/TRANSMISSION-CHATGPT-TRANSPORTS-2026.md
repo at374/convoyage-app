@@ -521,3 +521,15 @@ matchait pas la regex de déclenchement de la grande alerte rouge dans `app.js`
 déconnexion Hiflow n'aurait donc fait changer que la pastille colorée, jamais déclenché l'alerte visible
 pourtant conçue pour ce cas précis. Reformulé pour inclure « identifi ». Même redéploiement requis que
 ci-dessus (un seul redéploiement suffit pour les deux fixes).
+
+## Mise à jour du 27/11/2026 (soir) — passage quotidien Claude, branche main
+
+- Ajoutés aux moteurs : Mobigo Saône-et-Loire (`mobigo-bfc-saone-et-loire.zip`, 37 lignes, 500 courses) et Naolib Nantes.
+- Nouvelle option `compact_ids` de `filter_by_bounds` (identifiants de courses courts) : TAO, IDFM Paris, Naolib et
+  Fil Bleu repassent sous les 64 Mo décompressés. Option `keep_transfers` utilisée pour Tisséo (désormais filtré).
+- Tallis (Lons-le-Saunier) : jeu officiel courant `ecla-lons-agglo-mobilites`.
+- Vérification de bout en bout : 479/480. Reste : Proxim iTi (agrégat Oùra sans aucune course avant le 29/03/2027).
+- Tests : 12 échecs de péages connus + 3 tests de `tests/transport-scooter.test.cjs` (suivi GPS / fluidité) qui
+  attendent encore l’ancien code de `app.js` (modifié les 26-27/11) — à traiter par l’auteur de ces changements.
+- Branche `feature/transports-aura-suisse` non touchée : sa tâche « Build regional GTFS » échoue sur
+  `tests/paca-urban-real-feeds.test.cjs` (Téléphérique du Faron sans course sur 7 jours). Le site publié vient de `main`.
