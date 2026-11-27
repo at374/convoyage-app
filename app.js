@@ -292,6 +292,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const avant = new Set(etat.alertes.map(a => a.id));
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
       Object.assign(etat, { missions: window.CPFiltres.francais(deLEdition(missions)), alertes: alertesNouv, reglages, chargeLe: new Date().toISOString(), erreur: '' });
+      actualiserSuiviApresSynchro();
       ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures });
       if (etat.chargeLeDejaVu && nouvelles.length && !pauseActive()) notifier(nouvelles);
       // V233 : à chaque ouverture / retour au premier plan, on réexamine les alertes non lues de moins de 6 h (une alerte arrivée écran éteint n'était montrée qu'en petite notification)
@@ -806,13 +807,36 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
   let suiviTimer = null, suiviRefus = false, suiviReprise = false, suiviLectureEnCours = false; const suiviDedans = new Map();
   function missionsASuivre(quand) {
     const now = Number.isFinite(quand) ? quand : Date.now();
-    return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
+    return (etat.missions || []).filter(m => m.kind === 'acceptee' && !['annulee','terminee','cancelled','canceled','completed'].includes(String(m.status || '').toLowerCase()) && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
       if (arriveeGps(t.key)) return false;
       const p = Date.parse(t.pickup || ''); if (!Number.isFinite(p)) return false;
       const fin = Date.parse(t.deadline || ''); const limite = (Number.isFinite(fin) ? fin : p + 48 * 3600000) + 6 * 3600000;
       const d = G.coordonnees(m, 'destination');
       return now >= p - 3600000 && now <= limite && !!d && d.precision !== 'departement';
     });
+  }
+  function delaiAvantProchainSuivi(now = Date.now()) {
+    let prochain = Infinity;
+    for (const m of etat.missions || []) {
+      if (m.kind !== 'acceptee' || ['annulee','terminee','cancelled','canceled','completed'].includes(String(m.status || '').toLowerCase()) || !m.platform || m.external_id == null) continue;
+      const t = missionTiming(m), p = Date.parse(t.pickup || '');
+      if (!Number.isFinite(p) || arriveeGps(t.key)) continue;
+      const d = G.coordonnees(m, 'destination');
+      if (!d || d.precision === 'departement') continue;
+      const start = p - 3600000;
+      if (start > now && start < prochain) prochain = start;
+    }
+    return Number.isFinite(prochain) ? Math.max(1000, prochain - now) : null;
+  }
+  let suiviSignatureMissions = null, suiviDerniereLectureAt = 0;
+  function actualiserSuiviApresSynchro() {
+    const signature = JSON.stringify((etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null)
+      .map(m => { const t = missionTiming(m); return [m.platform,m.external_id,m.status,t.pickup,t.deadline]; })
+      .sort((a,b) => String(a[0]+'|'+a[1]).localeCompare(String(b[0]+'|'+b[1]))));
+    if (signature === suiviSignatureMissions) return;
+    suiviSignatureMissions = signature;
+    if (suiviTimer) { clearTimeout(suiviTimer); suiviTimer = null; }
+    suiviMaj();
   }
   // Suivi du convoyage : départ constaté au point GPS de prise en charge,
   // puis un relevé persistant toutes les 10 minutes jusqu'à la livraison.
@@ -828,17 +852,18 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     clearTimeout(suiviConvoyageEtaTimer); suiviConvoyageEtaTimer = null;
     if (suiviRefus || document.hidden) return;
     const missions = missionsASuivre(), store = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
-    const now = Date.now();
+    const now = Date.now(); let trajetActif = false;
     for (const {m,t} of missions) {
       const state = store[t.key], last = state?.lastPosition;
       if (state?.status !== 'en_route' || !last) continue;
       const lat = Number(last.lat), lng = Number(last.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+      trajetActif = true;
       // Recalcule l'ETA avec la dernière position connue sans réveiller le GPS.
       suiviConvoyageEstimerArrivee(m,t,{lat,lng},now,state);
     }
     ecrireLocal(SUIVI_CONVOYAGE_KEY,store);
-    if (missions.length) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS);
+    if (trajetActif) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS);
   }
   function suiviConvoyageEnregistrer(m, t, pos, ts) {
     const accuracy = Number(pos.coords.accuracy);
@@ -989,15 +1014,22 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     document.dispatchEvent(new CustomEvent('cp-arrivee', { detail: { key: t.key } }));
     suiviMaj();
   }
-  function suiviMaj() {
+  function suiviMaj(force = false) {
     clearTimeout(suiviTimer); suiviTimer = null;
     const missions = missionsASuivre();
-    if (!suiviRefus && !document.hidden && missions.length) { if (!suiviConvoyageEtaTimer) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS); }
+    const suiviStore = Object.assign({}, lireLocal(SUIVI_CONVOYAGE_KEY, {}));
+    const trajetActif = missions.some(({t}) => suiviStore[t.key]?.status === 'en_route' && !!suiviStore[t.key]?.lastPosition);
+    if (!suiviRefus && !document.hidden && trajetActif) { if (!suiviConvoyageEtaTimer) suiviConvoyageEtaTimer = setTimeout(suiviConvoyageEtaMaj,SUIVI_CONVOYAGE_ETA_INTERVALLE_MS); }
     else { clearTimeout(suiviConvoyageEtaTimer); suiviConvoyageEtaTimer = null; }
     const natif = window.CPNatif && typeof window.CPNatif.demarrerSuiviGps === 'function';
     const actif = !suiviRefus && !document.hidden && (natif || !!navigator.geolocation) && missions.length > 0;
-    // Toujours reprogrammer le prochain contrôle : une mission peut être synchronisée après le démarrage de l'application.
-    if (!suiviRefus && !document.hidden && (natif || navigator.geolocation)) suiviTimer = setTimeout(suiviMaj, 10 * 60000);
+    // GPS ponctuel toutes les 10 min uniquement pendant la fenêtre d'une mission acceptée.
+    // Hors mission, un réveil unique est posé à T-1 h de la prochaine prise en charge, sans demander la position.
+    const gpsDisponible = natif || !!navigator.geolocation;
+    if (!suiviRefus && !document.hidden && gpsDisponible) {
+      const delay = missions.length ? Math.max(1000, SUIVI_CONVOYAGE_INTERVALLE_MS - Math.max(0, Date.now() - suiviDerniereLectureAt)) : delaiAvantProchainSuivi();
+      if (delay !== null) suiviTimer = setTimeout(() => { suiviTimer = null; suiviMaj(true); }, delay);
+    }
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
     for (const { m } of missions) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
@@ -1034,9 +1066,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       return;
     }
     if (!actif) { suiviDedans.clear(); return; }
-    // Web : une seule acquisition basse consommation, puis extinction du capteur jusqu'au prochain cycle.
+    // Web : une lecture unique espacée d'au moins 10 min, jamais watchPosition.
+    const lireMaintenant = force || Date.now() - suiviDerniereLectureAt >= SUIVI_CONVOYAGE_INTERVALLE_MS;
+    if (!lireMaintenant || suiviLectureEnCours) return;
     if (!suiviLectureEnCours) {
-      suiviLectureEnCours = true;
+      suiviLectureEnCours = true; suiviDerniereLectureAt = Date.now();
       navigator.geolocation.getCurrentPosition(pos => {
         suiviLectureEnCours = false;
         if (!document.hidden) suiviTraiter(pos);
@@ -3807,7 +3841,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     }; }
 
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
-    { const cle = m.platform + '|' + m.external_id, sauve = msg => { ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast(msg); };
+    { const cle = m.platform + '|' + m.external_id, sauve = msg => { ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); actualiserSuiviApresSynchro(); $('feuille').hidden = true; afficher(); toast(msg); };
       const b1 = $('btnAnnMoi'); if (b1) b1.onclick = () => { if (!window.confirm('Marquer cette mission comme annulée par toi ? Elle sort du planning et des revenus. Une pénalité de la plateforme reste possible (montant à confirmer par toi).')) return; const o = lireLocal('cp_annul', {}) || {}; o[cle] = { pen: null }; ecrireLocal('cp_annul', o); window.CPFiltres.francais(etat.missions); sauve('Mission marquée annulée'); };
       const b2 = $('btnPenAnn'); if (b2) b2.onclick = () => { const val = $('inPenAnn').value.trim().replace(',', '.'), o = lireLocal('cp_annul', {}) || {}; o[cle] = { pen: val === '' || !Number.isFinite(Number(val)) ? null : Math.max(0, Number(val)) }; ecrireLocal('cp_annul', o); window.CPFiltres.francais(etat.missions); sauve('Pénalité enregistrée'); };
       const b3 = $('btnAnnRetire'); if (b3) b3.onclick = () => { const o = lireLocal('cp_annul', {}) || {}; delete o[cle]; ecrireLocal('cp_annul', o); for (const x of etat.missions) if (x.kind === 'acceptee' && x.platform + '|' + x.external_id === cle && x._statutOrig !== undefined) { x.status = x._statutOrig; delete x._statutOrig; x.annulee_par_moi = false; } sauve('Annulation retirée'); };
