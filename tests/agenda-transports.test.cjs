@@ -961,7 +961,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   const previous={kind:'transit',departure:new Date(now-12*60000).toISOString(),arrival:new Date(now-5*60000).toISOString()};
   const walk={kind:'walk',departure:new Date(now-5*60000).toISOString(),arrival:new Date(now-3*60000).toISOString()};
   const missed={kind:'transit',departure:depart,arrival:arrive};
-  const call=legs=>vm.runInContext(source+';missedConnection({picks:[{journey:{legs}}]})',context);
+  const call=legs=>{context.legs=legs;return vm.runInContext(source+';missedConnection({picks:[{journey:{legs:globalThis.legs}}]})',context);};
   assert.equal(call([previous,walk,missed]),depart,'missed connecting train is detected across an intervening walk leg');
   assert.equal(call([previous,{...missed,departure:new Date(now+5*60000).toISOString()}]),null,'future connection does not trigger recovery');
   assert.equal(call([previous,{...missed,departure:new Date(now-60*60000).toISOString()}]),null,'stale journeys do not trigger a new GPS request');
