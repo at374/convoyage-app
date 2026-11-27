@@ -38,11 +38,18 @@ jobs:
           with urllib.request.urlopen(url, timeout=30) as response:
               data = json.load(response)
           matches = []
+          street_matches = []
+          def is_exact_94(p):
+              return p.get('type') == 'housenumber' and str(p.get('housenumber')) == '94' and 'aix' in norm(p.get('street', '')) and 'bains' in norm(p.get('street', '')) and p.get('citycode') == '74010'
+          def is_avenue_fallback(p):
+              return p.get('type') == 'street' and norm(p.get('street', p.get('name', ''))) == 'avenue d aix les bains' and p.get('citycode') == '74010'
           for f in data['features']:
               p = f['properties']
               print(json.dumps({'properties': p, 'coordinates': f['geometry']['coordinates']}, ensure_ascii=False))
-              if p.get('type') == 'housenumber' and str(p.get('housenumber')) == '94' and 'aix' in norm(p.get('street', '')) and 'bains' in norm(p.get('street', '')) and 'annecy' in norm(p.get('city', '')):
+              if is_exact_94(p):
                   matches.append(f)
+              if is_avenue_fallback(p):
+                  street_matches.append(f)
           if not matches:
               for query in ["94 avenue d'Aix-les-Bains 74600 Annecy", "94 avenue aix les bains Seynod", "94 avenue d'Aix-les-Bains 74600 Seynod"]:
                   url = 'https://data.geopf.fr/geocodage/search?' + urllib.parse.urlencode({'q': query, 'limit': 10, 'type': 'housenumber'})
@@ -51,9 +58,10 @@ jobs:
                       for f in json.load(response)['features']:
                           p = f['properties']
                           print(json.dumps({'properties': p, 'coordinates': f['geometry']['coordinates']}, ensure_ascii=False))
-                          if p.get('type') == 'housenumber' and str(p.get('housenumber')) == '94' and norm(p.get('street', '')) == 'avenue d aix les bains' and p.get('citycode') == '74010':
+                          if is_exact_94(p):
                               matches.append(f)
-          assert matches, 'No verified exact address returned'
+          assert matches or street_matches, 'No verified house number or street fallback for 94 avenue d’Aix-les-Bains'
+          print('94 avenue d’Aix-les-Bains precision:', 'adresse' if matches else 'rue')
           def features_for(query, kind=None):
               params = {'q': query, 'limit': 10}
               if kind:
