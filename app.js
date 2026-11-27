@@ -2144,8 +2144,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       let missedConnectionTimer=null,missedConnectionCandidate=null;
       const missedConnectionDeparture=view=>{
         const now=Date.now();
-        for(const item of Array.isArray(view?.picks)?view.picks:[]){
-          const legs=(item?.journey?.legs||[]).filter(leg=>leg&&leg.kind!=='walk'&&
+        const journeys=[...(Array.isArray(view?.picks)?view.picks.map(item=>item?.journey):[]),
+          ...(Array.isArray(view?.others)?view.others:[])].filter(Boolean);
+        for(const journey of journeys){
+          const legs=(journey.legs||[]).filter(leg=>leg&&leg.kind!=='walk'&&
             Number.isFinite(Date.parse(leg.departure||''))&&Number.isFinite(Date.parse(leg.arrival||'')));
           for(let i=1;i<legs.length;i++){
             const prior=Date.parse(legs[i-1].arrival),depart=Date.parse(legs[i].departure),arrive=Date.parse(legs[i].arrival);
