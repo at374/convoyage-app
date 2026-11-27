@@ -33,3 +33,5 @@ jobs:
         run: |
           node tests/geo-adresse-repli.test.cjs
           node tests/transport-geocode-missing.test.cjs
+      - name: Run Plaque W competence regression tests
+        run: node --test tests/plaque-w.test.cjs
