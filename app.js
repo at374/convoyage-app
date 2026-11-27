@@ -2553,7 +2553,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             // Conserver les recherches ponctuelles dans Aller, puis lancer une recherche distincte
             // jusqu'à la fin du jour pour toutes les solutions qui imposent de décaler la prise en charge.
             const lateTask={...target,label:'Aller retard',plannedArrivalDeadline:pickupDate||target.latestArrival,
-              latestArrival:parisIso(parisServiceDay(new Date().toISOString()),23,59),allowJustifiedDelay:true};
+              latestArrival:parisIso(parisServiceDay(new Date().toISOString()),23,59),allowJustifiedDelay:true,lateAlternativesOnly:true};
             delete lateTask.windowKind;delete lateTask.windowStartMs;delete lateTask.windowEndMs;
             tasks.push(lateTask);
             if(!transportDestinations['Aller retard']){
