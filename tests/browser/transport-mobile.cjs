@@ -372,6 +372,8 @@ async function run(){
    ]});
   });
   const flexPanel=page.locator('#browser-flex-check');
+  try{await flexPanel.locator('.cp-hub-tad-results').waitFor({state:'attached',timeout:2000});}
+  catch(error){throw new Error('TAD section was not rendered: '+await flexPanel.evaluate(node=>node.innerHTML));}
   await flexPanel.getByRole('heading',{name:'Résultats de transport à la demande'}).waitFor();
   const bookedRequired=flexPanel.locator('details').filter({hasText:'TAD 31'});
   await bookedRequired.locator('summary').click();
