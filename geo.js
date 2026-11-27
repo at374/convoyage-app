@@ -238,7 +238,8 @@
           if (rueSansNumero && t === 'housenumber') continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
-          if (numero && (precision !== 'adresse' || String(f.properties.housenumber || '').match(/^\d+/)?.[0] !== numero[1])) continue;
+          if (numero && precision === 'adresse' && String(f.properties.housenumber || '').match(/^\d+/)?.[0] !== numero[1]) continue;
+          if (numero && precision === 'ville') continue;
           if (numero && precision === 'rue' && (!voieOK(f.properties.street || f.properties.name) || !communeOK(f.properties))) continue;
           if (numero && precision === 'adresse' && f.properties.street && !voieOK(f.properties.street)) continue;
           if (precision === 'adresse' || !x.a) return { cle, trouve: true, point };
