@@ -1219,7 +1219,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
     $('ecran').innerHTML = html;
-    for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
+    for (const b of document.querySelectorAll('.mission')) b.onclick = () => { const item = items[Number(b.dataset.i)]; if (item) detail(item.mission); };
     const t = $('agTout'); if (t) t.onclick = () => { etat.agendaTout = !etat.agendaTout; afficher(); };
   }
   // ---------- V80 : planning sur plusieurs jours ----------
