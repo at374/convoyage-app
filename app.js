@@ -2550,12 +2550,23 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             target.from={lat:liveReroutePosition.lat,lon:liveReroutePosition.lon};
             target.fromName='Position GPS actuelle';target.earliestDeparture=new Date().toISOString();
             target.approximateEndpoint=false;target.marginMinutes=securityMarginMin;target.allowShortMargin=false;
-            // Chercher aussi les solutions qui arriveront après l'heure prévue : le retard pourra
-            // être justifié par la correspondance manquée. La marge d'avance reste exigée pour le statut « Réalisable ».
-            target.plannedArrivalDeadline=target.latestArrival;
-            target.latestArrival=parisIso(parisServiceDay(new Date().toISOString()),23,59);
-            target.allowJustifiedDelay=true;
-            delete target.windowKind;delete target.windowStartMs;delete target.windowEndMs;
+            // Conserver les recherches ponctuelles dans Aller, puis lancer une recherche distincte
+            // jusqu'à la fin du jour pour toutes les solutions qui imposent de décaler la prise en charge.
+            const lateTask={...target,label:'Aller retard',plannedArrivalDeadline:pickupDate||target.latestArrival,
+              latestArrival:parisIso(parisServiceDay(new Date().toISOString()),23,59),allowJustifiedDelay:true};
+            delete lateTask.windowKind;delete lateTask.windowStartMs;delete lateTask.windowEndMs;
+            tasks.push(lateTask);
+            if(!transportDestinations['Aller retard']){
+              const section=document.createElement('section');section.className='cp-transport-direction cp-transport-late';
+              section.dataset.transportDirection='Aller retard';
+              const heading=document.createElement('h3');heading.textContent='01 bis · Solutions après retard';
+              const path=document.createElement('p');path.className='cp-transport-route';
+              path.textContent='Position GPS actuelle → adresse exacte de prise en charge';
+              section.append(heading,path);
+              const marker=liveRerouteStatus?.isConnected?liveRerouteStatus:transportDestinations.Aller;
+              marker.insertAdjacentElement('afterend',section);
+              transportDestinations['Aller retard']=section;transportDays['Aller retard']=transportDays.Aller;
+            }
           }
         }
         const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
