@@ -3377,7 +3377,42 @@ function render(host,v){
   }
  }
  
- // A GTFS-Flex window describes where/when a TAD can be REQUESTED.
+  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' écarté'+(v.hidden.tooEarly>1?'s':'')+' de la sélection'+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
+ if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');
+  // 20/11/2026 (demande Laurent) : si des trajets sont écartés pour une marche trop longue et que la trottinette
+  // électrique n'est pas déjà activée, le suggérer explicitement plutôt que de laisser "Aucun trajet trouvé" sans piste.
+  if(parts.length)host.appendChild(el(doc,'p','cp-hub-note','Détail : '+parts.join(' · ')+'.'+(h.longWalk&&!v.scooterEnabled?' Une partie du trajet pourrait être couverte en trottinette électrique : activez-la dans Paramètres pour l’essayer.':'')));
+  // 22/11/2026 (Laurent : « toujours pas de Y51 après 13h01 », quasi tous les trajets reçus écartés comme
+  // « avant la fin de la mission précédente ») : affiche la fenêtre earliestDeparture/latestArrival réellement
+  // utilisée pour CETTE recherche, pour voir directement si elle est décalée (mauvais jour, mauvaise heure)
+  // au lieu de deviner encore.
+  if(h.before)host.appendChild(el(doc,'p','cp-hub-note','🩺 fenêtre utilisée pour cette recherche : départ au plus tôt '+(v.task&&v.task.earliestDeparture?new Date(v.task.earliestDeparture).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')+' · arrivée au plus tard '+(v.task&&v.task.latestArrival?new Date(v.task.latestArrival).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')));
+  // 22/11/2026 (suite) : échantillon des trajets réellement écartés pour ce motif — horaire du véhicule lui-même
+  // vs horaire retenu après ajout de la marche d'accès, pour voir si l'écart vient du véhicule (horaire GTFS
+  // incohérent) ou de la marche (distance/durée aberrante calculée par le routeur piéton).
+  if(h.before&&Array.isArray(h.beforeSamples)&&h.beforeSamples.length)host.appendChild(el(doc,'p','cp-hub-note','🩺 exemples écartés : '+h.beforeSamples.join(' · ')));}
+ // 22/11/2026 (Laurent : blocage toujours ~40 s malgré le correctif du répit de 10 s après échec du worker) :
+ // on affiche la vraie raison du dernier échec du worker de calcul (au lieu du message générique 'worker' affiché
+ // avant), pour savoir enfin si le worker échoue systématiquement ici (réseau, sécurité, autre) plutôt que de
+ // deviner encore — un échec systématique expliquerait un blocage constant malgré le répit de 10 s.
+ if(v.done&&root.__cpHubWorkerLastError)host.appendChild(el(doc,'p','cp-hub-note','🔧 worker de calcul : en échec ('+root.__cpHubWorkerFailCount+' fois) — dernière raison : '+root.__cpHubWorkerLastError+(root.__cpHubWorkerOffUntil&&Date.now()<root.__cpHubWorkerOffUntil?' · désactivé encore '+Math.ceil((root.__cpHubWorkerOffUntil-Date.now())/1000)+' s':'')));
+ // 22/11/2026 (Laurent : Y51 après 13h toujours invisible alors que certains trajets S'AFFICHENT pour la
+ // même mission) : ce diagnostic complet (tous les motifs de rejet, pas seulement « avant la fin de la
+ // mission précédente ») ne s'affichait QUE quand AUCUN trajet n'était affiché du tout (!v.total). Si ne
+ // serait-ce qu'un seul trajet passe (ex. un car de nuit), Y51 peut être écarté pour un AUTRE motif
+ // (marge insuffisante, correspondance manquante…) sans que ce diagnostic ne le révèle jamais. On l'affiche
+ // désormais aussi dès qu'il reste des trajets non affichés, même quand d'autres trajets sont visibles.
+ if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
+ if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
+ if(v.done&&host.childNodes.length>diagnosticStart){
+  const section=el(doc,'details','cp-hub-diagnostics');
+  section.open=host.dataset.cpDiagnosticsOpen==='true';
+  section.appendChild(el(doc,'summary',null,'⚠ Diagnostic et anomalies'));
+  while(host.childNodes.length>diagnosticStart)section.appendChild(host.childNodes[diagnosticStart]);
+  section.ontoggle=()=>{host.dataset.cpDiagnosticsOpen=section.open?'true':'false';};
+  host.appendChild(section);
+ }
+// A GTFS-Flex window describes where/when a TAD can be REQUESTED.
  // It must never appear among ranked scheduled routes until a real booking
  // and concrete pickup/drop-off times are confirmed by the operator.
  if(Array.isArray(v.flexCandidates)&&v.flexCandidates.length){
@@ -3421,41 +3456,7 @@ function render(host,v){
  }
 
  const tads=tadFor(v.task);
- if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' écarté'+(v.hidden.tooEarly>1?'s':'')+' de la sélection'+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
- if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');
-  // 20/11/2026 (demande Laurent) : si des trajets sont écartés pour une marche trop longue et que la trottinette
-  // électrique n'est pas déjà activée, le suggérer explicitement plutôt que de laisser "Aucun trajet trouvé" sans piste.
-  if(parts.length)host.appendChild(el(doc,'p','cp-hub-note','Détail : '+parts.join(' · ')+'.'+(h.longWalk&&!v.scooterEnabled?' Une partie du trajet pourrait être couverte en trottinette électrique : activez-la dans Paramètres pour l’essayer.':'')));
-  // 22/11/2026 (Laurent : « toujours pas de Y51 après 13h01 », quasi tous les trajets reçus écartés comme
-  // « avant la fin de la mission précédente ») : affiche la fenêtre earliestDeparture/latestArrival réellement
-  // utilisée pour CETTE recherche, pour voir directement si elle est décalée (mauvais jour, mauvaise heure)
-  // au lieu de deviner encore.
-  if(h.before)host.appendChild(el(doc,'p','cp-hub-note','🩺 fenêtre utilisée pour cette recherche : départ au plus tôt '+(v.task&&v.task.earliestDeparture?new Date(v.task.earliestDeparture).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')+' · arrivée au plus tard '+(v.task&&v.task.latestArrival?new Date(v.task.latestArrival).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')));
-  // 22/11/2026 (suite) : échantillon des trajets réellement écartés pour ce motif — horaire du véhicule lui-même
-  // vs horaire retenu après ajout de la marche d'accès, pour voir si l'écart vient du véhicule (horaire GTFS
-  // incohérent) ou de la marche (distance/durée aberrante calculée par le routeur piéton).
-  if(h.before&&Array.isArray(h.beforeSamples)&&h.beforeSamples.length)host.appendChild(el(doc,'p','cp-hub-note','🩺 exemples écartés : '+h.beforeSamples.join(' · ')));}
- // 22/11/2026 (Laurent : blocage toujours ~40 s malgré le correctif du répit de 10 s après échec du worker) :
- // on affiche la vraie raison du dernier échec du worker de calcul (au lieu du message générique 'worker' affiché
- // avant), pour savoir enfin si le worker échoue systématiquement ici (réseau, sécurité, autre) plutôt que de
- // deviner encore — un échec systématique expliquerait un blocage constant malgré le répit de 10 s.
- if(v.done&&root.__cpHubWorkerLastError)host.appendChild(el(doc,'p','cp-hub-note','🔧 worker de calcul : en échec ('+root.__cpHubWorkerFailCount+' fois) — dernière raison : '+root.__cpHubWorkerLastError+(root.__cpHubWorkerOffUntil&&Date.now()<root.__cpHubWorkerOffUntil?' · désactivé encore '+Math.ceil((root.__cpHubWorkerOffUntil-Date.now())/1000)+' s':'')));
- // 22/11/2026 (Laurent : Y51 après 13h toujours invisible alors que certains trajets S'AFFICHENT pour la
- // même mission) : ce diagnostic complet (tous les motifs de rejet, pas seulement « avant la fin de la
- // mission précédente ») ne s'affichait QUE quand AUCUN trajet n'était affiché du tout (!v.total). Si ne
- // serait-ce qu'un seul trajet passe (ex. un car de nuit), Y51 peut être écarté pour un AUTRE motif
- // (marge insuffisante, correspondance manquante…) sans que ce diagnostic ne le révèle jamais. On l'affiche
- // désormais aussi dès qu'il reste des trajets non affichés, même quand d'autres trajets sont visibles.
- if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
- if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
- if(v.done&&host.childNodes.length>diagnosticStart){
-  const section=el(doc,'details','cp-hub-diagnostics');
-  section.open=host.dataset.cpDiagnosticsOpen==='true';
-  section.appendChild(el(doc,'summary',null,'⚠ Diagnostic et anomalies'));
-  while(host.childNodes.length>diagnosticStart)section.appendChild(host.childNodes[diagnosticStart]);
-  section.ontoggle=()=>{host.dataset.cpDiagnosticsOpen=section.open?'true':'false';};
-  host.appendChild(section);
- }
+
  if(v.done&&tads.length){
   const group=el(doc,'section','cp-hub-tad-results');
   group.appendChild(el(doc,'h3','cp-hub-tad-heading','Autres résultats TAD à réserver'));
