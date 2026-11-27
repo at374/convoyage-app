@@ -973,6 +973,15 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   scheduled.fn();
   assert.equal(reroutes,1);
   assert.equal(api.missedConnectionDeparture(view),'2026-11-27T07:44:00+01:00');
+  for(const [index,kind] of ['bus','coach','flixbus','blablacar-bus','scooter'].entries()){
+    const departure='2026-11-27T07:'+String(50+index).padStart(2,'0')+':00+01:00';
+    const nextView={picks:[{journey:{legs:[
+      {kind:'train',departure:'2026-11-27T07:36:00+01:00',arrival:'2026-11-27T07:40:00+01:00'},
+      {kind,departure,arrival:'2026-11-27T08:42:00+01:00'}
+    ]}}]};
+    assert.equal(api.missedConnectionDeparture(nextView),null,kind);
+    assert.equal(api.getCandidate(),departure,kind);
+  }
   assert.match(app,/Recherche d’une position GPS récente/);
   assert.match(app,/startTransportHub\(\);/);
   assert.match(app,/target\.plannedArrivalDeadline=pickupDate\|\|target\.latestArrival/);
