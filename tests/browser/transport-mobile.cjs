@@ -374,8 +374,14 @@ async function run(){
   const flexPanel=page.locator('#browser-flex-check');
   try{await flexPanel.locator('.cp-hub-tad-results').waitFor({state:'attached',timeout:2000});}
   catch(error){throw new Error('TAD section was not rendered: '+await flexPanel.evaluate(node=>node.innerHTML));}
-  console.log('TAD render diagnostic '+JSON.stringify(await flexPanel.locator('.cp-hub-tad-results').evaluate(node=>({html:node.innerHTML,rect:node.getBoundingClientRect().toJSON(),display:getComputedStyle(node).display,visibility:getComputedStyle(node).visibility}))));
-  await flexPanel.getByRole('heading',{name:'Résultats de transport à la demande'}).waitFor();
+  const tadHeading=await flexPanel.evaluate(node=>{
+   const heading=node.querySelector('.cp-hub-tad-heading');
+   if(!heading)return null;
+   const style=getComputedStyle(heading),rect=heading.getBoundingClientRect();
+   return {text:heading.textContent.trim(),visible:style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0};
+  });
+  assert.deepEqual(tadHeading,{text:'Résultats de transport à la demande',visible:true});
+
   const bookedRequired=flexPanel.locator('details').filter({hasText:'TAD 31'});
   await bookedRequired.locator('summary').click();
   assert.match(await bookedRequired.innerText(),/Préavis minimum : 60 min/);
