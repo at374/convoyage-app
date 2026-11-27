@@ -213,7 +213,7 @@ async function run(){
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Retour régional'));
   await release('16');
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
+  await page.waitForFunction(()=>[...document.querySelectorAll('.cp-transport-evidence')].some(node=>node.textContent.includes('Jonction régionale : 4 proposition')));
   await release('12');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
   const openGtfsAgenda=()=>page.locator('[data-gtfs-agenda] > summary').click();
@@ -294,7 +294,7 @@ async function run(){
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-transports.png')});
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).scrollIntoViewIfNeeded();
+  await page.locator('#cpTransportMissionDetails').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-regional.png')});
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'No horizontal overflow in the mobile mission sheet');
   const before=requests.length;
