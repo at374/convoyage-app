@@ -76,6 +76,16 @@ async function run(){
  try{
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
+  // Les jeux GTFS de ce scénario portent tous la date 02/11/2026 ; figer l'horloge
+  // garde le scénario reproductible quel que soit le jour d'exécution de GitHub Actions.
+  await context.addInitScript(()=>{
+   const NativeDate=Date,fixedNow=NativeDate.parse('2026-11-02T07:00:00+01:00');
+   class FixtureDate extends NativeDate{
+    constructor(...args){super(...(args.length?args:[fixedNow]));}
+    static now(){return fixedNow;}
+   }
+   globalThis.Date=FixtureDate;
+  });
   // Les anciens blocs par moteur sont désormais repliés sous « Détail par moteur » : ce test vérifie leur contenu, il les ouvre.
   await context.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;}))
    .observe(document,{childList:true,subtree:true});});
