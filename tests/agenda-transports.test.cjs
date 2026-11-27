@@ -1035,3 +1035,31 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
     {mode:'TRAIN',departure:new Date(missed).toISOString(),arrival:'2026-11-27T08:42:00+01:00'}
   ]}}]}),expected,'skip WALK legs when connection is missed');
 }
+
+
+// A departure that was still upcoming when the search completed schedules one check at departure+1s.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const timeStart=app.indexOf('      const missedLegTime=value=>');
+  const timeEnd=app.indexOf('      const missedConnection=view=>',timeStart);
+  const scheduleStart=app.indexOf('      const scheduleUpcomingMissedConnection=',timeEnd);
+  const scheduleEnd=app.indexOf('      const startTransportHub=',scheduleStart);
+  assert.ok(timeStart>=0&&timeEnd>timeStart&&scheduleStart>timeEnd&&scheduleEnd>scheduleStart);
+  const code='let missedConnectionTimer=null,missedConnectionCandidate=null;\\n'+
+    app.slice(timeStart,timeEnd)+app.slice(scheduleStart,scheduleEnd);
+  let now=Date.parse('2026-11-27T07:40:00+01:00'),timer=null,shown=null;
+  class FakeDate extends Date { static now(){return now;} }
+  const context={Date:FakeDate,clearTimeout(){},setTimeout(fn,delay){timer={fn,delay};return 1;},
+    showMissedConnection(label,view){shown={label,view};}};
+  vm.createContext(context);
+  const schedule=vm.runInContext(code+';scheduleUpcomingMissedConnection',context);
+  const view={others:[{legs:[
+    {mode:'RAIL',startTime:Date.parse('2026-11-27T06:43:00+01:00'),endTime:Date.parse('2026-11-27T07:36:00+01:00')},
+    {mode:'BUS',startTime:Date.parse('2026-11-27T07:44:00+01:00'),endTime:Date.parse('2026-11-27T08:42:00+01:00')}
+  ]}]};
+  schedule('Aller',view);
+  assert.equal(timer.delay,5*60*1000+1000);
+  now=Date.parse('2026-11-27T07:44:01+01:00');timer.fn();
+  assert.deepEqual(shown,{label:'Aller',view});
+}
