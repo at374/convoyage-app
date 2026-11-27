@@ -972,7 +972,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   now=Date.parse('2026-11-27T07:44:01+01:00');
   scheduled.fn();
   assert.equal(reroutes,1);
-  assert.equal(api.missedConnectionDeparture(view),'2026-11-27T07:44:00+01:00');
+  assert.equal(api.missedConnectionDeparture(view),'2026-11-27T06:44:00.000Z');
   for(const [index,kind] of ['bus','coach','flixbus','blablacar-bus','scooter'].entries()){
     const departure='2026-11-27T07:'+String(50+index).padStart(2,'0')+':00+01:00';
     const nextView={picks:[{journey:{legs:[
@@ -980,7 +980,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
       {kind,departure,arrival:'2026-11-27T08:42:00+01:00'}
     ]}}]};
     assert.equal(api.missedConnectionDeparture(nextView),null,kind);
-    assert.equal(api.getCandidate(),departure,kind);
+    assert.equal(api.getCandidate(),String(Date.parse(departure)),kind);
   }
   const otherDeparture='2026-11-27T07:55:00+01:00';
   const additional={others:[{legs:[
@@ -988,7 +988,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
     {kind:'coach',departure:otherDeparture,arrival:'2026-11-27T08:42:00+01:00'}
   ]}]};
   assert.equal(api.missedConnectionDeparture(additional),null);
-  assert.equal(api.getCandidate(),otherDeparture);
+  assert.equal(api.getCandidate(),String(Date.parse(otherDeparture)));
   assert.match(app,/Recherche d’une position GPS récente/);
   assert.match(app,/cp-missed-connection-banner/);
   assert.match(app,/setAttribute\('role','alert'\)/);
@@ -1011,7 +1011,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   assert.ok(start>=0&&end>start);
   let timer=null,now=Date.parse('2026-11-27T07:46:00+01:00');
   class FakeDate extends Date { static now(){return now;} }
-  const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\\n'+source.slice(start,end);
+  const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\n'+source.slice(start,end);
   const context={Date:FakeDate,clearTimeout(){},setTimeout(fn,delay){timer={fn,delay};return 1;},
     maybeStartLiveReroute(){}};
   vm.createContext(context);
