@@ -1028,7 +1028,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const gpsDisponible = natif || !!navigator.geolocation;
     if (!suiviRefus && !document.hidden && gpsDisponible) {
       const now = Date.now(), elapsed = suiviDerniereLectureAt > 0 ? Math.max(0, now - suiviDerniereLectureAt) : SUIVI_CONVOYAGE_INTERVALLE_MS;
-      const delay = missions.length ? Math.max(1000, SUIVI_CONVOYAGE_INTERVALLE_MS - (force ? 0 : elapsed)) : delaiAvantProchainSuivi();
+      const echantillonDu = force || suiviDerniereLectureAt === 0 || elapsed >= SUIVI_CONVOYAGE_INTERVALLE_MS;
+      const delay = missions.length ? (echantillonDu ? SUIVI_CONVOYAGE_INTERVALLE_MS : Math.max(1000, SUIVI_CONVOYAGE_INTERVALLE_MS - elapsed)) : delaiAvantProchainSuivi();
       if (delay !== null) suiviTimer = setTimeout(() => { suiviTimer = null; suiviMaj(true); }, delay);
     }
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
