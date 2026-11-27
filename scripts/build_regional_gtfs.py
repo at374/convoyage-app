@@ -110,6 +110,16 @@ FILTERED_MIRROR = [
     {'id': 'mobigo-bfc-jura', 'network': 'Mobigo Bourgogne-Franche-Comté (Jura, Ain, Suisse)',
      'url': 'https://transport.data.gouv.fr/resources/83931/download',
      'bounds': [46.2, 5.3, 47.1, 6.3], 'download_limit': 120 * 1024 * 1024},
+    # 27/11/2026 : Mobigo Saône-et-Loire (départements limitrophes Rhône, Loire, Allier, Ain), même ressource
+    # officielle que l'extrait Jura ; courses complètes pour ne pas couper les lignes qui sortent de l'emprise.
+    {'id': 'mobigo-bfc-saone-et-loire', 'network': 'Mobigo Bourgogne-Franche-Comté (Saône-et-Loire)',
+     'url': 'https://transport.data.gouv.fr/resources/83931/download',
+     'bounds': [46.15, 3.80, 47.15, 5.30], 'keep_complete_trips': True, 'download_limit': 120 * 1024 * 1024},
+    # 27/11/2026 : la publication Tisséo dépasse 12 Mo (recopie brute refusée) -> extrait filtré, sans les tracés.
+    {'id': 'tisseo-toulouse', 'network': 'Tisséo (Toulouse)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/64318177-f5b5-4144-a6be-2d0f22d26c77',
+     'bounds': [43.20, 0.90, 44.00, 1.95], 'horizon_days': 21, 'slim': True, 'compact_ids': 'tis',
+     'keep_transfers': True, 'download_limit': 60 * 1024 * 1024},
     {'id': 'zou-proximite-nord', 'network': 'ZOU ! Proximité (Hautes-Alpes, Vaucluse nord — limite Drôme)',
      'url': 'https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/',
      'bounds': [44.0, 5.0, 45.0, 7.0], 'download_limit': 120 * 1024 * 1024},
@@ -155,7 +165,7 @@ FILTERED_MIRROR = [
     # pour tenter un premier câblage, même à très court horizon.
     {'id': 'naolib-nantes', 'network': 'Naolib (Nantes Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/84101/download',
-     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 5, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 7, 'slim': True, 'compact_ids': 'nao', 'download_limit': 60 * 1024 * 1024},
     # 20/11/2026 : horizon réduit 45->15j puis 15->6j — à 15j l'archive réelle décompressait encore à
     # 89,4 Mo (~5,96 Mo/j, ratio non linéaire avec l'estimation à 45j), toujours au-delà des 64 Mo
     # maxFileBytes du moteur. 6j vise ~36 Mo, avec marge.
@@ -174,7 +184,7 @@ FILTERED_MIRROR = [
     # en linéaire, encore sous 64 Mo même avec un écart de +70 % comme constaté sur Rennes).
     {'id': 'tao-orleans', 'network': 'TAO (Orléans Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/83751/download',
-     'bounds': [47.80, 1.78, 47.95, 2.05], 'horizon_days': 15, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.80, 1.78, 47.95, 2.05], 'horizon_days': 15, 'slim': True, 'compact_ids': 'tao', 'download_limit': 60 * 1024 * 1024},
     # Ametis Amiens : ressource « pour GTFS-RT » (lignes régulières uniquement, sans TAD/scolaire qui alourdiraient
     # sans utilité pour un convoyage).
     {'id': 'ametis-amiens', 'network': 'Ametis (Amiens Métropole)',
@@ -218,7 +228,7 @@ FILTERED_MIRROR = [
      # encore 2->1j : à 2j, stop_times.txt décompressé pesait 106,54 Mo, au-dessus du plafond runtime
      # maxFileBytes=64 Mo (même si le zip compressé, lui, passait sous les deux plafonds). Paris
      # intra-muros reste très dense (métro+bus+RER) malgré la bbox déjà resserrée.
-     'bounds': [48.81, 2.22, 48.91, 2.43], 'horizon_days': 1, 'slim': True, 'download_limit': 150 * 1024 * 1024},
+     'bounds': [48.81, 2.22, 48.91, 2.43], 'horizon_days': 1, 'slim': True, 'compact_ids': 'idf', 'download_limit': 150 * 1024 * 1024},
     # SNCF Transilien (RER/Transilien/TER opérés par la SNCF en Île-de-France) : dataset distinct d'IDFM,
     # lien stable publié par SNCF Open Data (« toujours le GTFS en vigueur », comme STAR Rennes). Beaucoup
     # plus léger qu'IDFM (11,56 Mo compressés, 38 lignes, 3 204 arrêts selon la fiche transport.data.gouv.fr)
@@ -275,7 +285,9 @@ MIRROR = [
     {'id': 'tea-autun', 'network': "Ça roule / TEA (Autun, CC Grand Autunois Morvan)",
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/b587f007-9b23-4b2a-a609-9368a4c2c490', 'bounds': [46.88, 4.20, 47.02, 4.42]},
     {'id': 'tallis-lons', 'network': "Tallis (CA ECLA, Lons-le-Saunier)",
-     'url': 'https://static.data.gouv.fr/resources/offre-de-transport-reseau-tallis-gtfs/20240707-192145/gtfs-20240704-090655.zip', 'bounds': [46.58, 5.42, 46.78, 5.68]},
+     # 27/11/2026 : l'ancienne archive (07/2024) était périmée ; ressource officielle courante du jeu
+     # « ecla-lons-agglo-mobilites » (calendrier jusqu'au 31/07/2029).
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/ec61df69-830c-4ca7-9d78-9a81c515e9de', 'bounds': [46.58, 5.42, 46.78, 5.68]},
     {'id': 'moova-vesoul', 'network': "Moova (CA de Vesoul)",
      'url': 'https://static.data.gouv.fr/resources/horaires-theoriques-du-reseau-moova-communaute-dagglomeration-de-vesoul-gtfs/20260827-074354/gtfs-moova.zip', 'bounds': [47.55, 6.05, 47.70, 6.28]},
     {'id': 'optymo-belfort', 'network': "Optymo (CA Grand Belfort)",
@@ -383,7 +395,6 @@ MIRROR = [
     {'id': 'tul-laval', 'network': 'TUL (Laval Agglomération)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/bd780aef-b3c5-405a-8450-8365a7a0c315', 'bounds': [43.0, -5.0, 50.5, 3.5]},
     {'id': 'sitac-calais', 'network': 'Sitac (Calais)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/326e6585-9319-4022-88bf-930dd18af464', 'bounds': [43.0, -5.0, 50.5, 3.5]},
     {'id': 'tic-compiegne', 'network': 'TIC (Compiègne)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/3a98dcdb-ca6e-40fc-8da9-09ab7f5661c9', 'bounds': [43.0, -5.0, 50.5, 3.5]},
-    {'id': 'tisseo-toulouse', 'network': 'Tisséo (Toulouse)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/64318177-f5b5-4144-a6be-2d0f22d26c77', 'bounds': [43.45, 1.15, 43.85, 1.7]},
     {'id': 'mistral-toulon', 'network': 'Réseau Mistral (Toulon)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b0789d9e-5077-4124-b6b2-773353ada8cf', 'bounds': [43.0, 5.75, 43.25, 6.15]},
     {'id': 'aixenbus-aix', 'network': 'Aix en Bus', 'url': 'https://transport.data.gouv.fr/resources/39603/download', 'bounds': [43.45, 5.35, 43.65, 5.55]},
     {'id': 'tam-montpellier', 'network': 'TaM (Montpellier, urbain et suburbain)', 'url': 'https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip', 'bounds': [43.45, 3.5, 43.95, 4.15]},
@@ -628,6 +639,15 @@ def filter_by_bounds(z, spec):
     ag_ids = {r.get('agency_id') or '' for r in routes}
     afields, agencies = read_table(z, 'agency.txt')
     keep_ag = [a for a in agencies if (a.get('agency_id') or '') in ag_ids or len(agencies) == 1]
+    trip_names = {t['trip_id']: t['trip_id'] for t in trips}
+    if spec.get('compact_ids'):
+        # Identifiants de courses très longs (jusqu'à la moitié de stop_times.txt) : numéros courts préfixés,
+        # mêmes courses et mêmes horaires, pour rester sous les 64 Mo décompressés acceptés par le chargeur.
+        trip_names = {t['trip_id']: '%s%d' % (spec['compact_ids'], i) for i, t in enumerate(trips, 1)}
+        trips = [{**t, 'trip_id': trip_names[t['trip_id']]} for t in trips]
+        times = [r for r in times if r['trip_id'] in trip_names]
+        for r in times:
+            r['trip_id'] = trip_names[r['trip_id']]
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as out:
         write_table(out, 'agency.txt', afields, keep_ag)
@@ -648,6 +668,20 @@ def filter_by_bounds(z, spec):
         f, rows = read_table(z, 'feed_info.txt')
         if f:
             write_table(out, 'feed_info.txt', f, rows)
+        if spec.get('keep_transfers'):
+            f, rows = read_table(z, 'transfers.txt')
+            if f:
+                kept_stops = {s['stop_id'] for s in stops}
+                kept = []
+                for r in rows:
+                    if r.get('from_stop_id') not in kept_stops or r.get('to_stop_id') not in kept_stops:
+                        continue
+                    if any(r.get(k) and r[k] not in route_ids for k in ('from_route_id', 'to_route_id')):
+                        continue
+                    if any(r.get(k) and r[k] not in trip_names for k in ('from_trip_id', 'to_trip_id')):
+                        continue
+                    kept.append({**r, **{k: trip_names[r[k]] for k in ('from_trip_id', 'to_trip_id') if r.get(k)}})
+                write_table(out, 'transfers.txt', f, kept)
         # Tarifs officiels du producteur, limités aux lignes retenues dans la zone. Contrairement à
         # extract() (filtrage par agence, où un repli par agency_id est sûr), ici une ligne écartée par la
         # bbox peut partager son agence avec une ligne gardée : pas de repli par agence, seul fare_rules

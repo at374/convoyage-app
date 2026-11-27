@@ -84,6 +84,24 @@ class TFilterByBounds(unittest.TestCase):
             self.assertIn('FC1', fares, 'tarif de la ligne gardée conservé')
             self.assertNotIn('FC3', fares, 'tarif de la ligne écartée (T3) non recopié')
 
+    def test_compact_ids_keeps_same_trips_and_transfers(self):
+        m = load_module()
+        source = io.BytesIO(tcl_like_feed())
+        with zipfile.ZipFile(source, 'a') as z:
+            z.writestr('transfers.txt', 'from_stop_id,to_stop_id,transfer_type,from_trip_id,to_trip_id\n'
+                       'PARTDIEU,PERRACHE,2,T1,\nPARTDIEU,PERRACHE,2,T3,\nPARTDIEU,DEHORS,2,,\n')
+        spec = {'bounds': [45.70, 4.80, 45.80, 4.90], 'compact_ids': 'zz', 'keep_transfers': True}
+        with zipfile.ZipFile(source) as z:
+            data, info = m.filter_by_bounds(z, spec)
+        self.assertEqual(info['trips'], 1)
+        with zipfile.ZipFile(io.BytesIO(data)) as out:
+            _, trips = m.read_table(out, 'trips.txt')
+            _, times = m.read_table(out, 'stop_times.txt')
+            _, transfers = m.read_table(out, 'transfers.txt')
+        self.assertEqual([t['trip_id'] for t in trips], ['zz1'])
+        self.assertEqual([(r['trip_id'], r['departure_time']) for r in times], [('zz1', '08:00:00'), ('zz1', '08:10:00')])
+        self.assertEqual([r['from_trip_id'] for r in transfers], ['zz1'], 'règle d’une course ou d’un arrêt écarté retirée')
+
     def test_no_stop_in_zone_is_reported_not_silently_empty(self):
         m = load_module()
         spec = {'bounds': [0, 0, 1, 1]}

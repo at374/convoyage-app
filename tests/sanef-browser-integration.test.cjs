@@ -8,8 +8,9 @@ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const routes=fs.readFileSync(path.join(root,'routes-ui.js'),'utf8');
 const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 test('SANEF guard loads before the actual route calculator',()=>{
- const a=html.indexOf('<script src="sanef-gps-protection.js"></script>');
- const b=html.indexOf('<script src="routes-ui.js"></script>');
+ // Les scripts peuvent porter une version de cache (?v=…) : seul l'ordre de chargement est vérifié.
+ const a=html.search(/<script src="sanef-gps-protection\.js(\?v=[^"]*)?"><\/script>/);
+ const b=html.search(/<script src="routes-ui\.js(\?v=[^"]*)?"><\/script>/);
  assert.ok(a>=0&&b>a);
 });
 test('the actual overlay engine is protected when available',()=>{
