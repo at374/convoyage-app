@@ -827,7 +827,7 @@ function assess(j,task,fareFor){
  const lateArrival=task.allowJustifiedDelay===true&&Number.isFinite(deadline)&&Number.isFinite(arr)&&arr>deadline;
  const latenessMinutes=lateArrival?Math.ceil((arr-deadline)/60000):0;
  if(lateArrival)reasons.push('retard de '+latenessMinutes+' min après l’heure prévue — justificatif de correspondance manquée à fournir');
- const delayOnlyReasons=reasons.filter(reason=>!/^arrivée après l’heure de mission$|^marge insuffisante|^retard de \d+ min après l’heure prévue/.test(String(reason)));
+ const delayOnlyReasons=reasons.filter(reason=>!ADVISORY.test(String(reason))&&!/^arrivée après l’heure de mission$|^marge insuffisante|^retard de \d+ min après l’heure prévue/.test(String(reason)));
  const delayEligible=lateArrival&&delayOnlyReasons.length===0;
  const adjustedPickup=delayEligible?new Date(arr+margin*60000).toISOString():null;
  const feasible=reasons.length===0;
