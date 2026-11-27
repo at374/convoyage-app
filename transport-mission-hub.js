@@ -558,7 +558,9 @@ function assess(j,task,fareFor){
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
  const lateArrival=task.allowJustifiedDelay===true&&Number.isFinite(deadline)&&Number.isFinite(arr)&&arr>deadline;
- if(lateArrival)reasons.push('retard de '+Math.ceil((arr-deadline)/60000)+' min après l’heure prévue — justificatif de correspondance manquée à fournir');
+ const latenessMinutes=lateArrival?Math.ceil((arr-deadline)/60000):0;
+ const adjustedPickupMs=lateArrival?arr+margin*60000:null;
+ if(lateArrival)reasons.push('retard de '+latenessMinutes+' min après l’heure prévue — justificatif de correspondance manquée à fournir');
  const feasible=reasons.length===0;
  // Trois niveaux, jamais confondus (demande du 14/11/2026 : distinguer horaire programmé, disponibilité et prix) :
  //  - « Réalisable » : tout est vérifié, rien ne manque ;
@@ -572,9 +574,9 @@ function assess(j,task,fareFor){
   durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,price,reasons,delays,
   transfers:Math.max(0,legs.filter(l=>l.kind!=='walk').length-1),
   walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
-  feasible,lateArrival,latenessMinutes:lateArrival?Math.ceil((arr-deadline)/60000):0,
-  status:lateArrival?'Retard à justifier auprès de la plateforme':feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
-  statusDetail:lateArrival?'Arrivée estimée '+Math.ceil((arr-deadline)/60000)+' min après l’heure prévue. Conserver la preuve de la correspondance manquée et la transmettre à la plateforme.':scheduled?'Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : '+reasons.join(' · '):feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
+  feasible,lateArrival,latenessMinutes,adjustedPickup:lateArrival?new Date(adjustedPickupMs).toISOString():null,
+  status:lateArrival?'Retard accepté sous justificatif':feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
+  statusDetail:lateArrival?'Retard estimé de '+latenessMinutes+' min. Nouvelle prise en charge proposée à '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(adjustedPickupMs))+' (arrivée transport + '+margin+' min de marge). Transmettre le justificatif de correspondance manquée à la plateforme.':scheduled?'Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : '+reasons.join(' · '):feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
 
 }
 // Un transport n'a d'intérêt que s'il rapproche du but : si la marche à vol d'oiseau jusqu'au premier arrêt plus celle
@@ -1486,7 +1488,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
   const usable=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
-   !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
+   !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||'')))&&(!s.task.lateAlternativesOnly||ms(j.legs[j.legs.length-1]?.arrival)>ms(s.task.plannedArrivalDeadline)));
   // Point d'arrivée ou de départ approximatif (adresse trouvée seulement au niveau de la voie ou de la commune) : le test « marcher
   // directement serait aussi court » n'est pas fiable (l'écart de plusieurs km vient de l'approximation), on garde le trajet.
   let clean=usable.filter(j=>(s.task.approximateEndpoint||!walkDetour(j,s.task)||j.needsAccess)&&!excessiveDetour(j,s.task));
@@ -2042,7 +2044,7 @@ function render(host,v){
   host.appendChild(group);
  }
  if(v.done&&!v.picks.some(p=>p.journey.feasible)&&v.picks.some(p=>p.journey.scheduled))host.appendChild(el(doc,'p','cp-hub-note','Aucun trajet confirmé en temps réel pour l’instant. Les propositions « Horaire programmé » suivent les horaires officiels publiés, avec marches et marge vérifiées : à confirmer le jour J.'));
- else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none',v.picks.some(p=>p.journey.lateArrival)?'Aucun trajet ponctuel trouvé. Les solutions avec retard restent affichées ; transmettre à la plateforme le justificatif de correspondance manquée.':'Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
+ else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none',v.task?.lateAlternativesOnly?(v.picks.length?'Solutions tardives affichées avec l’heure de prise en charge décalée ; transmettre le justificatif de correspondance manquée à la plateforme.':'Aucun horaire ultérieur n’a été trouvé pour rejoindre le lieu de prise en charge aujourd’hui.'):(v.picks.some(p=>p.journey.lateArrival)?'Aucun trajet ponctuel trouvé. Les solutions avec retard restent affichées ; transmettre à la plateforme le justificatif de correspondance manquée.':'Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.')));
 }
 
 const api={VERSION,flexBookingCheck,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
