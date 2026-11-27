@@ -2179,19 +2179,34 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       // La position n'est gardée qu'en mémoire pendant cette fiche, sans suivi continu ni écriture dans l'agenda.
       let liveRerouteAttempted=false,liveRerouteRunning=false,liveReroutePosition=null,liveRerouteAt=0,liveDelayPlan=null,liveRerouteStatus=null;
       let missedConnectionTimer=null,missedConnectionCandidate=null;
+      const missedLegTime=value=>{
+        if(typeof value==='string'){
+          const parsed=Date.parse(value);
+          if(Number.isFinite(parsed))return parsed;
+        }
+        if(typeof value==='number'&&Number.isFinite(value)&&value>0)return value<1e11?value*1000:value;
+        return NaN;
+      };
       const missedConnectionDeparture=view=>{
         const now=Date.now();
         const journeys=[...(Array.isArray(view?.picks)?view.picks.map(item=>item?.journey):[]),
           ...(Array.isArray(view?.others)?view.others:[])].filter(Boolean);
         for(const journey of journeys){
-          const legs=(journey.legs||[]).filter(leg=>leg&&leg.kind!=='walk'&&
-            Number.isFinite(Date.parse(leg.departure||''))&&Number.isFinite(Date.parse(leg.arrival||'')));
+          const legs=(journey.legs||[]).map(leg=>{
+            if(!leg||typeof leg!=='object')return null;
+            const mode=String(leg.kind||leg.mode||leg.type||'').toLowerCase();
+            if(mode==='walk'||mode==='walking'||mode==='foot'||mode==='marche')return null;
+            const departure=missedLegTime(leg.departure??leg.startTime??leg.start_time??leg.departureTime??leg.departure_time);
+            const arrival=missedLegTime(leg.arrival??leg.endTime??leg.end_time??leg.arrivalTime??leg.arrival_time);
+            return Number.isFinite(departure)&&Number.isFinite(arrival)?{departure,arrival,raw:leg}:null;
+          }).filter(Boolean);
           for(let i=1;i<legs.length;i++){
-            const prior=Date.parse(legs[i-1].arrival),depart=Date.parse(legs[i].departure),arrive=Date.parse(legs[i].arrival);
-            if(prior>depart||arrive<=now)continue;
+            const prior=legs[i-1].arrival,depart=legs[i].departure;
+            if(prior>depart)continue;
             if(depart>now&&depart-now<=90*60000){
-              if(missedConnectionCandidate!==legs[i].departure){
-                clearTimeout(missedConnectionTimer);missedConnectionCandidate=legs[i].departure;
+              const candidate=String(depart);
+              if(missedConnectionCandidate!==candidate){
+                clearTimeout(missedConnectionTimer);missedConnectionCandidate=candidate;
                 missedConnectionTimer=setTimeout(()=>{
                   missedConnectionCandidate=null;missedConnectionTimer=null;
                   maybeStartLiveReroute('Aller',view);
@@ -2199,7 +2214,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               }
               continue;
             }
-            if(depart<=now&&depart>=now-45*60000)return legs[i].departure;
+            if(depart<=now&&depart>=now-45*60000)return new Date(depart).toISOString();
           }
         }
         return null;
@@ -2211,7 +2226,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(!liveRerouteStatus&&section){
           liveRerouteStatus=document.createElement('p');liveRerouteStatus.className='doux cp-live-reroute-status cp-missed-connection-banner';
           liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
-          section.appendChild(liveRerouteStatus);
+          panel.insertBefore(liveRerouteStatus,transportDestinations.Aller||null);
         }
         const status=liveRerouteStatus;
         if(status){status.textContent='Correspondance manquée. Recherche d’une position GPS récente…';status.querySelector('button')?.remove();}
@@ -2246,7 +2261,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(!liveRerouteStatus.isConnected){
           liveRerouteStatus.className='doux cp-live-reroute-status cp-missed-connection-banner';
           liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
-          transportDestinations.Aller?.appendChild(liveRerouteStatus);
+          panel.insertBefore(liveRerouteStatus,transportDestinations.Aller||null);
         }
         liveRerouteStatus.textContent='Correspondance manquée (départ '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(departure))+'). Actualisation depuis votre position…';
         toast('⚠ Correspondance manquée : recherche d’un trajet actualisé depuis ta position.');
