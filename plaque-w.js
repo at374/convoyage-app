@@ -11,7 +11,7 @@
     .replace(/[\\u2010-\\u2015\\u2212]/g, '-')
     .toLowerCase().replace(/\\s+/g, ' ').trim();
   const POSITIF = /\\bplaques?\\s+(?:(?:d[' ]immatriculation|de garage|garage|professionnelles?)\\s+)?w\\b|\\bw[ -]?garage\\b|\\bimmatriculation\\s+(?:de\\s+)?w\\b|\\bplaques?\\s+professionnelles?\\b|\\bplaques?\\s+garage\\b/;
-  const NEGATIF = /\\b(?:non\\s+(?:requise?|obligatoire|necessaire|demandee?)|pas\\s+(?:de\\s+)?(?:plaque\\s+w|besoin\\s+de\\s+plaque)|sans\\s+plaque\\s+w|plaque\\s+w\\s+(?:facultative|non\\s+requise?|non\\s+obligatoire)|aucune\\s+plaque\\s+w)\\b/;
+  const NEGATIF = /\\b(?:non\\s+(?:requise?|obligatoire|necessaire|demandee?|exigee?)|pas\\s+(?:de\\s+)?(?:plaque\\s+w|besoin\\s+de\\s+plaque)|sans\\s+plaque\\s+w|plaque\\s+w\\s+(?:facultative|non\\s+requise?|non\\s+obligatoire|pas\\s+(?:requise?|obligatoire|necessaire|exigee?))|aucune\\s+plaque\\s+w)\\b/;
   const parseVehicle = mission => {
     let vehicle = mission && mission.vehicle;
     if (typeof vehicle === 'string') {
