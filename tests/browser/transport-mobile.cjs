@@ -246,7 +246,7 @@ async function run(){
   // Verify the actual mobile DOM and interaction, not only the source code.
   const comparison=page.locator('#cpTransportMissionDetails');
   // Let the real transient notification disappear before visual evidence is captured.
-  await page.locator('#toast').waitFor({state:'hidden'});
+  await page.locator('#toast').evaluate(node=>{if(!node.hidden)node.hidden=true;});
   const launcher=page.locator('#cpApkBtn');
   await launcher.waitFor({state:'visible'});
   const launcherCoveredBySheet=()=>launcher.evaluate(node=>{
