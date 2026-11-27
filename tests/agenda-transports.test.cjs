@@ -999,3 +999,45 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   assert.match(app,/Retour décalé/);
   assert.match(app,/Jonction décalée/);
 }
+
+
+// Le détecteur reprend les formes horaires réellement émises par les adaptateurs (ISO, epoch ms, epoch s)
+// et ignore les marches tout en couvrant bus, cars, FlixBus et trains.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const start=source.indexOf('      const missedLegTime=value=>');
+  const end=source.indexOf('      const requestLiveReroute=',start);
+  assert.ok(start>=0&&end>start);
+  let timer=null,now=Date.parse('2026-11-27T07:46:00+01:00');
+  class FakeDate extends Date { static now(){return now;} }
+  const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\\n'+source.slice(start,end);
+  const context={Date:FakeDate,clearTimeout(){},setTimeout(fn,delay){timer={fn,delay};return 1;},
+    maybeStartLiveReroute(){}};
+  vm.createContext(context);
+  const detect=vm.runInContext(helper+'missedConnectionDeparture',context);
+  const make=(kind,firstMode,nextMode,firstDeparture,nextDeparture)=>{
+    const first=Date.parse(firstDeparture),next=Date.parse(nextDeparture);
+    const time=(value,mode)=>mode==='epochSeconds'?Math.floor(value/1000):mode==='epochMs'?value:new Date(value).toISOString();
+    return {picks:[{journey:{legs:[
+      {kind:firstMode||kind,departure:time(first,'iso'),arrival:new Date(first+53*60*1000).toISOString()},
+      {kind:nextMode||kind,departure:time(next,nextMode==='epochSeconds'?'epochSeconds':nextMode==='epochMs'?'epochMs':'iso'),
+        arrival:new Date(next+60*60*1000).toISOString()}
+    ]}}]};
+  };
+  for(const mode of ['train','bus','coach','flixbus','blablacar-bus']){
+    const view=make(mode,mode,mode,'2026-11-27T06:43:00+01:00','2026-11-27T07:44:00+01:00');
+    assert.equal(detect(view),'2026-11-27T06:44:00.000Z',mode);
+  }
+  const otp={picks:[{journey:{legs:[
+    {mode:'RAIL',startTime:Date.parse('2026-11-27T06:43:00+01:00'),endTime:Date.parse('2026-11-27T07:36:00+01:00')},
+    {mode:'BUS',startTime:Date.parse('2026-11-27T07:44:00+01:00')/1000,endTime:Date.parse('2026-11-27T08:42:00+01:00')/1000}
+  ]}}]};
+  assert.equal(detect(otp),'2026-11-27T06:44:00.000Z','OTP epoch formats');
+  const walking={picks:[{journey:{legs:[
+    {mode:'BUS',departure:'2026-11-27T06:43:00+01:00',arrival:'2026-11-27T07:36:00+01:00'},
+    {mode:'WALK',departure:'2026-11-27T07:37:00+01:00',arrival:'2026-11-27T07:38:00+01:00'},
+    {mode:'TRAIN',departure:'2026-11-27T07:44:00+01:00',arrival:'2026-11-27T08:42:00+01:00'}
+  ]}}]};
+  assert.equal(detect(walking),'2026-11-27T06:44:00.000Z','walking leg ignored');
+}
