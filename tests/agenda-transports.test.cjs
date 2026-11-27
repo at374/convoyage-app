@@ -956,12 +956,12 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
   const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
   const source=app.slice(app.indexOf('      const missedConnection=view=>'),app.indexOf('      const requestLiveReroute=',app.indexOf('      const missedConnection=view=>')));
-  const context={Date};vm.createContext(context);
+  const context={Date};
   const now=Date.now(),depart=new Date(now-2*60000).toISOString(),arrive=new Date(now+40*60000).toISOString();
   const previous={kind:'transit',departure:new Date(now-12*60000).toISOString(),arrival:new Date(now-5*60000).toISOString()};
   const walk={kind:'walk',departure:new Date(now-5*60000).toISOString(),arrival:new Date(now-3*60000).toISOString()};
   const missed={kind:'transit',departure:depart,arrival:arrive};
-  const call=legs=>{context.legs=legs;return vm.runInContext(source+';missedConnection({picks:[{journey:{legs:globalThis.legs}}]})',context);};
+  const call=legs=>vm.runInNewContext(source+';missedConnection({picks:[{journey:{legs:globalThis.legs}}]})',{Date,legs});
   assert.equal(call([previous,walk,missed]),depart,'missed connecting train is detected across an intervening walk leg');
   assert.equal(call([previous,{...missed,departure:new Date(now+5*60000).toISOString()}]),null,'future connection does not trigger recovery');
   assert.equal(call([previous,{...missed,departure:new Date(now-60*60000).toISOString()}]),null,'stale journeys do not trigger a new GPS request');
