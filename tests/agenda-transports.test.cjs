@@ -1021,7 +1021,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   const expected='2026-11-27T06:44:00.000Z';
   const formats=[
     {kind:'transit',departure:new Date(prior).toISOString(),arrival:new Date(missed).toISOString()},
-    {kind:'walk',departure:new Date(missed).toISOString(),arrival:new Date(missed+60_000).toISOString()},
+    {kind:'walk',departure:new Date(prior).toISOString(),arrival:new Date(missed-60_000).toISOString()},
     {kind:'transit',departure:new Date(missed).toISOString(),arrival:'2026-11-27T08:42:00+01:00'}
   ];
   assert.equal(detect({picks:[{journey:{legs:formats}}]}),expected,'ISO with transfer walk');
@@ -1031,7 +1031,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   ]}]}),expected,'epoch milliseconds and seconds from different transport modes');
   assert.equal(detect({picks:[{journey:{legs:[
     {mode:'BUS',departure:new Date(prior).toISOString(),arrival:new Date(missed).toISOString()},
-    {mode:'WALK',departure:new Date(missed).toISOString(),arrival:new Date(missed+60_000).toISOString()},
+    {mode:'WALK',departure:new Date(prior).toISOString(),arrival:new Date(missed-60_000).toISOString()},
     {mode:'TRAIN',departure:new Date(missed).toISOString(),arrival:'2026-11-27T08:42:00+01:00'}
   ]}}]}),expected,'skip WALK legs when connection is missed');
 }
