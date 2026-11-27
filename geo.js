@@ -167,7 +167,7 @@
     const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
     return { a, v, cp, d };
   };
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v2', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v3', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
@@ -203,7 +203,11 @@
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
-          if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
+          const communes = [f.properties.city, f.properties.municipality, f.properties.oldcity].filter(Boolean);
+          if (x.v && communes.length && !communes.some(v => norm(v) === norm(x.v))) continue;
+          const numNormalise = v => norm(v).replace(/\s/g, '');
+          const numDemande = numero && numero[0].match(/^\d{1,4}\s*(?:bis|ter)?/i)[0].trim();
+          if (numero && (precision !== 'adresse' || (f.properties.housenumber && numNormalise(f.properties.housenumber) !== numNormalise(numDemande)))) continue;
           if (numero && f.properties.street) {
             const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
             const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]);
