@@ -70,7 +70,8 @@ test('GPS convoyage : aucun réveil permanent hors mission, reprise à la procha
   assert.match(app, /function delaiAvantProchainSuivi\(now = Date\.now\(\)\)/);
   assert.match(app, /function actualiserSuiviApresSynchro\(\)/);
   assert.match(app, /actualiserSuiviApresSynchro\(\);/);
-  assert.match(app, /delay = missions\.length \? Math\.max\(1000,[\s\S]*: delaiAvantProchainSuivi\(\)/);
+  assert.match(app, /const echantillonDu = force \|\| suiviDerniereLectureAt === 0 \|\| elapsed >= SUIVI_CONVOYAGE_INTERVALLE_MS/);
+  assert.match(app, /missions\.length \? \(echantillonDu \? SUIVI_CONVOYAGE_INTERVALLE_MS : Math\.max\(1000,[\s\S]*: delaiAvantProchainSuivi\(\)/);
   assert.match(app, /SUIVI_CONVOYAGE_INTERVALLE_MS = 10 \* 60000/);
   assert.doesNotMatch(app, /navigator\.geolocation\.watchPosition/);
   assert.match(app, /!\['annulee','terminee','cancelled','canceled','completed'\]/);
