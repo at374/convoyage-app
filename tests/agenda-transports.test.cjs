@@ -1046,7 +1046,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   const scheduleStart=app.indexOf('      const scheduleUpcomingMissedConnection=',timeEnd);
   const scheduleEnd=app.indexOf('      const startTransportHub=',scheduleStart);
   assert.ok(timeStart>=0&&timeEnd>timeStart&&scheduleStart>timeEnd&&scheduleEnd>scheduleStart);
-  const code='let missedConnectionTimer=null,missedConnectionCandidate=null;\n'+
+  const code='let liveRerouteAttempted=false,liveRerouteRunning=false,missedConnectionTimer=null,missedConnectionCandidate=null;\n'+
     app.slice(timeStart,timeEnd)+app.slice(scheduleStart,scheduleEnd);
   let now=Date.parse('2026-11-27T07:40:00+01:00'),timer=null,shown=null;
   class FakeDate extends Date { static now(){return now;} }
