@@ -1027,7 +1027,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     // Hors mission, un réveil unique est posé à T-1 h de la prochaine prise en charge, sans demander la position.
     const gpsDisponible = natif || !!navigator.geolocation;
     if (!suiviRefus && !document.hidden && gpsDisponible) {
-      const delay = missions.length ? Math.max(1000, SUIVI_CONVOYAGE_INTERVALLE_MS - Math.max(0, Date.now() - suiviDerniereLectureAt)) : delaiAvantProchainSuivi();
+      const now = Date.now(), elapsed = suiviDerniereLectureAt > 0 ? Math.max(0, now - suiviDerniereLectureAt) : SUIVI_CONVOYAGE_INTERVALLE_MS;
+      const delay = missions.length ? Math.max(1000, SUIVI_CONVOYAGE_INTERVALLE_MS - (force ? 0 : elapsed)) : delaiAvantProchainSuivi();
       if (delay !== null) suiviTimer = setTimeout(() => { suiviTimer = null; suiviMaj(true); }, delay);
     }
     // Le point officiel de livraison est résolu en tâche de fond, sans maintenir le GPS allumé.
@@ -1037,6 +1038,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     if (natif) {
       try {
         if (missions.length && !suiviRefus) {
+          if (force || !suiviDerniereLectureAt || Date.now() - suiviDerniereLectureAt >= SUIVI_CONVOYAGE_INTERVALLE_MS) suiviDerniereLectureAt = Date.now();
           const cible = missions.slice().sort((a, b) => Date.parse(a.t.pickup || '') - Date.parse(b.t.pickup || ''))[0];
           const origine = G.coordonnees(cible.m, 'origin');
           const dest = G.coordonnees(cible.m, 'destination');
@@ -2206,8 +2208,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         liveRerouteRunning=true;liveRerouteAttempted=true;liveRerouteAt=Date.now();
         const section=transportDestinations.Aller;
         if(!liveRerouteStatus&&section){
-          liveRerouteStatus=document.createElement('p');liveRerouteStatus.className='doux cp-live-reroute-status';
-          liveRerouteStatus.setAttribute('role','status');liveRerouteStatus.setAttribute('aria-live','polite');
+          liveRerouteStatus=document.createElement('p');liveRerouteStatus.className='doux cp-live-reroute-status cp-missed-connection-banner';
+          liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
           section.appendChild(liveRerouteStatus);
         }
         const status=liveRerouteStatus;
@@ -2241,11 +2243,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         if(!departure)return;
         liveRerouteStatus ||= document.createElement('p');
         if(!liveRerouteStatus.isConnected){
-          liveRerouteStatus.className='doux cp-live-reroute-status';
-          liveRerouteStatus.setAttribute('role','status');liveRerouteStatus.setAttribute('aria-live','polite');
+          liveRerouteStatus.className='doux cp-live-reroute-status cp-missed-connection-banner';
+          liveRerouteStatus.setAttribute('role','alert');liveRerouteStatus.setAttribute('aria-live','assertive');liveRerouteStatus.style.cssText='border:2px solid #e04444;background:#351311;color:#fff;padding:10px;border-radius:10px;font-weight:700;margin:8px 0';
           transportDestinations.Aller?.appendChild(liveRerouteStatus);
         }
         liveRerouteStatus.textContent='Correspondance manquée (départ '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(departure))+'). Actualisation depuis votre position…';
+        toast('⚠ Correspondance manquée : recherche d’un trajet actualisé depuis ta position.');
         requestLiveReroute();
       };
       const maybeShiftMissionAfterLatePickup=(label,view)=>{
