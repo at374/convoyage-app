@@ -953,7 +953,7 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
 {
   const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
   const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
-  const start=app.indexOf('      const missedConnectionDeparture=view=>');
+  const start=app.indexOf('      const missedLegTime=value=>');
   const end=app.indexOf('      const requestLiveReroute=',start);
   assert.ok(start>=0&&end>start);
   const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\n'+app.slice(start,end);
