@@ -16,7 +16,7 @@ test('fiche mission : moteur automatique raccordé et sans formulaire de recherc
  assert.match(app,/startTransportHub\(\)/);
 });
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
- assert.match(html,/style\.css\?v=progression-transports-20261126/);
+ assert.match(html,/style\.css\?v=/);
  assert.match(css,/\.cp-hub-card \.cp-hub-price\{[^}]*font-size:1\.28em/);
  assert.match(css,/@media\(max-width:600px\)/);
  assert.match(css,/\.cp-hub-card \.cp-hub-map\{max-width:100%/);

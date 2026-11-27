@@ -947,3 +947,52 @@ console.log('PASS: Agenda click refreshes visible mission, uses new button, conf
   assert.equal(evaluate({...base,pickup_end:null}),'2026-11-25T16:00:00.000Z');
   console.log('PASS: accepted pickup at 15:00 cannot inherit a 17:00 deadline');
 }
+
+
+// Missed transfers trigger a fresh GPS search even when the original search finished before departure.
+{
+  const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const start=app.indexOf('      const missedConnectionDeparture=view=>');
+  const end=app.indexOf('      const requestLiveReroute=',start);
+  assert.ok(start>=0&&end>start);
+  const helper='let missedConnectionTimer=null,missedConnectionCandidate=null;\n'+app.slice(start,end);
+  let now=Date.parse('2026-11-27T07:40:00+01:00'),scheduled=null,reroutes=0;
+  class FakeDate extends Date { static now(){return now;} }
+  const view={picks:[{journey:{legs:[
+    {kind:'train',departure:'2026-11-27T06:43:00+01:00',arrival:'2026-11-27T07:36:00+01:00'},
+    {kind:'train',departure:'2026-11-27T07:44:00+01:00',arrival:'2026-11-27T08:42:00+01:00'}
+  ]}}]};
+  const context={Date:FakeDate,clearTimeout(){},setTimeout(fn,delay){scheduled={fn,delay};return 1;},
+    maybeStartLiveReroute(label,route){assert.equal(label,'Aller');assert.equal(route,view);reroutes++;}};
+  vm.createContext(context);
+  const api=vm.runInContext(helper+'({missedConnectionDeparture,getCandidate:()=>missedConnectionCandidate})',context);
+  assert.equal(api.missedConnectionDeparture(view),null);
+  assert.equal(scheduled.delay,4*60*1000+1000);
+  now=Date.parse('2026-11-27T07:44:01+01:00');
+  scheduled.fn();
+  assert.equal(reroutes,1);
+  assert.equal(api.missedConnectionDeparture(view),'2026-11-27T07:44:00+01:00');
+  for(const [index,kind] of ['bus','coach','flixbus','blablacar-bus','scooter'].entries()){
+    const departure='2026-11-27T07:'+String(50+index).padStart(2,'0')+':00+01:00';
+    const nextView={picks:[{journey:{legs:[
+      {kind:'train',departure:'2026-11-27T07:36:00+01:00',arrival:'2026-11-27T07:40:00+01:00'},
+      {kind,departure,arrival:'2026-11-27T08:42:00+01:00'}
+    ]}}]};
+    assert.equal(api.missedConnectionDeparture(nextView),null,kind);
+    assert.equal(api.getCandidate(),departure,kind);
+  }
+  const otherDeparture='2026-11-27T07:55:00+01:00';
+  const additional={others:[{legs:[
+    {kind:'bus',departure:'2026-11-27T07:36:00+01:00',arrival:'2026-11-27T07:40:00+01:00'},
+    {kind:'coach',departure:otherDeparture,arrival:'2026-11-27T08:42:00+01:00'}
+  ]}]};
+  assert.equal(api.missedConnectionDeparture(additional),null);
+  assert.equal(api.getCandidate(),otherDeparture);
+  assert.match(app,/Recherche d’une position GPS récente/);
+  assert.match(app,/startTransportHub\(\);/);
+  assert.match(app,/target\.plannedArrivalDeadline=pickupDate\|\|target\.latestArrival/);
+  assert.match(app,/target\.allowJustifiedDelay=true/);
+  assert.match(app,/Retour décalé/);
+  assert.match(app,/Jonction décalée/);
+}

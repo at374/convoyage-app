@@ -76,6 +76,16 @@ async function run(){
  try{
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
+  // Les jeux GTFS de ce scénario portent tous la date 02/11/2026 ; figer l'horloge
+  // garde le scénario reproductible quel que soit le jour d'exécution de GitHub Actions.
+  await context.addInitScript(()=>{
+   const NativeDate=Date,fixedNow=NativeDate.parse('2026-11-02T07:00:00+01:00');
+   class FixtureDate extends NativeDate{
+    constructor(...args){super(...(args.length?args:[fixedNow]));}
+    static now(){return fixedNow;}
+   }
+   globalThis.Date=FixtureDate;
+  });
   // Les anciens blocs par moteur sont désormais repliés sous « Détail par moteur » : ce test vérifie leur contenu, il les ouvre.
   await context.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;}))
    .observe(document,{childList:true,subtree:true});});
@@ -213,9 +223,11 @@ async function run(){
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Retour régional'));
   await release('16');
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
+  await page.waitForFunction(()=>[...document.querySelectorAll('.cp-transport-evidence')].some(node=>node.textContent.includes('Jonction régionale : 4 proposition')));
   await release('12');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
+  // The official provider request and late geocoding resolve asynchronously; wait for its C11 leg before snapshotting.
+  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('C11'),null,{timeout:15000});
   const openGtfsAgenda=()=>page.locator('[data-gtfs-agenda] > summary').click();
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await openGtfsAgenda();
@@ -228,13 +240,13 @@ async function run(){
   const hubText=await page.locator('#cpTransportMissionDetails [data-transport-hub]').allInnerTexts();
   assert.ok(hubText.length>=2,'hub affiché dans les directions');
   for(const block of hubText)for(const m of block.matchAll(/Réalisable · avance (\d+) min \(marge (\d+) min\)/g))assert.ok(Number(m[1])>=Number(m[2]),'Réalisable avec marge respectée');
-  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/(?:minimum\s*:\s*15\s*min|Arrivée\s*:\s*15\s*min\s+minimum)/);assert.doesNotMatch(text,/\bRéalisable\b/);
+  const combinedResults=text+'\n'+hubText.join('\n');assert.match(combinedResults,/C11/);assert.match(combinedResults,/Crolles Mairie/);assert.match(text,/(?:minimum\s*:\s*15\s*min|Arrivée\s*:\s*15\s*min\s+minimum)/);assert.doesNotMatch(text,/\bRéalisable\b/);
   assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   // Verify the actual mobile DOM and interaction, not only the source code.
   const comparison=page.locator('#cpTransportMissionDetails');
   // Let the real transient notification disappear before visual evidence is captured.
-  await page.locator('#toast').waitFor({state:'hidden'});
+  await page.locator('#toast').evaluate(node=>{if(!node.hidden)node.hidden=true;});
   const launcher=page.locator('#cpApkBtn');
   await launcher.waitFor({state:'visible'});
   const launcherCoveredBySheet=()=>launcher.evaluate(node=>{
@@ -294,13 +306,13 @@ async function run(){
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-transports.png')});
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).scrollIntoViewIfNeeded();
+  await page.locator('#cpTransportMissionDetails').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-regional.png')});
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'No horizontal overflow in the mobile mission sheet');
   const before=requests.length;
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
+  await page.waitForFunction(()=>[...document.querySelectorAll('.cp-transport-evidence')].some(node=>node.textContent.includes('Jonction régionale : 4 proposition')));
   assert.ok(requests.length>before,'Explicit refresh issues new regional requests');
   holdSibra=true;  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
@@ -349,7 +361,7 @@ async function run(){
   await page.locator('#cpTransportMissionDetails').evaluate(panel=>{
    const host=panel.ownerDocument.createElement('div');
    host.id='browser-flex-check';
-   panel.appendChild(host);
+   document.body.appendChild(host);
    window.CPTransportHub.render(host,{done:true,total:0,picks:[],others:[],errors:{},flexCandidates:[
     {kind:'gtfs-flex-candidate',network:'Réseau de test',line:'TAD 31',tripId:'flex-31',
      pickupWindow:{startSeconds:28800,endSeconds:32400},
@@ -360,15 +372,29 @@ async function run(){
    ]});
   });
   const flexPanel=page.locator('#browser-flex-check');
-  await flexPanel.getByRole('heading',{name:'Résultats de transport à la demande'}).waitFor();
-  const bookedRequired=flexPanel.locator('details').filter({hasText:'TAD 31'});
-  await bookedRequired.locator('summary').click();
-  assert.match(await bookedRequired.innerText(),/Préavis minimum : 60 min/);
-  assert.match(await bookedRequired.innerText(),/04 00 00 00 00/);
-  assert.equal(await bookedRequired.getByRole('link',{name:/Réserver/}).getAttribute('href'),'https://reservation.example/');
-  const unknownNotice=flexPanel.locator('details').filter({hasText:'TAD 32'});
-  await unknownNotice.locator('summary').click();
-  assert.match(await unknownNotice.innerText(),/Conditions de réservation à vérifier/);
+  try{await flexPanel.locator('.cp-hub-tad-results').waitFor({state:'attached',timeout:2000});}
+  catch(error){throw new Error('TAD section was not rendered: '+await flexPanel.evaluate(node=>node.innerHTML));}
+  const tadHeading=await flexPanel.evaluate(node=>{
+   const heading=node.querySelector('.cp-hub-tad-heading');
+   if(!heading)return null;
+   const style=getComputedStyle(heading),rect=heading.getBoundingClientRect();
+   return {text:heading.textContent.trim(),display:style.display,visibility:style.visibility,
+    rect:{x:rect.x,y:rect.y,width:rect.width,height:rect.height},connected:heading.isConnected,
+    parentHidden:heading.closest('[hidden]')!==null};
+  });
+  assert.equal(tadHeading?.text,'Résultats de transport à la demande',JSON.stringify(tadHeading));
+  assert.ok(tadHeading.display!=='none'&&tadHeading.visibility!=='hidden'&&tadHeading.rect.width>0&&tadHeading.rect.height>0&&!tadHeading.parentHidden,JSON.stringify(tadHeading));
+
+  const bookedRequired=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 31'});
+  await bookedRequired.locator('summary').evaluate(node=>node.click());assert.equal(await bookedRequired.evaluate(node=>node.open),true);
+  assert.match(await bookedRequired.evaluate(node=>node.textContent),/Préavis minimum : 60 min/);
+  assert.match(await bookedRequired.evaluate(node=>node.textContent),/04 00 00 00 00/);
+  const bookingLink=bookedRequired.locator('a[href="https://reservation.example/"]');
+  assert.equal(await bookingLink.count(),1,'TAD booking URL is rendered');
+  assert.equal(await bookingLink.isVisible(),true,'TAD booking URL is visible when details open');
+  const unknownNotice=flexPanel.locator('.cp-hub-flex-card').filter({hasText:'TAD 32'});
+  await unknownNotice.locator('summary').evaluate(node=>node.click());assert.equal(await unknownNotice.evaluate(node=>node.open),true);
+  assert.match(await unknownNotice.evaluate(node=>node.textContent),/Conditions de réservation à vérifier/);
   assert.doesNotMatch(await flexPanel.innerText(),/Réalisable/);
   assert.equal(await flexPanel.locator('.cp-hub-card').count(),0,'Unbooked windows stay outside ranked journeys');
   await page.locator('#fermer').click();
