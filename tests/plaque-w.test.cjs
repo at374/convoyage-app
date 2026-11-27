@@ -28,3 +28,13 @@ test('accepte les champs explicites de compétence au niveau mission', () => {
   assert.equal(plaqueW.detect({ required_competences: ['Plaque W garage'] }), true);
   assert.equal(plaqueW.detect({ vehicleRequirements: ['Plaque W garage'] }), true);
 });
+
+test('mission Hiflow acceptée Albertville–Chambéry conserve l’exigence sous vehicle.competences', () => {
+  const acceptedMission = {
+    platform: 'Hiflow', kind: 'acceptee', from_city: 'Albertville', to_city: 'Chambéry',
+    vehicle: { category: 'Citadine', model: 'ATTO 2 DMi Gris', energy: 'hybride rechargeable',
+      competences: ['Plaque W garage obligatoire'] }
+  };
+  assert.equal(plaqueW.detect(acceptedMission), true);
+  assert.match(plaqueW.render(acceptedMission), /aria-label="Plaque W garage"/);
+});
