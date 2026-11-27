@@ -16,7 +16,10 @@ test('fiche mission : moteur automatique raccordé et sans formulaire de recherc
  assert.match(app,/startTransportHub\(\)/);
 });
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
- assert.match(html,/style\.css\?v=progression-transports-20261126/);
+ const versionedStyle=html.match(/href="(style\.css\?v=[a-zA-Z0-9_-]+)"/);
+ assert.ok(versionedStyle,'stylesheet must have a cache version');
+ const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+ assert.ok(sw.includes("'"+versionedStyle[1]+"'"),'service worker must cache the same stylesheet version');
  assert.match(css,/\.cp-hub-card \.cp-hub-price\{[^}]*font-size:1\.28em/);
  assert.match(css,/@media\(max-width:600px\)/);
  assert.match(css,/\.cp-hub-card \.cp-hub-map\{max-width:100%/);

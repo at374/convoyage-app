@@ -213,7 +213,9 @@ async function run(){
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Retour régional'));
   await release('16');
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
+  const legacyJunction=page.locator('[data-transport-sources="Jonction"]');
+  await legacyJunction.getByText(/Jonction régionale : 4 proposition/).waitFor({state:'attached'});
+  assert.equal(await legacyJunction.isVisible(),false,'Legacy source stays hidden to avoid duplicate results');
   await release('12');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
   const openGtfsAgenda=()=>page.locator('[data-gtfs-agenda] > summary').click();
