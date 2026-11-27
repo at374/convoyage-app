@@ -132,7 +132,7 @@ FILTERED_MIRROR = [
     # décompressés (157 Mo de stop_times.txt) → même traitement que RTM Marseille : limiter aux courses
     # des 45 prochains jours (rafraîchi chaque semaine).
     {'id': 'fil-bleu-tours', 'network': 'Fil Bleu (Tours Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430',
-     'bounds': [47.34, 0.62, 47.46, 0.76], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.34, 0.62, 47.46, 0.76], 'horizon_days': 45, 'slim': True, 'compact_ids': 'tfb', 'download_limit': 60 * 1024 * 1024},
     # 20/11/2026 — 5 grandes métropoles encore absentes (demande : couvrir toute la France). Chacune a un métro/tram
     # (gros volumes de courses) → horizon_days + slim dès le départ, même traitement préventif que RTM/Fil Bleu
     # (évite de reproduire le bug du 19-20/11 où une emprise seule ne suffit pas à repasser sous 128 Mo décompressés).

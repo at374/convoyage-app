@@ -1258,6 +1258,7 @@ const LOCAL_GTFS_NETWORKS=[
  ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.092,4.401,46.537,4.945]],
  ['lio_occitanie_nord','liO Occitanie (Gard, Lozère)','lio-occitanie-nord.zip',[44.0,3.3,44.95,4.7]],
  ['mobigo_bfc_jura','Mobigo Bourgogne-Franche-Comté (Jura)','mobigo-bfc-jura.zip',[46.2,5.3,47.1,6.3]],
+ ['mobigo_bfc_saone_et_loire','Mobigo Bourgogne-Franche-Comté (Saône-et-Loire)','mobigo-bfc-saone-et-loire.zip',[46.19,3.15,47.5,5.56]],
  ['zou_express_nord','ZOU ! Express (Alpes du Sud)','zou-express-nord.zip',[44.0,5.0,45.2,7.2]],
  ['zou_proximite_nord','ZOU ! Proximité (Hautes-Alpes, Vaucluse nord)','zou-proximite-nord.zip',[44.0,5.0,45.0,7.0]],
  ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.535,4.688,46.527,6.09]],
@@ -1311,10 +1312,9 @@ const LOCAL_GTFS_NETWORKS=[
  ['cts_strasbourg', "CTS (Strasbourg Eurométropole)", 'cts-strasbourg.zip', [48.48,7.60,48.68,7.82]],
  ['ilevia_lille', "ilévia (Métropole Européenne de Lille)", 'ilevia-lille.zip', [50.55,2.85,50.75,3.20]],
  ['star_rennes', "STAR (Rennes Métropole)", 'star-rennes.zip', [47.98,-1.85,48.22,-1.55]],
- // naolib_nantes volontairement absent : même avec un horizon réduit à 14 j, l'archive réelle décompresse
- // à 178 Mo de stop_times.txt (réseau très dense, ~12,7 Mo/j), largement au-delà des 64 Mo maxFileBytes du
- // moteur — « Expanded GTFS exceeds size limit » constaté en réel le 20/11/2026. La câbler demanderait un
- // horizon de 4-5 j, trop court pour un cron hebdomadaire (voir transport-coverage.js pour le suivi).
+ // Naolib Nantes : câblé le 27/11/2026 grâce aux identifiants de courses courts (58 Mo décompressés au lieu de
+ // 93 Mo, sous les 64 Mo maxFileBytes) ; horizon de 7 jours, rafraîchi chaque lundi.
+ ['naolib_nantes', "Naolib (Nantes Métropole)", 'naolib-nantes.zip', [47.13,-1.70,47.33,-1.42]],
  ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]],
  // TAO Orléans Métropole : horizon réduit à 15 j (scripts/build_regional_gtfs.py) ; archive réelle
  // mesurée à 37,35 Mo (confortablement sous les 64 Mo maxFileBytes), ajoutée le 20/11/2026.
