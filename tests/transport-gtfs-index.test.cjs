@@ -67,7 +67,7 @@ assert.equal(close[0].accessVerified,false);
 assert.equal(nearbyStops(geo,999,6.122).length,0);
 const doorFiles={
  'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nS1,Annecy,45.901,6.122\nS2,Albertville,45.675,6.390\n',
- 'routes.txt':'route_id,route_short_name\nR1,Y51\n',
+ 'routes.txt':'route_id,route_short_name,route_type\nR1,Y51,700\n',
  'trips.txt':'route_id,service_id,trip_id\nR1,WK,T1\n',
  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,10:30:00,10:30:00,S1,1\nT1,11:48:00,11:48:00,S2,2\n'
 };
