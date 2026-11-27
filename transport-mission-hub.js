@@ -787,7 +787,7 @@ function assess(j,task,fareFor){
  if(task.afterMissedTransport&&Number.isFinite(task.siteCloseMinutes)&&parisDayParts(arr)?.minute>task.siteCloseMinutes)
   reasons.push('arrivée après la fermeture prévue du site : accès à vérifier');
  if(legs.some(l=>l.cancelled))reasons.push('course annulée signalée');
- const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
+ const margin=marginFor(task),deadline=ms(task.plannedArrivalDeadline||task.latestArrival),earliest=ms(task.earliestDeparture);
  const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
  if(Number.isFinite(earliest)&&Number.isFinite(dep)&&dep<earliest-(task.afterMissedTransport?0:60000))reasons.push(task.afterMissedTransport?'départ avant la relance':'départ avant la fin de la mission précédente');
  if(slack!==null&&slack<margin)reasons.push(slack<0?'arrivée après l’heure de mission':'marge insuffisante ('+slack+' min, '+margin+' min requises)');
@@ -824,6 +824,12 @@ function assess(j,task,fareFor){
  else if(longWalk)reasons.push('marche trop longue ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, limite '+(walkMax/1000).toFixed(1).replace('.',',')+' km)');
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
+ const lateArrival=task.allowJustifiedDelay===true&&Number.isFinite(deadline)&&Number.isFinite(arr)&&arr>deadline;
+ const latenessMinutes=lateArrival?Math.ceil((arr-deadline)/60000):0;
+ if(lateArrival)reasons.push('retard de '+latenessMinutes+' min après l’heure prévue — justificatif de correspondance manquée à fournir');
+ const delayOnlyReasons=reasons.filter(reason=>!/^arrivée après l’heure de mission$|^marge insuffisante|^retard de \d+ min après l’heure prévue/.test(String(reason)));
+ const delayEligible=lateArrival&&delayOnlyReasons.length===0;
+ const adjustedPickup=delayEligible?new Date(arr+margin*60000).toISOString():null;
  const feasible=reasons.length===0;
  // Trois niveaux, jamais confondus (demande du 14/11/2026 : distinguer horaire programmé, disponibilité et prix) :
  //  - « Réalisable » : tout est vérifié, rien ne manque ;
@@ -842,8 +848,9 @@ function assess(j,task,fareFor){
   deadlineEstimated:task.deadlineEstimated===true,deadlineMs:Number.isFinite(deadline)?deadline:null,price,reasons,delays,
   transfers:Math.max(0,legs.filter(l=>!isFoot(l)).length-1),
   walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
-  feasible,status:feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
-  statusDetail:scheduled?'Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : '+reasons.join(' · '):feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
+  feasible,lateArrival,delayEligible,latenessMinutes,adjustedPickup,
+  status:delayEligible?'Retard accepté sous justificatif':feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
+  statusDetail:delayEligible?'Retard estimé de '+latenessMinutes+' min. Nouvelle prise en charge proposée à '+new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(adjustedPickup))+' (arrivée transport + '+margin+' min de marge). Transmettre le justificatif de correspondance manquée à la plateforme.':scheduled?'Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : '+reasons.join(' · '):feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
 }
 // Un transport n'a d'intérêt que s'il rapproche du but : si la marche à vol d'oiseau jusqu'au premier arrêt plus celle
 // depuis le dernier arrêt atteint déjà la distance directe départ → arrivée, marcher directement est au moins aussi
@@ -967,7 +974,7 @@ function rank(items,task={},includeLongWalk=false){
  all=[...byBoarding.values(),...unboarded];
  // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
  // Garder les alternatives possibles, mais privilégier celles proches de la marge cible.
- const target=ms(task.latestArrival),margin=marginFor(task);
+ const target=ms(task.plannedArrivalDeadline||task.latestArrival),margin=marginFor(task);
  const arrivalGap=j=>Number.isFinite(target)&&Number.isFinite(ms(j.arrival))?
   Math.abs((target-ms(j.arrival))/60000-margin):0;
  const relevant=(a,b)=>arrivalGap(a)-arrivalGap(b);
@@ -1004,6 +1011,12 @@ function rank(items,task={},includeLongWalk=false){
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
+ if(task.afterMissedTransport){
+  const late=[...all].filter(j=>j.lateArrival).sort((a,b)=>Number(!!b.delayEligible)-Number(!!a.delayEligible)||
+   ms(a.arrival)-ms(b.arrival)||a.durationMinutes-b.durationMinutes)[0];
+  if(late&&!picks.some(p=>p.journey===late))
+   picks.push({labels:[late.delayEligible?'Retard accepté sous justificatif':'Retard à vérifier'],journey:late});
+ }
  // Une offre FlixBus/BlaBlaCar Bus ne doit pas disparaître derrière
  // « Autres propositions » uniquement parce qu'un TER est plus rapide.
  // Ne jamais promouvoir une course hors date, annulée ou non exploitable.
@@ -2904,7 +2917,7 @@ function card(doc,j,labels,expanded=false,task=null){
   if(direction&&direction!==l.line)
    s.appendChild(el(doc,'small','cp-hub-endpoints',['Bus',l.line,'· Direction',direction].filter(Boolean).join(' ')));
  }
- s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · '+(j.deadlineEstimated?'avance avant fermeture estimée de l’agence ('+clock(j.deadlineMs)+')':'avance')+' '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
+ s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · '+(j.lateArrival?'retard '+durationText(j.latenessMinutes):j.deadlineEstimated?'avance avant fermeture estimée de l’agence ('+clock(j.deadlineMs)+')':'avance')+(j.lateArrival?'':' '+signedDurationText(j.slackMinutes))+' (marge '+durationText(j.marginMinutes)+')':'')));
  const walkLabels=missingWalkLabels(j,task);
  if(walkLabels.length)s.appendChild(el(doc,'small','cp-hub-endpoints','🚶 '+walkStatusLabel(j,walkLabels)));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
