@@ -81,6 +81,25 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    # Rémi, grilles commerciales du 10/11/2026. Les courses scolaires partagent le même route_id.
+    {'id': 'remi36-800', 'network': 'Rémi 36 · 800 Tours – Loches – Châteauroux',
+     'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
+     'pattern': r'remi\s*36', 'route_ids': {'REMI36:Line:800'},
+     'trip_short_names': set("""
+         52800 52803 52804 52804L 52807B 52807L 52808 52809 52811 52812 52813 52813D
+         52814 52814D 52815 52815D 52816 52818 52818D 52820 52820D 52821 52821D 52824
+         52825 52825D 52826 52826D 52827 52828 52830 52830B 52831 52834 52836 52836D
+         52837 52837S 52840 52842 52843 52843D 52844 52845 52846 52846D 52847 52850
+         52851 52853 52857 52859 52871 52873
+     """.split()),
+     # Préfixes des quais GTFS. Sens 1 : Châteauroux vers Tours, sens 0 : Tours vers Châteauroux.
+     'stop_access': {
+         '0': {'no_pickup': ('CHATgr', 'CHATEcp', 'CHATEpr'), 'no_drop_off': ('TOURSgr',)},
+         '1': {'no_pickup': ('TOURSgr',), 'no_drop_off': ('CHATgr', 'CHATEcp', 'CHATEpr')},
+     },
+     # CHR Trousseau déplacé : pas de marche calculée vers les quais nominaux.
+     'excluded_stops': ('CHAMBr1', 'CHAMBchr', 'CHAMBla'),
+     'bounds': [46.75, 0.64, 47.44, 1.76], 'download_limit': 30_000_000},
     {'id': 'remi36-abfiq', 'network': 'Rémi 36 · lignes A, B, F, I et Q',
      'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
      'pattern': r'remi\s*36',
@@ -542,10 +561,22 @@ def extract(z, spec):
     route_ids = {r['route_id'] for r in routes}
     tfields, trips = read_table(z, 'trips.txt')
     trips = [t for t in trips if t['route_id'] in route_ids]
+    if spec.get('trip_short_names'):
+        trips = [t for t in trips if t.get('trip_short_name') in spec['trip_short_names']]
     trip_ids = {t['trip_id'] for t in trips}
     service_ids = {t['service_id'] for t in trips}
     stfields, times = read_table(z, 'stop_times.txt')
     times = [t for t in times if t['trip_id'] in trip_ids]
+    if spec.get('stop_access'):
+        direction_by_trip = {t['trip_id']: t['direction_id'] for t in trips}
+        for row in times:
+            quay = row['stop_id'].rsplit(':', 1)[-1]
+            access = spec['stop_access'].get(direction_by_trip[row['trip_id']], {})
+            excluded = quay.startswith(spec.get('excluded_stops', ()))
+            if excluded or quay.startswith(access.get('no_pickup', ())):
+                row['pickup_type'] = '1'
+            if excluded or quay.startswith(access.get('no_drop_off', ())):
+                row['drop_off_type'] = '1'
     stop_ids = {t['stop_id'] for t in times}
     sfields, stops = read_table(z, 'stops.txt')
     parents = {s.get('parent_station') for s in stops if s['stop_id'] in stop_ids and s.get('parent_station')}
