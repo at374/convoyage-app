@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 global.window=global;global.localStorage={getItem(){return null},setItem(){}};
 const G=require('../geo.js');const geo=global.CPGeo||G.default||G;
-const fakeFetch=(lat,lng,type)=>async()=>({ok:true,json:async()=>({features:[{geometry:{coordinates:[lng,lat]},properties:{score:0.9,type}}]})});
+const fakeFetch=(lat,lng,type)=>async()=>({ok:true,json:async()=>({features:[{geometry:{coordinates:[lng,lat]},properties:{score:0.9,type,housenumber:'300',city:'Archamps',street:'Rue Louis Rustin'}}]})});
 
 test('communes absentes de la table : coordonnées inconnues avant géocodage, adresse ensuite',async()=>{
  const m={to_city:'Archamps',destination:{city:'Archamps',zip:'74160',address:'300 rue Louis Rustin'}};
