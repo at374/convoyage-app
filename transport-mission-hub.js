@@ -3644,7 +3644,12 @@ const REMI433_FEEDERS=[
   ]
  }
 ];
-function remi433FeederReference(task,a,b){
+const REMI_V_FEEDER={
+ line:'V',stop:'Neuvy-Pailloux · Bourg',arrive:'07:40',back:'18:50',
+ flyer:'https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-54.pdf?v=ce134c3d4cc8d47d',
+ towns:["Ambrault","Bommiers","Brives","Chouday","Condé","La Champenoise","Meunet-Planches","Neuvy-Pailloux","Pruniers","Saint-Aoustrille","Saint-Aubin","Sainte-Fauste","Saint-Valentin","Thizay","Vouillon","Lizeray"]
+};
+function remiChateaurouxFeederReference(task,a,b){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_ROAD_HOLIDAYS.has(day))return null;
  const date=new Date(day+'T12:00:00Z'),weekday=date.getUTCDay();
@@ -3655,12 +3660,12 @@ function remi433FeederReference(task,a,b){
  const outward=to.includes(chateauroux);
  if(outward===from.includes(chateauroux))return null;
  const townText=outward?from:to;
- for(const {stop,arrive,back,flyer,towns} of REMI433_FEEDERS){
+ for(const {line='433',stop,arrive,back,flyer,towns} of [...REMI433_FEEDERS,REMI_V_FEEDER]){
   const town=towns.find(name=>townText.includes(remiTownText(name)));
   if(!town)continue;
   const direction=outward?town+' → Châteauroux':'Châteauroux → '+town;
   return {
-   name:'Rémi+ ligne 433 · '+direction,
+   name:'Rémi+ ligne '+line+' · '+direction,
    status:'Navette sur réservation · correspondance à confirmer',
    timetable:[outward?arrive:back],
    timetableDirection:direction,
@@ -3684,8 +3689,8 @@ function tadFor(task){
  if(remi185)base.push(remi185);
  const remi800=remi800FeederReference(task||{},a,b);
  if(remi800)base.push(remi800);
- const remi433=remi433FeederReference(task||{},a,b);
- if(remi433)base.push(remi433);
+ const remiChateauroux=remiChateaurouxFeederReference(task||{},a,b);
+ if(remiChateauroux)base.push(remiChateauroux);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
