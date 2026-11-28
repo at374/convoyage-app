@@ -18,17 +18,18 @@ for f in sorted(glob.glob(R+'*.zip')):
                 a=float(s['stop_lat']);o=float(s['stop_lon'])
                 if 41<a<52 and -6<o<11: la.append(a);lo.append(o)
             except: pass
-        ends=[]
-        for r in rd('calendar.txt'): ends.append(r.get('end_date',''))
-        for r in rd('calendar_dates.txt'):
-            if r.get('exception_type')=='1': ends.append(r.get('date',''))
+        calendar=rd('calendar.txt')
+        added_dates={r['date'] for r in rd('calendar_dates.txt')
+                     if r.get('exception_type')=='1' and len(r.get('date') or '')==8}
+        ends=[r.get('end_date','') for r in calendar]+list(added_dates)
+        explicit_service=dict(firstService=min(added_dates),serviceDays=len(added_dates)) if not calendar and added_dates else {}
         end=max([e for e in ends if len(e)==8] or [''])
         nm,orig=names.get(b,(b[:-4],'(hors manifeste)'))
         if not la: out.append(dict(file=b,name=nm,err='aucun arrêt')); continue
         la.sort();lo.sort();n=len(la)
         out.append(dict(file=b,name=nm,lat=round(statistics.median(la),4),lon=round(statistics.median(lo),4),
           b=[round(la[int(n*.03)],3),round(lo[int(n*.03)],3),round(la[int(n*.97)],3),round(lo[int(n*.97)],3)],
-          stops=len(st),end=end,moteur=(b in hub or b.startswith('national-')),mb=round(os.path.getsize(f)/1e6,1)))
+          stops=len(st),end=end,moteur=(b in hub or b.startswith('national-')),mb=round(os.path.getsize(f)/1e6,1),**explicit_service))
     except Exception as e: out.append(dict(file=b,err=str(e)[:60]))
 json.dump(out,open(sys.argv[1] if len(sys.argv)>1 else 'scan.json','w'),ensure_ascii=False)
 print(len(out),[o for o in out if 'err' in o][:5])
