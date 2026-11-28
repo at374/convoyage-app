@@ -3649,6 +3649,95 @@ const REMI_V_FEEDER={
  flyer:'https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-54.pdf?v=ce134c3d4cc8d47d',
  towns:["Ambrault","Bommiers","Brives","Chouday","Condé","La Champenoise","Meunet-Planches","Neuvy-Pailloux","Pruniers","Saint-Aoustrille","Saint-Aubin","Sainte-Fauste","Saint-Valentin","Thizay","Vouillon","Lizeray"]
 };
+const REMI_F_I_FEEDERS=[
+ {
+  "line": "F",
+  "stop": "La Châtre · Place du Champ de Foire",
+  "arrive": "06:35",
+  "back": "18:20",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-55.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "La Châtre",
+   "Lacs",
+   "Montlevicq",
+   "Néret",
+   "Le Magny",
+   "Briantes",
+   "La Motte-Feuilly",
+   "Champillet",
+   "Urciers",
+   "Chassignolles",
+   "Feusines",
+   "Pouligny-Saint-Martin",
+   "Lignerolles",
+   "Sainte-Sévère-sur-Indre",
+   "Pouligny-Notre-Dame",
+   "Pérassay",
+   "Sazeray",
+   "Vigoulant",
+   "Vijon"
+  ]
+ },
+ {
+  "line": "F",
+  "stop": "Ardentes · Agora",
+  "arrive": "07:05",
+  "back": "17:50",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-56.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "Saint-Août",
+   "La Berthenoux",
+   "Saint-Chartier",
+   "Saint-Christophe-en-Boucherie",
+   "Verneuil-sur-Igneraie",
+   "Thevet-Saint-Julien",
+   "Nohant-Vic",
+   "Lourouer-Saint-Laurent",
+   "Vicq-Exemplet",
+   "Sarzay",
+   "Montgivray"
+  ]
+ },
+ {
+  "line": "I",
+  "stop": "Aigurande · Monument aux Morts",
+  "arrive": "07:15",
+  "back": "19:30",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-57.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "Aigurande",
+   "Saint-Denis-de-Jouhet",
+   "La Buxerette",
+   "Crozon-sur-Vauvre",
+   "Montchevrier",
+   "Orsennes",
+   "Crevant",
+   "Saint-Plantaire",
+   "Lourdoueix-Saint-Michel"
+  ]
+ },
+ {
+  "line": "I",
+  "stop": "Neuvy-Saint-Sépulchre · Place du Champ de Foire",
+  "arrive": "06:40",
+  "back": "19:05",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-58.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "Mers-sur-Indre",
+   "Lys-Saint-Georges",
+   "Buxières-d’Aillac",
+   "Montipouret",
+   "Tranzault",
+   "Gournay",
+   "Neuvy-Saint-Sépulchre",
+   "Malicornay",
+   "Maillet",
+   "Mouhers",
+   "Fougerolles",
+   "Cluis"
+  ]
+ }
+];
 function remiChateaurouxFeederReference(task,a,b){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_ROAD_HOLIDAYS.has(day))return null;
@@ -3660,7 +3749,7 @@ function remiChateaurouxFeederReference(task,a,b){
  const outward=to.includes(chateauroux);
  if(outward===from.includes(chateauroux))return null;
  const townText=outward?from:to;
- for(const {line='433',stop,arrive,back,flyer,towns} of [...REMI433_FEEDERS,REMI_V_FEEDER]){
+ for(const {line='433',stop,arrive,back,flyer,towns} of [...REMI433_FEEDERS,REMI_V_FEEDER,...REMI_F_I_FEEDERS]){
   const town=towns.find(name=>townText.includes(remiTownText(name)));
   if(!town)continue;
   const direction=outward?town+' → Châteauroux':'Châteauroux → '+town;
