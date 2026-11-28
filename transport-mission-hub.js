@@ -3449,23 +3449,25 @@ const REMI_L_TOWNS=[
  'Lignac','Dunet','Saint-Hilaire-sur-Benaize','Mauvières','Bélâbre','Chalais','Prissac','Roussines',
  'Parnac','Saint-Gilles','Sacierges-Saint-Martin','Saint-Civran','Vigoux','Chazelet','Celon','Luzeret'
 ];
-const REMI_L_HOLIDAYS=new Set([
+const REMI_ROAD_HOLIDAYS=new Set([
  '2026-11-01','2026-11-11','2026-12-25','2027-01-01','2027-03-29','2027-05-01',
  '2027-05-06','2027-05-08','2027-05-17','2027-07-14','2027-08-15'
 ]);
+function remiTownText(value){
+ return ' '+String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
+}
 function remiLReservationReference(task,a,b){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
- if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_L_HOLIDAYS.has(day))return null;
+ if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_ROAD_HOLIDAYS.has(day))return null;
  const date=new Date(day+'T12:00:00Z'),weekday=date.getUTCDay();
  if(weekday===0)return null;
- const normalize=value=>' '+String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
- const start=normalize(task.fromCity||task.from?.city||task.from?.town||a);
- const end=normalize(task.toCity||task.to?.city||task.to?.town||b);
- const arg=normalize('Argenton-sur-Creuse');
+ const start=remiTownText(task.fromCity||task.from?.city||task.from?.town||a);
+ const end=remiTownText(task.toCity||task.to?.city||task.to?.town||b);
+ const arg=remiTownText('Argenton-sur-Creuse');
  const outward=start.includes(arg);
  if(outward===end.includes(arg))return null;
  const rural=outward?end:start;
- const townIndex=REMI_L_TOWNS.findIndex(town=>rural.includes(normalize(town)));
+ const townIndex=REMI_L_TOWNS.findIndex(town=>rural.includes(remiTownText(town)));
  if(townIndex<0)return null;
  const town=REMI_L_TOWNS[townIndex];
  const timetable=outward?['11:30','18:15']:[
@@ -3484,6 +3486,42 @@ function remiLReservationReference(task,a,b){
   url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/fiche_horaire/REMI%2036%20-%20Fiche%20Horaires%202026-2027%20-%20Ligne%20L.pdf'
  };
 }
+// Fiche 185 Rémi 18, valable du 01/09/2026 au 31/08/2027.
+const REMI185_VIERZON=[
+ 'Dampierre-en-Graçay','Foëcy','Genouilly','Graçay','Massay','Méry-sur-Cher','Neuvy-sur-Barangeon',
+ 'Nohant-en-Graçay','Saint-Georges-sur-la-Prée','Saint-Hilaire-de-Court','Saint-Laurent',
+ 'Saint-Outrille','Thénioux','Vouzeron','Vignoux-sur-Barangeon'
+];
+const REMI185_MEHUN=[
+ 'Brinay','Cerbois','Chéry','Lazenay','Limeux','Lury-sur-Arnon','Méreau','Poisieux',
+ 'Preuilly','Quincy','Sainte-Thorette'
+];
+const REMI185_CORRIDOR=['Vierzon','Vignoux-sur-Barangeon','Allouis','Mehun-sur-Yèvre','Berry-Bouy','Saint-Doulchard','Bourges'];
+function remi185FeederReference(task,a,b){
+ const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
+ if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_ROAD_HOLIDAYS.has(day))return null;
+ const date=new Date(day+'T12:00:00Z');
+ if(date.getUTCDay()===0)return null;
+ const from=remiTownText(task.fromCity||task.from?.city||task.from?.town||a);
+ const to=remiTownText(task.toCity||task.to?.city||task.to?.town||b);
+ const find=(list,text)=>list.find(town=>text.includes(remiTownText(town)));
+ const start=find(REMI185_CORRIDOR,from),end=find(REMI185_CORRIDOR,to);
+ const rural=[...REMI185_VIERZON,...REMI185_MEHUN];
+ const outbound=end&&find(rural,from),inbound=start&&find(rural,to);
+ if(!outbound&&!inbound)return null;
+ const town=outbound||inbound,other=outbound?end:start;
+ if(town===other)return null;
+ const west=REMI185_VIERZON.includes(town);
+ const access=west?'Vierzon Gare SNCF (quai C)':'Mehun-sur-Yèvre, arrêt 14 Juillet, ou Bourges Gare Routière';
+ const times=west&&other!=='Vierzon'?(outbound?' Correspondance car signalée à 7 h 30 au départ de Vierzon.':' Correspondance navette signalée à l’arrivée du car à 18 h 06 à Vierzon.'):(!outbound&&start==='Vierzon'?' Correspondance navette signalée à 18 h 40 à Mehun-sur-Yèvre, arrêt 14 Juillet.':'');
+ return {
+  name:'Rémi+ ligne 185 · '+(outbound?town+' → '+other:other+' → '+town),
+  status:'Navette sur réservation · correspondance à confirmer',
+  phone:'0 806 70 33 33',
+  note:'Point de correspondance indiqué : '+access+'.'+times+' Appeler avant 17 h le '+remiBookingDeadline(date)+'. Rémi confirme le point de prise en charge et le car compatible.',
+  url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/fiche_horaire/REMI%2018%20-%20Fiche%20Horaires%202026-2027%20-%20Ligne%20185_V3%20PRINT_0.pdf'
+ };
+}
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
@@ -3492,6 +3530,8 @@ function tadFor(task){
  if(remiU)base.push(remiU);
  const remiL=remiLReservationReference(task||{},a,b);
  if(remiL)base.push(remiL);
+ const remi185=remi185FeederReference(task||{},a,b);
+ if(remi185)base.push(remi185);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
