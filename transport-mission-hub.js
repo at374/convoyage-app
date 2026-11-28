@@ -1132,6 +1132,7 @@ function nationalResourceForTrip(resources,operator,from,to){
 // sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
 // ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
 const LOCAL_GTFS_NETWORKS=[
+ ['remi36_abfiq','Rémi 36 · lignes A, B, F, I et Q','remi36-abfiq.zip',[46.39,0.90,47.30,2.38]],
  ['remi18_regular','Rémi 18 · lignes 100, 105, 110, 120, 145, 160, 190 et 235','remi18-regular.zip',[46.50,1.76,47.61,3.07]],
  ['remi18_150_185','Rémi 18 · lignes 150 et 185','remi18-150-185.zip',[46.52,2.01,47.27,2.56]],
  ['remi36_vs','Rémi 36 · lignes V et S','remi36-v-s.zip',[46.76,1.30,47.16,2.44]],
