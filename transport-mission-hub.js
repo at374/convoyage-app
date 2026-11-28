@@ -1132,6 +1132,7 @@ function nationalResourceForTrip(resources,operator,from,to){
 // sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
 // ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
 const LOCAL_GTFS_NETWORKS=[
+ ['remi36_433','Rémi 36 · 433 Poitiers – Le Blanc – Châteauroux','remi36-433.zip',[46.52,0.28,46.86,1.75]],
  ['remi36_800','Rémi 36 · 800 Tours – Loches – Châteauroux','remi36-800.zip',[46.75,0.64,47.44,1.76]],
  ['remi36_abfiq','Rémi 36 · lignes A, B, F, I et Q','remi36-abfiq.zip',[46.39,0.90,47.30,2.38]],
  ['remi18_regular','Rémi 18 · lignes 100, 105, 110, 120, 145, 160, 190 et 235','remi18-regular.zip',[46.50,1.76,47.61,3.07]],
