@@ -91,7 +91,7 @@ FILTERED_MIRROR = [
      },
      'bounds': [46.52, 0.28, 46.86, 1.75], 'download_limit': 30_000_000},
     # Rémi, grilles commerciales du 10/11/2026. Les courses scolaires partagent le même route_id.
-    {'id': 'remi36-800', 'network': 'Rémi 36 · 800 Tours – Loches – Châteauroux',
+    {'id': 'remi36-800-trousseau', 'network': 'Rémi 36 · 800 Tours – Loches – Châteauroux',
      'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
      'pattern': r'remi\s*36', 'route_ids': {'REMI36:Line:800'},
      'trip_short_names': set("""
@@ -103,11 +103,12 @@ FILTERED_MIRROR = [
      """.split()),
      # Préfixes des quais GTFS. Sens 1 : Châteauroux vers Tours, sens 0 : Tours vers Châteauroux.
      'stop_access': {
-         '0': {'no_pickup': ('CHATgr', 'CHATEcp', 'CHATEpr'), 'no_drop_off': ('TOURSgr',)},
-         '1': {'no_pickup': ('TOURSgr',), 'no_drop_off': ('CHATgr', 'CHATEcp', 'CHATEpr')},
+         '0': {'no_pickup': ('CHATgr', 'CHATEcp', 'CHATEpr', 'CHAMBr1'), 'no_drop_off': ('TOURSgr', 'CHAMBchr')},
+         '1': {'no_pickup': ('TOURSgr', 'CHAMBr1'), 'no_drop_off': ('CHATgr', 'CHATEcp', 'CHATEpr', 'CHAMBchr')},
      },
-     # CHR Trousseau déplacé : pas de marche calculée vers les quais nominaux.
-     'excluded_stops': ('CHAMBr1', 'CHAMBchr', 'CHAMBla'),
+     # Le plan Rémi du 10/11 place CHAMBr1 vers Tours et CHAMBchr vers Loches.
+     # Le GTFS courant concorde avec les positions des deux quais déplacés.
+     'excluded_stops': ('CHAMBla',),
      'bounds': [46.75, 0.64, 47.44, 1.76], 'download_limit': 30_000_000},
     {'id': 'remi36-abfiq', 'network': 'Rémi 36 · lignes A, B, F, I et Q',
      'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
