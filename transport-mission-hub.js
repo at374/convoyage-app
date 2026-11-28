@@ -3568,6 +3568,110 @@ function remi800FeederReference(task,a,b){
   url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/2026-10/LIGNE%20800-%20Tours%20Chtx%20%C3%A0%20partir%20du%2010%20nov26.pdf'
  };
 }
+// Données des fiches Rémi+ 36-59, 36-60 et 36-61 et de la recherche officielle par commune.
+const REMI433_FEEDERS=[
+ {
+  "stop": "Argenton-sur-Creuse · Gare routière",
+  "arrive": "07:35",
+  "back": "19:10",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-59.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "Argenton-sur-Creuse",
+   "Velles",
+   "Tendu",
+   "Chasseneuil",
+   "Saint-Gaultier",
+   "Le Pont-Chrétien-Chabenet",
+   "Saint-Marcel",
+   "Mosnay",
+   "Bouesse",
+   "Le Pêchereau",
+   "Chavin",
+   "Le Menoux",
+   "Celon",
+   "Badecon-le-Pin",
+   "Ceaulmont",
+   "Pommiers",
+   "Gargilesse-Dampierre",
+   "Bazaiges",
+   "Cuzion",
+   "Baraize",
+   "Éguzon-Chantôme"
+  ]
+ },
+ {
+  "stop": "Le Blanc · Place du Bateau",
+  "arrive": "06:45",
+  "back": "20:00",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-60.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "Néons-sur-Creuse",
+   "Lureuil",
+   "Tournon-Saint-Martin",
+   "Preuilly-la-Ville",
+   "Douadic",
+   "Rosnay",
+   "Lurais",
+   "Pouligny-Saint-Pierre",
+   "Fontgombault",
+   "Sauzelles",
+   "Ciron",
+   "Le Blanc",
+   "Ruffec",
+   "Saint-Aigny",
+   "Mérigny",
+   "Concremiers",
+   "Ingrandes"
+  ]
+ },
+ {
+  "stop": "Saint-Gaultier · Marché/Place du champ de foire",
+  "arrive": "07:15",
+  "back": "19:30",
+  "flyer": "https://bo.remi-centrevaldeloire.fr/sites/default/files/tad/flyers/36-61.pdf?v=ce134c3d4cc8d47d",
+  "towns": [
+   "La Pérouille",
+   "Nuret-le-Ferron",
+   "Chitray",
+   "Rivarennes",
+   "Oulches",
+   "Thenay",
+   "Luzeret",
+   "Sacierges-Saint-Martin",
+   "Chazelet",
+   "Vigoux",
+   "Saint-Civran"
+  ]
+ }
+];
+function remi433FeederReference(task,a,b){
+ const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
+ if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_ROAD_HOLIDAYS.has(day))return null;
+ const date=new Date(day+'T12:00:00Z'),weekday=date.getUTCDay();
+ if(weekday===0||weekday===6)return null;
+ const from=remiTownText(task.fromCity||task.from?.city||task.from?.town||a);
+ const to=remiTownText(task.toCity||task.to?.city||task.to?.town||b);
+ const chateauroux=remiTownText('Châteauroux');
+ const outward=to.includes(chateauroux);
+ if(outward===from.includes(chateauroux))return null;
+ const townText=outward?from:to;
+ for(const {stop,arrive,back,flyer,towns} of REMI433_FEEDERS){
+  const town=towns.find(name=>townText.includes(remiTownText(name)));
+  if(!town)continue;
+  const direction=outward?town+' → Châteauroux':'Châteauroux → '+town;
+  return {
+   name:'Rémi+ ligne 433 · '+direction,
+   status:'Navette sur réservation · correspondance à confirmer',
+   timetable:[outward?arrive:back],
+   timetableDirection:direction,
+   timetableLabel:outward?'Arrivée prévue au point de correspondance':'Horaire de retour publié par Rémi',
+   phone:'0 806 70 33 33',
+   note:'Point de correspondance : '+stop+'. Appeler avant 17 h le '+remiBookingDeadline(date)+'. Rémi confirme l’heure de prise en charge à domicile et le car compatible.',
+   url:flyer
+  };
+ }
+ return null;
+}
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
@@ -3580,6 +3684,8 @@ function tadFor(task){
  if(remi185)base.push(remi185);
  const remi800=remi800FeederReference(task||{},a,b);
  if(remi800)base.push(remi800);
+ const remi433=remi433FeederReference(task||{},a,b);
+ if(remi433)base.push(remi433);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
