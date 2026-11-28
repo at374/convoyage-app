@@ -81,6 +81,15 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'remi36-433', 'network': 'Rémi 36 · 433 Poitiers – Le Blanc – Châteauroux',
+     'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
+     'pattern': r'remi\s*36', 'route_ids': {'REMI36:Line:433'},
+     # Desserte locale Saint-Maur/Châteauroux : conserver la restriction de la fiche Rémi.
+     'stop_access': {
+         '0': {'no_pickup': ('CHATEno', 'CHATEbo', 'CHATEba', 'CHATmed', 'CHATgr')},
+         '1': {'no_drop_off': ('CHATEno', 'CHATEbo', 'CHATEba', 'CHATmed', 'CHATgr')},
+     },
+     'bounds': [46.52, 0.28, 46.86, 1.75], 'download_limit': 30_000_000},
     # Rémi, grilles commerciales du 10/11/2026. Les courses scolaires partagent le même route_id.
     {'id': 'remi36-800', 'network': 'Rémi 36 · 800 Tours – Loches – Châteauroux',
      'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
