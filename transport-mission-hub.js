@@ -3148,6 +3148,17 @@ function endpointText(x){
  if(!x||typeof x!=='object')return '';
  return [x.address,x.label,x.name,x.city,x.town,x.from,x.to,x.from_address,x.to_address].filter(v=>typeof v==='string').join(' ');
 }
+// Fiche officielle 360, pages 2 à 4 : départ indiqué et arrivée maximale, de gare à gare.
+const PROXIMITI_360=[
+ [
+  ['06:21–07:02','07:21–08:02','08:21–09:02','09:21–10:02','11:21–12:02','13:21–14:02','15:21–16:02','16:21–17:02','17:21–18:02','18:21–19:02','19:21–20:02','20:21–21:02'],
+  ['04:57–05:37','05:57–06:37','06:57–07:37','07:57–08:37','09:57–10:37','11:57–12:37','13:57–14:37','14:57–15:37','15:57–16:37','16:57–17:37','17:57–18:37','18:57–19:37']
+ ],
+ [
+  ['09:21–10:02','12:21–13:02','15:21–16:02','18:21–19:02'],
+  ['08:57–09:37','11:57–12:37','14:57–15:37','17:57–18:37']
+ ]
+];
 function proximiti360Reference(task,a,b){
  const bonneville=/\bbonneville\b/i,laRoche=/\bla roche(?:[- ]sur[- ]foron|\b)/i;
  const closeTo=(point,stop)=>!!pt(point)&&meters(pt(point),stop)<=2000;
@@ -3158,10 +3169,13 @@ function proximiti360Reference(task,a,b){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||day<'2026-11-28'||day>'2026-12-13'||['2026-11-29','2026-12-06','2026-12-13'].includes(day))return null;
  const orange=['2026-11-28','2026-12-05','2026-12-12'].includes(day);
+ const timetable=PROXIMITI_360[orange?1:0][outbound?1:0];
  return {
   name:'Proxim iTi Agile · ligne 360 · Bonneville ↔ La Roche-sur-Foron',
   status:'Horaires officiels à vérifier pour ce trajet',
-  note:(orange?'4 courses':'12 courses')+' par sens ce jour. Être à l’arrêt 5 min avant l’heure indiquée. Le bus peut passer dans les 15 min suivantes. Réservation obligatoire pour les arrêts sur demande et les correspondances garanties sur demande, au plus tard 30 min avant le départ.',
+  timetable,
+  timetableDirection:outbound?'Bonneville Gare → La Roche-sur-Foron Gare':'La Roche-sur-Foron Gare → Bonneville Gare',
+  note:timetable.length+' courses dans ce sens ce jour. Être à l’arrêt 5 min avant l’heure indiquée. Le bus peut passer dans les 15 min suivantes. Réservation obligatoire pour les arrêts sur demande et les correspondances garanties sur demande, au plus tard 30 min avant le départ.',
   url:'https://www.proximiti.fr/wp-content/uploads/2026/07/360-a-partir-du-24-08-2026.pdf',
   bookingUrl:'https://www.proximiti.fr/vos-deplacements/itineraire-enregistrement/',
   phone:'04 50 62 29 39'
@@ -3507,6 +3521,15 @@ function render(host,v){
    item.appendChild(el(doc,'strong',null,t.name));
    item.appendChild(el(doc,'p','cp-hub-note',t.status||'Transport à la demande · disponibilité à confirmer auprès de l’opérateur.'));
    item.appendChild(el(doc,'p','cp-hub-note',t.note));
+   if(t.timetable){
+    const times=el(doc,'details','cp-hub-tad-timetable');
+    times.appendChild(el(doc,'summary',null,'Tous les horaires · '+t.timetableDirection));
+    times.appendChild(el(doc,'p','cp-hub-note','Heure de départ indiquée → heure maximale d’arrivée'));
+    const list=el(doc,'ul');
+    for(const time of t.timetable)list.appendChild(el(doc,'li',null,time.replace('–',' → ')));
+    times.appendChild(list);
+    item.appendChild(times);
+   }
    if(t.phone){const tel=el(doc,'a','cp-hub-tad-phone','☎ Réserver par téléphone : '+t.phone);tel.href='tel:'+t.phone.replace(/\s/g,'');item.appendChild(tel);}
    const links=el(doc,'p','cp-hub-tad-links');
    if(t.bookingUrl){const a=el(doc,'a',null,'Réserver en ligne');a.href=t.bookingUrl;a.target='_blank';a.rel='noopener noreferrer';links.appendChild(a);}
