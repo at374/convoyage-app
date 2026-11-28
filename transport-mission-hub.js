@@ -3148,9 +3148,30 @@ function endpointText(x){
  if(!x||typeof x!=='object')return '';
  return [x.address,x.label,x.name,x.city,x.town,x.from,x.to,x.from_address,x.to_address].filter(v=>typeof v==='string').join(' ');
 }
+function proximiti360Reference(task,a,b){
+ const bonneville=/\bbonneville\b/i,laRoche=/\bla roche(?:[- ]sur[- ]foron|\b)/i;
+ const closeTo=(point,stop)=>!!pt(point)&&meters(pt(point),stop)<=2000;
+ const bonnevilleStop={lat:46.077887,lon:6.41667},laRocheStop={lat:46.067986,lon:6.303527};
+ const outbound=(bonneville.test(a)||closeTo(task.from,bonnevilleStop))&&(laRoche.test(b)||closeTo(task.to,laRocheStop));
+ const inbound=(laRoche.test(a)||closeTo(task.from,laRocheStop))&&(bonneville.test(b)||closeTo(task.to,bonnevilleStop));
+ if(!outbound&&!inbound)return null;
+ const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
+ if(!day||day<'2026-11-28'||day>'2026-12-13'||['2026-11-29','2026-12-06','2026-12-13'].includes(day))return null;
+ const orange=['2026-11-28','2026-12-05','2026-12-12'].includes(day);
+ return {
+  name:'Proxim iTi Agile · ligne 360 · Bonneville ↔ La Roche-sur-Foron',
+  status:'Horaires officiels à vérifier pour ce trajet',
+  note:(orange?'4 courses':'12 courses')+' par sens ce jour. Être à l’arrêt 5 min avant l’heure indiquée. Le bus peut passer dans les 15 min suivantes. Réservation obligatoire pour les arrêts sur demande et les correspondances garanties sur demande, au plus tard 30 min avant le départ.',
+  url:'https://www.proximiti.fr/wp-content/uploads/2026/07/360-a-partir-du-24-08-2026.pdf',
+  bookingUrl:'https://www.proximiti.fr/vos-deplacements/itineraire-enregistrement/',
+  phone:'04 50 62 29 39'
+ };
+}
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
+ const proximiti=proximiti360Reference(task||{},a,b);
+ if(proximiti)base.push(proximiti);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
