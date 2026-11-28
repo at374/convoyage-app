@@ -187,8 +187,8 @@
     const a = adresseDe(m, cote).a;
     return !!a && /\b(?:\d{1,4}\s*(?:bis|ter)?\s+)?(?:rue|avenue|av\.?|route|chemin|boulevard|bd\.?|impasse|allée|allee|place|quai|cours|passage|faubourg|voie|zone|zi|za|rond[- ]point)\b/i.test(a);
   };
-  // geo-v3 invalide les anciens points calculés avec les règles précédentes.
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v3', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  // geo-v4 invalide les anciens points calculés avec les règles précédentes.
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v4', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
@@ -199,9 +199,15 @@
       // Requêtes de plus en plus larges (« se rapprocher au mieux », demande du 17/11/2026 : « Aéroport De Genève – Secteur France
       // Route Douanière, 01210 Ferney-Voltaire » n'était pas trouvée) : 1) adresse complète ; 2) sans nom de lieu avant « – » ou « , » ;
       // 3) la voie seule avec code postal et commune ; 4) la commune seule. La précision rendue dit ce qui a vraiment été trouvé.
-      const sansLieu = String(x.a || '').split(/\s[–—-]\s/).pop().replace(/^secteur\s+\S+\s+/i, '').replace(/\(.*?\)/g, ' ').trim();
+      const sansLieu = String(x.a || '').replace(/(\b\d{1,4}(?:\s*(?:bis|ter))?)\s*[,–—-]\s*(?=(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg)\b)/gi, '$1 ').split(/\s[–—-]\s/).pop().replace(/^secteur\s+\S+\s+/i, '').replace(/\(.*?\)/g, ' ').trim();
       const voie = sansLieu.replace(/^.*?\b((?:route|rue|avenue|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg|zone|zi|za|rond-point)\b.*)$/i, '$1');
-      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg)\b/i);
+      const numero = sansLieu.match(/\b(\d{1,4})(?:\s*(bis|ter))?(?:\s*[,–—-]\s*|\s+)(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg)\b/i);
+      const numDemande = numero ? (numero[1] + (numero[2] || '')).toLowerCase() : '';
+      const numeroOK = p => String(p.housenumber || '').toLowerCase().replace(/\s/g, '') === numDemande;
+      const communeCompatible = p => {
+        const communes = [p.city, p.municipality, p.oldcity].filter(Boolean);
+        return !communes.length || communes.some(v => norm(v) === norm(x.v));
+      };
       const rueSansNumero = !numero && aAdresseRue(m, cote);
       const essais = [];
       const ajoute = (q, commune, type) => {
@@ -221,7 +227,7 @@
         if (!essais.some(e => e.q === q && e.sansCP)) essais.push({q, commune:false, sansCP:true});
       }
       const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
-      const rueDemandee = numero ? motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]) : '';
+      const rueDemandee = numero ? motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').replace(/^\s*[,–—-]\s*/,'').split(/\b\d{5}\b|,/)[0]) : '';
       const voieOK = v => !!v && motsVoie(v) === rueDemandee;
       const communeOK = p => [p.city,p.municipality,p.oldcity].some(v => v && norm(v) === norm(x.v));
       let meilleur = null;
@@ -238,7 +244,8 @@
           if (rueSansNumero && t === 'housenumber') continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
-          if (numero && precision === 'adresse' && String(f.properties.housenumber || '').match(/^\d+/)?.[0] !== numero[1]) continue;
+          if (precision === 'adresse' && !communeCompatible(f.properties)) continue;
+          if (numero && precision === 'adresse' && !numeroOK(f.properties)) continue;
           if (numero && precision === 'ville') continue;
           if (numero && precision === 'rue' && (!voieOK(f.properties.street || f.properties.name) || !communeOK(f.properties))) continue;
           if (numero && precision === 'adresse' && f.properties.street && !voieOK(f.properties.street)) continue;
