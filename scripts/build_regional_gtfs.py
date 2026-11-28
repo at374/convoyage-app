@@ -81,6 +81,10 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'remi36-u', 'network': 'Rémi 36 · U Vierzon – Issoudun',
+     'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
+     'pattern': r'remi\s*36', 'route_ids': {'REMI36:Line:U'},
+     'bounds': [46.90, 1.95, 47.26, 2.15], 'download_limit': 30_000_000},
     # Nice : le zip d'origine est en ZIP64 (illisible sur le téléphone) → recompressé via le filtre d'emprise.
     {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'url': 'https://transport.data.gouv.fr/resources/83178/download',
      'bounds': [43.55, 7.0, 43.9, 7.5], 'download_limit': 60 * 1024 * 1024},
@@ -515,6 +519,8 @@ def extract(z, spec):
     single = len(agencies) == 1
     rfields, routes = read_table(z, 'routes.txt')
     routes = [r for r in routes if (r.get('agency_id') or '') in ag_ids or (single and not r.get('agency_id'))]
+    if spec.get('route_ids'):
+        routes = [r for r in routes if r['route_id'] in spec['route_ids']]
     route_ids = {r['route_id'] for r in routes}
     tfields, trips = read_table(z, 'trips.txt')
     trips = [t for t in trips if t['route_id'] in route_ids]
@@ -757,7 +763,7 @@ def main():
                 p = download(spec['url'], spec.get('download_limit', MAX_OUT))
                 with zipfile.ZipFile(p) as z:
                     validate(z)
-                    data, info = filter_by_bounds(z, spec)
+                    data, info = extract(z, spec) if spec.get('pattern') else filter_by_bounds(z, spec)
                 if data is None:
                     manifest['errors'][spec['id']] = info
                     continue
@@ -767,7 +773,7 @@ def main():
                 with open(os.path.join(args.out, name), 'wb') as f:
                     f.write(data)
                 manifest['networks'][spec['id']] = {'network': spec['network'], 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
-                                                    'bytes': len(data), 'origin': spec['url'], **info}
+                                                    'bytes': len(data), 'origin': spec['url'], 'bounds': spec['bounds'], **info}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
     with open(os.path.join(args.out, 'manifest.json'), 'w', encoding='utf-8') as f:

@@ -1132,6 +1132,7 @@ function nationalResourceForTrip(resources,operator,from,to){
 // sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
 // ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
 const LOCAL_GTFS_NETWORKS=[
+ ['remi36_u','Rémi 36 · U Vierzon – Issoudun','remi36-u.zip',[46.90,1.95,47.26,2.15]],
  ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
  ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.494,5.814,45.779,6.196]],
  ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
