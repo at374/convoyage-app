@@ -3454,7 +3454,7 @@ const REMI_ROAD_HOLIDAYS=new Set([
  '2027-05-06','2027-05-08','2027-05-17','2027-07-14','2027-08-15'
 ]);
 function remiTownText(value){
- return ' '+String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
+ return ' '+String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/œ/g,'oe').replace(/[^a-z0-9]+/g,' ').trim()+' ';
 }
 function remiLReservationReference(task,a,b){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
@@ -3522,6 +3522,52 @@ function remi185FeederReference(task,a,b){
   url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/fiche_horaire/REMI%2018%20-%20Fiche%20Horaires%202026-2027%20-%20Ligne%20185_V3%20PRINT_0.pdf'
  };
 }
+// Points Navette Relais des grilles commerciales Rémi 800 du 10/11/2026.
+const REMI800_FEEDERS=[
+ {stop:'Clion-sur-Indre · Centre',towns:[
+  'Arpheuilles','Châtillon-sur-Indre','Cléré-du-Bois','Clion-sur-Indre','Fléré-la-Rivière',
+  'Le Tranger','Murs','Palluau-sur-Indre','Saint-Cyran-du-Jambot','Saint-Médard'
+ ]},
+ {stop:'Buzançais · Gare SNCF',towns:[
+  'Argy','Buzançais','Chézelles','La Chapelle-Orthemale','Méobecq','Neuillay-les-Bois',
+  'Niherne','Saint-Genou','Saint-Lactencin','Sougé','Vendœuvres','Villedieu-sur-Indre'
+ ]}
+];
+const REMI800_CORRIDOR=[
+ 'Châteauroux','Buzançais','Saint-Genou','Clion-sur-Indre','Châtillon-sur-Indre','Fléré-la-Rivière',
+ 'Bridoré','Verneuil-sur-Indre','Saint-Jean-Saint-Germain','Perrusson','Loches','Chambourg-sur-Indre',
+ 'Azay-sur-Indre','Reignac-sur-Indre','Courçay','Tauxigny','Cormery','Truyes','Esvres','Veigné',
+ 'Montbazon','Chambray-lès-Tours','Tours','Villedieu-sur-Indre'
+];
+function remi800FeederReference(task,a,b){
+ const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
+ if(!day||day<'2026-11-10'||day>'2027-08-31')return null;
+ const start=remiTownText(task.fromCity||task.from?.city||task.from?.town||a);
+ const end=remiTownText(task.toCity||task.to?.city||task.to?.town||b);
+ const find=(list,text)=>list.find(town=>text.includes(remiTownText(town)));
+ const otherStart=find(REMI800_CORRIDOR,start),otherEnd=find(REMI800_CORRIDOR,end);
+ const feeder=text=>{
+  for(const group of REMI800_FEEDERS){
+   const town=find(group.towns,text);
+   if(town)return {town,stop:group.stop};
+  }
+  return null;
+ };
+ const outbound=otherEnd&&feeder(start),inbound=otherStart&&feeder(end);
+ const connection=outbound||inbound;
+ if(!connection)return null;
+ const {town,stop}=connection,other=outbound?otherEnd:otherStart;
+ if(town===other)return null;
+ const date=new Date(day+'T12:00:00Z');
+ const direction=outbound?town+' → '+other:other+' → '+town;
+ return {
+  name:'Rémi+ ligne 800 · '+direction,
+  status:'Navette sur réservation · correspondance à confirmer',
+  phone:'0 806 70 33 33',
+  note:'Point de correspondance indiqué : '+stop+'. Appeler avant 17 h le '+remiBookingDeadline(date)+'. Rémi confirme les jours de fonctionnement, la prise en charge et le car compatible.',
+  url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/2026-10/LIGNE%20800-%20Tours%20Chtx%20%C3%A0%20partir%20du%2010%20nov26.pdf'
+ };
+}
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
@@ -3532,6 +3578,8 @@ function tadFor(task){
  if(remiL)base.push(remiL);
  const remi185=remi185FeederReference(task||{},a,b);
  if(remi185)base.push(remi185);
+ const remi800=remi800FeederReference(task||{},a,b);
+ if(remi800)base.push(remi800);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
