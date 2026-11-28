@@ -3384,10 +3384,60 @@ function proximitiReferences(task,line){
   phone:'04 50 62 29 39'
  }));
 }
+// Fiche Rémi 36 U 2026–2027 : en vacances, les trois courses de chaque sens sont sur réservation.
+const REMI_U_STOPS=[
+ ['Vierzon Gare SNCF',47.226170,2.059327],
+ ['Méreau Mairie',47.162663,2.049838],
+ ['Lury-sur-Arnon Place de l’Église',47.127319,2.058196],
+ ['Reuilly Gare SNCF',47.086136,2.047081],
+ ['Diou Intersection D918/D2',47.047867,2.023826],
+ ['Sainte-Lizaigne Centre',47.006840,2.022528],
+ ['Issoudun Centre Hospitalier',46.957771,1.996844],
+ ['Issoudun Gare SNCF',46.948483,1.985898]
+].map(([name,lat,lon])=>({name,lat,lon}));
+const REMI_U_VACATIONS=[
+ ['2026-10-17','2026-11-01'],['2026-12-19','2027-01-03'],['2027-02-20','2027-03-07'],
+ ['2027-04-17','2027-05-02'],['2027-05-06','2027-05-07'],['2027-07-03','2027-08-31']
+];
+function remiUVacationReference(task){
+ const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
+ if(!day||!REMI_U_VACATIONS.some(([start,end])=>day>=start&&day<=end))return null;
+ const date=new Date(day+'T12:00:00Z'),weekday=date.getUTCDay();
+ if(weekday===0||weekday===6||['2026-12-25','2027-01-01','2027-05-01','2027-05-06','2027-07-14','2027-08-15'].includes(day))return null;
+ const from=pt(task.from),to=pt(task.to);
+ if(!from||!to)return null;
+ const nearest=point=>{
+  let best=-1,distance=2000;
+  for(const [index,stop] of REMI_U_STOPS.entries()){
+   const next=meters(point,stop);
+   if(next<=distance){best=index;distance=next;}
+  }
+  return best;
+ };
+ const start=nearest(from),end=nearest(to);
+ if(start<0||end<0||start===end)return null;
+ const eastToWest=start<end;
+ const offset=eastToWest?[0,15,20,27,33,38,46,51]:[51,36,31,24,18,13,5,0];
+ const departureMinutes=eastToWest?[570,735,1095]:[400,795,1035];
+ const timetable=departureMinutes.map(t=>proximitiClock(t+offset[start])+'–'+proximitiClock(t+offset[end]));
+ date.setUTCDate(date.getUTCDate()-(weekday===1?3:1));
+ const deadline=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',weekday:'long',day:'numeric',month:'long'}).format(date);
+ const direction=REMI_U_STOPS[start].name+' → '+REMI_U_STOPS[end].name;
+ return {
+  name:'Rémi 36 · ligne U · '+direction,
+  status:'Sur réservation · disponibilité à confirmer',
+  timetable,timetableDirection:direction,timetableLabel:'Heure de départ → heure d’arrivée',
+  note:'Réservation téléphonique obligatoire avant 17 h le '+deadline+'. La prise en charge doit être confirmée par Rémi.',
+  phone:'0 806 70 33 33',
+  url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/fiche_horaire/REMI%2036%20-%20Fiche%20Horaires%202026-2027%20-%20Ligne%20U.pdf'
+ };
+}
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
  for(const line of ['360','380'])base.push(...proximitiReferences(task||{},line));
+ const remiU=remiUVacationReference(task||{});
+ if(remiU)base.push(remiU);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
@@ -3726,7 +3776,7 @@ function render(host,v){
    if(t.timetable){
     const times=el(doc,'details','cp-hub-tad-timetable');
     times.appendChild(el(doc,'summary',null,'Tous les horaires · '+t.timetableDirection));
-    times.appendChild(el(doc,'p','cp-hub-note','Heure de départ indiquée → heure maximale d’arrivée'));
+    times.appendChild(el(doc,'p','cp-hub-note',t.timetableLabel||'Heure de départ indiquée → heure maximale d’arrivée'));
     const list=el(doc,'ul');
     for(const time of t.timetable)list.appendChild(el(doc,'li',null,time.replace('–',' → ')));
     times.appendChild(list);
