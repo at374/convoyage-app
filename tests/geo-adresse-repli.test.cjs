@@ -3,7 +3,7 @@ const G=require('../geo.js');
 const mission={from_city:'Ferney-Voltaire',from_department:'01',origin_address:'Aéroport De Genève – Secteur France Route Douanière, 01210 Ferney-Voltaire'};
 function fetcher(reponses){const urls=[];return {urls,f:async u=>{urls.push(decodeURIComponent(u));const q=decodeURIComponent(u);
  const hit=reponses.find(r=>q.includes(r.contient)&&(r.commune?q.includes('type=municipality'):!q.includes('type=municipality')));
- return {ok:true,json:async()=>({features:hit?[{geometry:{coordinates:[hit.lng,hit.lat]},properties:{score:hit.score??0.9,type:hit.type,label:'x'}}]:[]})};}};}
+ return {ok:true,json:async()=>({features:hit?[{geometry:{coordinates:[hit.lng,hit.lat]},properties:{score:hit.score??0.9,type:hit.type,label:'x',housenumber:hit.housenumber}}]:[]})};}};}
 
 test('adresse de lieu non trouvée : repli sur la voie, puis la commune, avec la précision réelle',async()=>{
  const a=fetcher([{contient:'Route Douanière',type:'street',lat:46.2593,lng:6.1066}]);
@@ -24,7 +24,7 @@ test('un résultat centre-ville ne masque pas le numéro de rue trouvé ensuite'
  const adresse={from_city:'Voiron',from_department:'38',origin_address:'Dépôt – 12 rue Exemple 38500 Voiron'};
  const a=fetcher([
   {contient:'Dépôt',type:'municipality',lat:45.36,lng:5.59},
-  {contient:'12 rue Exemple',type:'housenumber',lat:45.38,lng:5.58}
+  {contient:'12 rue Exemple',type:'housenumber',housenumber:'12',lat:45.38,lng:5.58}
  ]);
  const r=await G.chercherPoint(adresse,'origin',a.f);
  assert.deepEqual(r.point,{lat:45.38,lng:5.58,precision:'adresse'});
@@ -75,4 +75,23 @@ test('recherche de secours : voie seule puis numéro exact dans la bonne commune
  assert.equal(r.point.precision,'adresse');
  assert.ok(urls.some(u=>u.includes('&type=street')));
  assert.ok(urls.some(u=>u.includes('&type=housenumber')));
+});
+
+test('un numéro avec suffixe et séparateur doit correspondre dans la bonne commune', async () => {
+ const m = {to_city:'Annecy', destination_address:"94 bis – avenue d'Aix-les-Bains, 74000 Annecy"};
+ const hits = [
+  {housenumber:'94 bis', city:'Chambéry'},
+  {housenumber:'94', city:'Annecy'},
+  {housenumber:'94 bis', city:'Annecy'}
+ ];
+ let calls = 0;
+ const result = await G.chercherPoint(m, 'destination', async () => {
+  const hit = hits[calls++];
+  return {ok:true, json:async () => ({features:hit ? [{
+   geometry:{coordinates:[6.1, 45.8 + calls / 100]},
+   properties:{type:'housenumber', score:0.9, street:"Avenue d'Aix-les-Bains", ...hit}
+  }] : []})};
+ });
+ assert.equal(result.point.precision, 'adresse');
+ assert.ok(Math.abs(result.point.lat - 45.83) < 1e-8);
 });

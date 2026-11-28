@@ -146,7 +146,10 @@ async function run(){
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
      const point=regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
-     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':'Grenoble'}}]}).catch(()=>{});
+     const city=regionalPassScenario
+      ? (number==='14' ? (regionalFareScenario ? 'Albertville' : 'Duingt') : 'Annecy')
+      : (['16','18'].includes(number) ? 'Crolles' : 'Grenoble');
+     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',housenumber:number,city}}]}).catch(()=>{});
     }
     return json(route,{features:[]});
    }

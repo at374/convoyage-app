@@ -167,7 +167,7 @@
     const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim();
     return { a, v, cp, d };
   };
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v2', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? ['geo-v4', x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
@@ -178,7 +178,7 @@
       // Requêtes de plus en plus larges (« se rapprocher au mieux », demande du 17/11/2026 : « Aéroport De Genève – Secteur France
       // Route Douanière, 01210 Ferney-Voltaire » n'était pas trouvée) : 1) adresse complète ; 2) sans nom de lieu avant « – » ou « , » ;
       // 3) la voie seule avec code postal et commune ; 4) la commune seule. La précision rendue dit ce qui a vraiment été trouvé.
-      const sansLieu = String(x.a || '').split(/\s[–—-]\s/).pop().replace(/^secteur\s+\S+\s+/i, '').replace(/\(.*?\)/g, ' ').trim();
+      const sansLieu = String(x.a || '').replace(/(\b\d{1,4}(?:\s*(?:bis|ter))?)\s*[,–—-]\s*(?=(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg)\b)/gi, '$1 ').split(/\s[–—-]\s/).pop().replace(/^secteur\s+\S+\s+/i, '').replace(/\(.*?\)/g, ' ').trim();
       const voie = sansLieu.replace(/^.*?\b((?:route|rue|avenue|chemin|boulevard|bd|impasse|allée|allee|place|quai|zone|zi|za|rond-point)\b.*)$/i, '$1');
       const essais = [];
       const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
@@ -190,7 +190,13 @@
       // cette extraction ne trouvait aucun numéro — et la vérification stricte du numéro renvoyé par le
       // géocodeur (quelques lignes plus bas) était alors purement et simplement sautée, laissant passer
       // n'importe quelle adresse plausible de la bonne rue, même avec un numéro différent de celui demandé.
-      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?(?:\s*[,\-–—]\s*|\s+)(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
+      const numero = sansLieu.match(/\b(\d{1,4})(?:\s*(bis|ter))?(?:\s*[,–—-]\s*|\s+)(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai|faubourg)\b/i);
+      const numDemande = numero ? (numero[1] + (numero[2] || '')).toLowerCase() : '';
+      const numeroOK = p => String(p.housenumber || '').toLowerCase().replace(/\s/g, '') === numDemande;
+      const communeCompatible = p => {
+        const communes = [p.city, p.municipality, p.oldcity].filter(Boolean);
+        return !communes.length || communes.some(v => norm(v) === norm(x.v));
+      };
       if (numero && x.cp) essais.push({ q: [sansLieu.replace(/\b\d{5}\b/g, ''), x.v].filter(Boolean).join(' '), commune: false, sansCP: true });
       if (numero) {
         const mots = norm(sansLieu.replace(/\b\d{5}\b/g, '')).replace(/\bd\s+(?=\w)/g, '').trim();
@@ -209,7 +215,9 @@
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
           const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
           const point = { lat, lng, precision };
-          if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
+          if (precision === 'adresse' && !communeCompatible(f.properties)) continue;
+          if (numero && precision === 'adresse' && !numeroOK(f.properties)) continue;
+          if (numero && precision !== 'adresse') continue;
           if (numero && f.properties.street) {
             const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
             const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').replace(/^\s*[,\-–—]\s*/,'').split(/\b\d{5}\b|,/)[0]);
