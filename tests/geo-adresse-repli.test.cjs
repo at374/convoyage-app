@@ -97,11 +97,11 @@ test('un résultat housenumber sans numéro vérifiable est rejeté',async()=>{
  assert.equal(r.trouve,false,'un point sans housenumber vérifiable ne doit jamais être annoncé comme adresse exacte');
 });
 
-test('la détection de rue est exposée et le cache passe à geo-v3',()=>{
+test('la détection de rue est exposée et le cache passe à geo-v4',()=>{
  const m={to_city:'Annecy',to_department:'74',destination_address:"94 avenue d'Aix-les-Bains"};
  assert.equal(typeof G.aAdresseRue,'function');
  assert.equal(G.aAdresseRue(m,'destination'),true);
- assert.ok(G.cleAdresse(m,'destination').startsWith('geo-v3|'));
+ assert.ok(G.cleAdresse(m,'destination').startsWith('geo-v4|'));
  assert.equal(G.aAdresseRue({to_city:'Annecy',destination_address:'Annecy'},'destination'),false);
 });
 
@@ -147,4 +147,23 @@ test('un objet origin partiel ne masque pas les coordonnées GPS du pickup',()=>
  assert.equal(p.lat,45.91);
  assert.equal(p.lng,6.12);
  assert.equal(p.precision,'gps');
+});
+
+test('un numéro avec suffixe et séparateur doit correspondre dans la bonne commune', async () => {
+ const m = {to_city:'Annecy', destination_address:"94 bis – avenue d'Aix-les-Bains, 74000 Annecy"};
+ const hits = [
+  {housenumber:'94 bis', city:'Chambéry'},
+  {housenumber:'94', city:'Annecy'},
+  {housenumber:'94 bis', city:'Annecy'}
+ ];
+ let calls = 0;
+ const result = await G.chercherPoint(m, 'destination', async () => {
+  const hit = hits[calls++];
+  return {ok:true, json:async () => ({features:hit ? [{
+   geometry:{coordinates:[6.1, 45.8 + calls / 100]},
+   properties:{type:'housenumber', score:0.9, street:"Avenue d'Aix-les-Bains", ...hit}
+  }] : []})};
+ });
+ assert.equal(result.point.precision, 'adresse');
+ assert.ok(Math.abs(result.point.lat - 45.83) < 1e-8);
 });
