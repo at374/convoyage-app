@@ -735,8 +735,12 @@ function compareFares(a,b){
 
 /* ---------- Évaluation ---------- */
 function marginFor(task){
- const base=finite(task.marginMinutes)?Math.max(5,task.marginMinutes):15;
- return task.exactTarget===true&&task.allowShortMargin===true?Math.min(base,5):Math.max(15,base);
+ // 28/11/2026 (Laurent : « pour la marge on peut mettre 5 minutes avant le début de mission au lieu de 15,
+ // sur toutes les missions ») : le plancher de 15 min n'était jusqu'ici ramené à 5 min que si exactTarget ET
+ // allowShortMargin étaient tous les deux vrais (point GPS exact + case « marge courte » cochée dans les
+ // réglages). Le plancher général passe désormais à 5 min pour toutes les missions, sans condition ; un appelant
+ // qui demande explicitement une marge plus grande (task.marginMinutes) la conserve.
+ return finite(task.marginMinutes)?Math.max(5,task.marginMinutes):5;
 }
 const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|correspondance programmée non confirmée en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
 // Horaires civils français : une arrivée la veille ou un trajet de nuit ne doit

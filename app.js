@@ -1112,9 +1112,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const fin = t.planned || t.deadline;
         const o = pt(G.coordonnees(m, 'origin')), d = pt(G.coordonnees(m, 'destination'));
         const taches = [];
-        if (home && o) taches.push({ label: 'Aller', from: home, to: o, latestArrival: t.pickup, marginMinutes: 15 });
+        if (home && o) taches.push({ label: 'Aller', from: home, to: o, latestArrival: t.pickup, marginMinutes: 5 });
         if (home && d && fin) taches.push({ label: 'Retour', from: d, to: home, earliestDeparture: fin });
-        if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 15 }); }
+        if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 5 }); }
         for (const tache of taches) {
           for (const [k, prov] of Object.entries(P)) {
             if (!/^local_/.test(k)) continue;
@@ -1934,7 +1934,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
-      const securityMarginMin = 15;
+      // 28/11/2026 (Laurent : « pour la marge on peut mettre 5 minutes avant le début de mission au lieu de 15,
+      // sur toutes les missions ») : plancher général abaissé de 15 à 5 min (voir aussi marginFor() dans
+      // transport-mission-hub.js, qui applique désormais ce même plancher de 5 min sans condition).
+      const securityMarginMin = 5;
       // Suivi GPS : les départs ne peuvent pas être antérieurs à l'heure actuelle (arrondie aux 5 min) une fois l'arrivée détectée.
       const suiviPlancherMs = timing.gps ? Math.ceil(Date.now() / 300000) * 300000 : 0;
       const plancher = iso => suiviPlancherMs && iso && Date.parse(iso) < suiviPlancherMs ? new Date(suiviPlancherMs).toISOString() : iso;
@@ -1958,9 +1961,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin < 0 ?
-          '⚠️ Jonction non réalisable avec une marge minimale de 15 min, même sans trajet d’approche.' :
+          '⚠️ Jonction non réalisable avec une marge minimale de 5 min, même sans trajet d’approche.' :
           'Temps maximum théorique pour transport et approche : ' +
-          connectionBudgetMin + ' min, après réservation d’une marge minimale de 15 min. ' +
+          connectionBudgetMin + ' min, après réservation d’une marge minimale de 5 min. ' +
           'Transport non confirmé — vérifiez vous-même.';
       const nextOrigin = next && locationText(next.origin_address || next.from_address,
         next.from_city, next.from_department);
@@ -2145,7 +2148,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const eyebrow=document.createElement('span');eyebrow.className='cp-transport-eyebrow';eyebrow.textContent='CONVOYAGE ULTRA · TRANSPORTS';
       const title=document.createElement('h2');title.textContent='Tes trajets, au même endroit';
       const lead=document.createElement('p');lead.textContent='Recherche automatique à partir des adresses de ta mission.';
-      const margin=document.createElement('small');margin.textContent='Arrivée : 15 min minimum avant la prise en charge. Horaires et prix à vérifier avant de partir.';
+      const margin=document.createElement('small');margin.textContent='Arrivée : 5 min minimum avant la prise en charge. Horaires et prix à vérifier avant de partir.';
       hero.append(eyebrow,title,lead,margin);panel.appendChild(hero);
       const transportDestinations={},legacySources={};
       for(const [key,label,route] of [['Aller','01 · Aller',home+' → '+from],['Jonction','02 · Jonction · Mission suivante',next?to+' → '+nextOrigin:'Aucune prochaine mission prévue'],['Retour','03 · Retour',to+' → '+home]]){
@@ -3007,7 +3010,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             regionalStatus.textContent = options.length ?
               'Jonction régionale : ' + options.length +
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
-              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
+              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
@@ -3273,7 +3276,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             outboundStatus.textContent = options.length ?
               'Aller régional : ' + options.length +
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
-              'Aller régional : aucune arrivée compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
+              'Aller régional : aucune arrivée compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
@@ -3517,7 +3520,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
                   candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge minimale de 15 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge minimale de 5 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Jonction SIBRA avec 1 correspondance (horaires théoriques) : ' +
                     changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
@@ -3525,7 +3528,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
                       ' / ' + clock(j.secondLeg.departureSeconds) +
                       ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                     '. Correspondance au même arrêt GTFS, marche et circulation non vérifiées. Transport non confirmé — vérifiez vous-même.' :
-                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.');
+                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.');
               } else {
                 auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }

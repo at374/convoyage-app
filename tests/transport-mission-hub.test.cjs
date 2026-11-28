@@ -67,7 +67,9 @@ test('marches d’approche et finale ajoutées ; Réalisable avec 15 min de marg
 });
 
 test('marge insuffisante ou marche impossible => Transport non confirmé avec raison',async()=>{
- const task={label:'Aller',from:HOME,to:MISSION,latestArrival:at(8,40)};
+ // 28/11/2026 : plancher abaissé de 15 à 5 min (marginFor) — écart resserré (~3 min de marge réelle une fois
+ // la marche finale décomptée, toujours insuffisant) au lieu de ~6 min (qui serait désormais réalisable).
+ const task={label:'Aller',from:HOME,to:MISSION,latestArrival:at(8,37)};
  const j={source:'GTFS',sources:['GTFS'],legs:[bus(at(8,0),at(8,30),STOP1,STOP2)]};
  const x=H.assess(await H.completeWalks(j,task,fakeRouter()),task);
  assert.equal(x.feasible,false);assert.match(x.statusDetail,/marge insuffisante/);
@@ -75,9 +77,9 @@ test('marge insuffisante ou marche impossible => Transport non confirmé avec ra
  assert.equal(y.feasible,false);assert.match(y.statusDetail,/non calculée/);
 });
 
-test('marge réduite à 5 min seulement si GPS exact confirmé et autorisé',()=>{
- assert.equal(H.marginFor({}),15);
- assert.equal(H.marginFor({exactTarget:true}),15);
+test('marge plancher de 5 min pour toutes les missions (28/11/2026 : remplace le plancher de 15 min, qui ne descendait à 5 min que si GPS exact confirmé et autorisé)',()=>{
+ assert.equal(H.marginFor({}),5);
+ assert.equal(H.marginFor({exactTarget:true}),5);
  assert.equal(H.marginFor({exactTarget:true,allowShortMargin:true}),5);
  assert.equal(H.marginFor({marginMinutes:30}),30);
 });
@@ -177,8 +179,9 @@ test('session : moteurs en parallèle, ingestion GTFS, erreurs et moteurs ignor�
 });
 
 test('fenêtres de requête : aller en heure d’arrivée (limite − marge), retour en heure de départ',()=>{
- assert.deepEqual(H.queryWindow({latestArrival:at(9,0)}),{when:at(8,45),arriveBy:true});
- assert.deepEqual(H.queryWindow({earliestDeparture:at(17,0),latestArrival:at(19,0)}),{when:at(18,45),arriveBy:true});
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor).
+ assert.deepEqual(H.queryWindow({latestArrival:at(9,0)}),{when:at(8,55),arriveBy:true});
+ assert.deepEqual(H.queryWindow({earliestDeparture:at(17,0),latestArrival:at(19,0)}),{when:at(18,55),arriveBy:true});
  assert.equal(H.inSwissArea({lat:46.19,lon:6.23}),true,'Annemasse');
  assert.equal(H.inSwissArea({lat:45.76,lon:4.84}),false,'Lyon');
  assert.equal(H.inSwissArea({lat:45.90,lon:6.12}),false,'Annecy');
@@ -330,7 +333,9 @@ test('trois niveaux : horaire GTFS complet = « Horaire programmé », jamais «
  assert.equal(national.scheduled,true);
  const broken=H.assess({...ok,missing:['horaire GTFS local non confirmé en temps réel','marche jusqu’à l’adresse exacte d’arrivée non calculée']},task,null);
  assert.equal(broken.scheduled,false);assert.equal(broken.status,'Transport non confirmé');
- const late=H.assess({...ok,legs:[bus(at(9,10),at(9,25),STOP1,STOP2,{line:'L'})],missing:['horaire GTFS local non confirmé en temps réel']},task,null);
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor) — arrivée resserrée à 9h26 (4 min de marge,
+ // toujours insuffisant) au lieu de 9h25 (5 min, qui serait désormais tout juste suffisant).
+ const late=H.assess({...ok,legs:[bus(at(9,10),at(9,26),STOP1,STOP2,{line:'L'})],missing:['horaire GTFS local non confirmé en temps réel']},task,null);
  assert.equal(late.scheduled,false,'marge insuffisante : non confirmé');
  const full=H.assess({...ok,missing:[]},task,null);assert.equal(full.feasible,true);assert.equal(full.scheduled,false);
  const r=H.rank([broken,sched,full]);assert.equal(r.picks[0].journey.feasible,true);
@@ -446,9 +451,10 @@ test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une por
  assert.deepEqual(hub.ticketLinks(j).map(t=>t.label),['SNCF Connect']);
 });
 
-test('prise en charge : priorité à l’arrivée avec 15 minutes de marge même si départ minimal connu',()=>{
+test('prise en charge : priorité à l’arrivée avec marge même si départ minimal connu',()=>{
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor).
  const task={earliestDeparture:at(7,30),latestArrival:at(9,0)};
- assert.deepEqual(H.queryWindow(task),{when:at(8,45),arriveBy:true});
+ assert.deepEqual(H.queryWindow(task),{when:at(8,55),arriveBy:true});
 });
 test('jonction : départ minimal seul reste une recherche après livraison',()=>{
  const task={earliestDeparture:at(14,10)};
@@ -460,20 +466,24 @@ test('prise en charge : marge paramétrée de 30 minutes respectée',()=>{
 });
 
 test('jonction impossible : aucune recherche si la livraison dépasse la limite avec marge',()=>{
- assert.equal(H.queryWindow({earliestDeparture:at(8,50),latestArrival:at(9,0)}),null);
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor) — le départ minimal doit maintenant
+ // dépasser 8h55 (au lieu de 8h45) pour que la fenêtre soit jugée impossible.
+ assert.equal(H.queryWindow({earliestDeparture:at(8,57),latestArrival:at(9,0)}),null);
  assert.equal(H.queryWindow({earliestDeparture:at(8,45),latestArrival:at(9,0)}).arriveBy,true);
 });
 test('jonction multi-jours : ne pas rejeter un départ la veille si la marge reste possible',()=>{
  const w=H.queryWindow({earliestDeparture:at(18,0,'2026-11-16'),latestArrival:at(9,0,'2026-11-17')});
- assert.ok(w);assert.equal(w.arriveBy,true);assert.equal(w.when,at(8,45,'2026-11-17'));
+ assert.ok(w);assert.equal(w.arriveBy,true);assert.equal(w.when,at(8,55,'2026-11-17'));
 });
 
 test('jonction impossible : aucune requête fournisseur ni routage piéton',async()=>{
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor) — départ minimal resserré à 8h57 (au lieu
+ // de 8h50) pour que la fenêtre reste impossible.
  let providersCalled=0,walksCalled=0;
  const provider={name:'Réseau test',enabled:()=>true,run:async()=>{providersCalled++;return [];}};
  const router={route:async()=>{walksCalled++;return {status:'unavailable'};}};
  const session=H.createSession({
-  tasks:[{label:'Jonction',from:HOME,to:MISSION,earliestDeparture:at(8,50),latestArrival:at(9,0)}],
+  tasks:[{label:'Jonction',from:HOME,to:MISSION,earliestDeparture:at(8,57),latestArrival:at(9,0)}],
   providers:{test:provider},router
  });
  await new Promise(resolve=>setImmediate(resolve));
@@ -485,18 +495,21 @@ test('jonction impossible : aucune requête fournisseur ni routage piéton',asyn
  session.dispose();
 });
 
-test('jonction à pied : départ calculé pour arriver exactement avec 15 minutes de marge',async()=>{
+test('jonction à pied : départ calculé pour arriver exactement avec la marge requise',async()=>{
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor).
  const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
  const task={from:HOME,to:STOP1,earliestDeparture:at(8,0),latestArrival:at(9,0)};
  const walk=await H.walkOnly(task,router,3);
  assert.ok(walk);
- assert.equal(walk.legs[0].departure,at(8,35));
- assert.equal(walk.legs[0].arrival,at(8,45));
+ assert.equal(walk.legs[0].departure,at(8,45));
+ assert.equal(walk.legs[0].arrival,at(8,55));
  assert.equal(H.assess(walk,task).feasible,true);
 });
 test('jonction à pied : rejeter la marche si la livraison est trop tardive',async()=>{
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor) — départ minimal resserré à 8h50 (au lieu
+ // de 8h40) pour rester après le départ calculé (8h45).
  const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
- const task={from:HOME,to:STOP1,earliestDeparture:at(8,40),latestArrival:at(9,0)};
+ const task={from:HOME,to:STOP1,earliestDeparture:at(8,50),latestArrival:at(9,0)};
  assert.equal(await H.walkOnly(task,router,3),null);
 });
 
@@ -652,9 +665,11 @@ test('cars : privilégier le tarif vérifié le moins cher à faisabilité égal
 });
 
 test('moins cher : un trajet tarifé mais trop tardif ne reçoit pas cette recommandation',()=>{
+ // 28/11/2026 : plancher de marge abaissé de 15 à 5 min (marginFor) — arrivée resserrée à 8h56 (4 min de marge,
+ // toujours insuffisant) au lieu de 8h55 (5 min, qui serait désormais tout juste suffisant).
  const task={latestArrival:at(9,0)};
  const late=H.assess({source:'Tarif tardif',sources:['Tarif tardif'],missing:[],
-  legs:[bus(at(8,30),at(8,55),STOP1,STOP2,{line:'L',
+  legs:[bus(at(8,30),at(8,56),STOP1,STOP2,{line:'L',
    fare:{amount:1,currency:'EUR',source:'grille'}})]},task);
  const onTime=H.assess({source:'Tarif exploitable',sources:['Tarif exploitable'],missing:[],
   legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line:'M',
