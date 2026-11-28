@@ -3405,6 +3405,12 @@ const REMI_U_VACATIONS=[
  ['2026-10-17','2026-11-01'],['2026-12-19','2027-01-03'],['2027-02-20','2027-03-07'],
  ['2027-04-17','2027-05-02'],['2027-05-06','2027-05-07'],['2027-07-03','2027-08-31']
 ];
+function remiBookingDeadline(date){
+ const deadline=new Date(date);
+ const weekday=deadline.getUTCDay();
+ deadline.setUTCDate(deadline.getUTCDate()-({0:2,1:3}[weekday]||1));
+ return new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',weekday:'long',day:'numeric',month:'long'}).format(deadline);
+}
 function remiUVacationReference(task){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||!REMI_U_VACATIONS.some(([start,end])=>day>=start&&day<=end))return null;
@@ -3426,8 +3432,7 @@ function remiUVacationReference(task){
  const offset=eastToWest?[0,15,20,27,33,38,46,51]:[51,36,31,24,18,13,5,0];
  const departureMinutes=eastToWest?[570,735,1095]:[400,795,1035];
  const timetable=departureMinutes.map(t=>proximitiClock(t+offset[start])+'–'+proximitiClock(t+offset[end]));
- date.setUTCDate(date.getUTCDate()-(weekday===1?3:1));
- const deadline=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',weekday:'long',day:'numeric',month:'long'}).format(date);
+ const deadline=remiBookingDeadline(date);
  const direction=REMI_U_STOPS[start].name+' → '+REMI_U_STOPS[end].name;
  return {
   name:'Rémi 36 · ligne U · '+direction,
@@ -3438,12 +3443,55 @@ function remiUVacationReference(task){
   url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/fiche_horaire/REMI%2036%20-%20Fiche%20Horaires%202026-2027%20-%20Ligne%20U.pdf'
  };
 }
+// Ligne L 2026–2027 : la fiche donne une heure à Argenton et un symbole téléphone aux arrêts ruraux.
+const REMI_L_TOWNS=[
+ 'Mouhet','Beaulieu','Bonneuil','Tilly','La Châtre-l’Anglin','Saint-Benoît-du-Sault','Chaillac',
+ 'Lignac','Dunet','Saint-Hilaire-sur-Benaize','Mauvières','Bélâbre','Chalais','Prissac','Roussines',
+ 'Parnac','Saint-Gilles','Sacierges-Saint-Martin','Saint-Civran','Vigoux','Chazelet','Celon','Luzeret'
+];
+const REMI_L_HOLIDAYS=new Set([
+ '2026-11-01','2026-11-11','2026-12-25','2027-01-01','2027-03-29','2027-05-01',
+ '2027-05-06','2027-05-08','2027-05-17','2027-07-14','2027-08-15'
+]);
+function remiLReservationReference(task,a,b){
+ const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
+ if(!day||day<'2026-09-01'||day>'2027-08-31'||REMI_L_HOLIDAYS.has(day))return null;
+ const date=new Date(day+'T12:00:00Z'),weekday=date.getUTCDay();
+ if(weekday===0)return null;
+ const normalize=value=>' '+String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
+ const start=normalize(task.fromCity||task.from?.city||task.from?.town||a);
+ const end=normalize(task.toCity||task.to?.city||task.to?.town||b);
+ const arg=normalize('Argenton-sur-Creuse');
+ const outward=start.includes(arg);
+ if(outward===end.includes(arg))return null;
+ const rural=outward?end:start;
+ const townIndex=REMI_L_TOWNS.findIndex(town=>rural.includes(normalize(town)));
+ if(townIndex<0)return null;
+ const town=REMI_L_TOWNS[townIndex];
+ const timetable=outward?['11:30','18:15']:[
+  ...(weekday!==6?['07:20']:[]),'08:55',...([3,6].includes(weekday)?['14:30']:[])
+ ];
+ const schoolFriday=weekday===5&&day<='2027-07-02'&&!REMI_U_VACATIONS.some(([start,end])=>day>=start&&day<=end);
+ if(outward&&schoolFriday&&townIndex<=REMI_L_TOWNS.indexOf('Parnac'))timetable.push('20:45');
+ const direction=outward?'Argenton-sur-Creuse Gare → '+town:town+' → Argenton-sur-Creuse Gare';
+ return {
+  name:'Rémi 36 · ligne L · '+direction,
+  status:'Sur réservation · disponibilité à confirmer',
+  timetable,timetableDirection:direction,
+  timetableLabel:outward?'Départs de la gare d’Argenton-sur-Creuse':'Arrivées à la gare d’Argenton-sur-Creuse',
+  note:'Réservation téléphonique obligatoire avant 17 h le '+remiBookingDeadline(date)+'. Rémi confirme l’arrêt et l’heure du passage dans la commune. Consulter la fiche pour les services supplémentaires de veille de fête ou de vacances.',
+  phone:'0 806 70 33 33',
+  url:'https://bo.remi-centrevaldeloire.fr/sites/default/files/fiche_horaire/REMI%2036%20-%20Fiche%20Horaires%202026-2027%20-%20Ligne%20L.pdf'
+ };
+}
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
  for(const line of ['360','380'])base.push(...proximitiReferences(task||{},line));
  const remiU=remiUVacationReference(task||{});
  if(remiU)base.push(remiU);
+ const remiL=remiLReservationReference(task||{},a,b);
+ if(remiL)base.push(remiL);
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
