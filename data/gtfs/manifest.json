@@ -3,6 +3,7 @@
  "generatedAt": "2026-11-27T18:04:50.198760+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
+  "remi36-v-s": {"network":"Rémi 36 · lignes V et S","file":"remi36-v-s.zip","sha256":"2b36e17b1a9f89f6a9a43c0765ed33465c9e79cc24872faa5e73372479a90b16","bytes":36944,"origin":"https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip","bounds":[46.76,1.3,47.16,2.44],"agencies":["Rémi 36"],"routes":2,"trips":440,"stops":73,"fares":false},
   "remi36-u": {"network":"Rémi 36 · U Vierzon – Issoudun","file":"remi36-u.zip","sha256":"e331bc9249b374737f06589f54c17f16890cb8d72171fc373792438107b9c48b","bytes":6468,"origin":"https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip","bounds":[46.9,1.95,47.26,2.15],"agencies":["Rémi 36"],"routes":1,"trips":80,"stops":21,"fares":false},
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
