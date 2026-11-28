@@ -184,7 +184,13 @@
       const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
       ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
       if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
-      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?\s+(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
+      // 28/11/2026 (Laurent : trajet piéton vers « 43 Rue des Epinettes » alors que la bonne adresse est
+      // « 453 Rue des Epinettes », Chambéry 73) : quand le numéro est séparé du nom de la voie par une virgule
+      // ou un tiret (« 453, Rue des Epinettes », format fréquent des plateformes) au lieu d'une simple espace,
+      // cette extraction ne trouvait aucun numéro — et la vérification stricte du numéro renvoyé par le
+      // géocodeur (quelques lignes plus bas) était alors purement et simplement sautée, laissant passer
+      // n'importe quelle adresse plausible de la bonne rue, même avec un numéro différent de celui demandé.
+      const numero = sansLieu.match(/\b(\d{1,4})\s*(?:bis|ter)?(?:\s*[,\-–—]\s*|\s+)(?:rue|avenue|route|chemin|boulevard|bd|impasse|allée|allee|place|quai)\b/i);
       if (numero && x.cp) essais.push({ q: [sansLieu.replace(/\b\d{5}\b/g, ''), x.v].filter(Boolean).join(' '), commune: false, sansCP: true });
       if (numero) {
         const mots = norm(sansLieu.replace(/\b\d{5}\b/g, '')).replace(/\bd\s+(?=\w)/g, '').trim();
@@ -206,7 +212,7 @@
           if (numero && (precision !== 'adresse' || (f.properties.housenumber && String(f.properties.housenumber).match(/^\d+/)?.[0] !== numero[1]))) continue;
           if (numero && f.properties.street) {
             const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
-            const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0]);
+            const demandee = motsVoie(sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').replace(/^\s*[,\-–—]\s*/,'').split(/\b\d{5}\b|,/)[0]);
             const trouvee = motsVoie(f.properties.street);
             if (demandee && trouvee && demandee !== trouvee && !demandee.startsWith(trouvee+' ')) continue;
           }
@@ -216,7 +222,7 @@
       }
       if (numero) {
         const motsVoie = v => norm(v).replace(/\b(?:d|de|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
-        const rue = sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').split(/\b\d{5}\b|,/)[0].trim();
+        const rue = sansLieu.slice(numero.index + numero[0].indexOf(numero[1]) + numero[1].length).replace(/^\s*(?:bis|ter)\b/i,'').replace(/^\s*[,\-–—]\s*/,'').split(/\b\d{5}\b|,/)[0].trim();
         const communeOK = p => [p.city,p.municipality,p.oldcity].some(v => v && norm(v) === norm(x.v));
         const voieOK = v => !!v && motsVoie(v) === motsVoie(rue);
         const base = 'https://data.geopf.fr/geocodage/search?limit=5&q=';
