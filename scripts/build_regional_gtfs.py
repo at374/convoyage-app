@@ -81,6 +81,10 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    {'id': 'remi18-150-185', 'network': 'Rémi 18 · lignes 150 et 185',
+     'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
+     'pattern': r'remi\s*18', 'route_ids': {'REMI_18:Line:150', 'REMI_18:Line:185'},
+     'bounds': [46.52, 2.01, 47.27, 2.56], 'download_limit': 30_000_000},
     {'id': 'remi36-v-s', 'network': 'Rémi 36 · lignes V et S',
      'url': 'https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/REMI.zip',
      'pattern': r'remi\s*36', 'route_ids': {'REMI36:Line:V', 'REMI36:Line:S'},
