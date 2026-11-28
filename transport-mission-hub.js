@@ -1378,7 +1378,8 @@ function makeProviders(r,opts={}){
   };
 
  const fetcher=opts.fetcher||((url,init)=>gtfsCacheFetch(r,url,init));
- const P={};
+ const P={proximiti360:{name:'Proxim iTi Agile · ligne 360',enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!proximiti360Reference(task,endpointText(task.from),endpointText(task.to)),
+  disabledReason:'hors axe ou calendrier de la ligne 360',run:async task=>proximiti360Journeys(task)}};
  // 22/11/2026 (Laurent : blocages répétés de 30-40 s mesurés sur son téléphone, réseau très lent — 0 à 5 Ko/s
  // vu sur ses captures) : un seul incident du worker (erreur réseau pendant un téléchargement GTFS sur une
  // connexion instable, par exemple) mettait __cpHubWorkerOff à true DÉFINITIVEMENT pour le reste de la
@@ -2987,7 +2988,7 @@ function card(doc,j,labels,expanded=false,task=null){
     if(value)legTitle.textContent=legTitle.textContent.replace('terminus non renseigné','direction '+value);
    }).catch(()=>{});
   }
-  li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+durationText(l.delayMinutes):'')));
+  li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.agilePublishedDeparture?' · Heure à l’arrêt, départ affiché par l’opérateur à '+l.agilePublishedDeparture+' · arrivée au plus tard':'')+(l.delayMinutes?' · retard annoncé +'+durationText(l.delayMinutes):'')));
   if(l.kind==='scooter'){
    li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(l.speedKmh||j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
    const sm=mapSvg(doc,{legs:[l]});
@@ -3159,10 +3160,38 @@ const PROXIMITI_360=[
   ['08:57–09:37','11:57–12:37','14:57–15:37','17:57–18:37']
  ]
 ];
+const PROXIMITI_360_STATIONS=[
+ {name:'Bonneville Gare',lat:46.077887,lon:6.41667},
+ {name:'La Roche-sur-Foron Gare',lat:46.067986,lon:6.303527}
+];
+function proximiti360Journeys(task){
+ const origin=pt(task.from),destination=pt(task.to);
+ if(!origin||!destination)return [];
+ const reference=proximiti360Reference(task,endpointText(task.from),endpointText(task.to));
+ if(!reference)return [];
+ const [fromPoint,toPoint]=reference.outbound?PROXIMITI_360_STATIONS:[...PROXIMITI_360_STATIONS].reverse();
+ if(meters(origin,fromPoint)>2000||meters(destination,toPoint)>2000)return [];
+ const dateTime=clock=>Date.parse(reference.serviceDay+'T'+clock+':00+01:00');
+ const earliest=ms(task.earliestDeparture), latest=ms(task.latestArrival);
+ const journeys=[];
+ for(const time of reference.timetable){
+  const [publishedDeparture,maximumArrival]=time.split('–');
+  const ready=dateTime(publishedDeparture)-5*60000, arrival=dateTime(maximumArrival);
+  if(ready<earliest||arrival>latest-marginFor(task)*60000)continue;
+  journeys.push({
+   sources:['Proxim iTi Agile · ligne 360'],
+   missing:['Proxim iTi Agile : vérifier la course et la réservation éventuelle auprès de l’opérateur'],
+   legs:[{kind:'ride',mode:'bus',line:'360',provider:'Proxim iTi Agile',
+    from:fromPoint.name,to:toPoint.name,fromPoint,toPoint,
+    departure:new Date(ready).toISOString(),arrival:new Date(arrival).toISOString(),agilePublishedDeparture:publishedDeparture}]
+  });
+ }
+ return journeys;
+}
 function proximiti360Reference(task,a,b){
  const bonneville=/\bbonneville\b/i,laRoche=/\bla roche(?:[- ]sur[- ]foron|\b)/i;
  const closeTo=(point,stop)=>!!pt(point)&&meters(pt(point),stop)<=2000;
- const bonnevilleStop={lat:46.077887,lon:6.41667},laRocheStop={lat:46.067986,lon:6.303527};
+ const [bonnevilleStop,laRocheStop]=PROXIMITI_360_STATIONS;
  const outbound=(bonneville.test(a)||closeTo(task.from,bonnevilleStop))&&(laRoche.test(b)||closeTo(task.to,laRocheStop));
  const inbound=(laRoche.test(a)||closeTo(task.from,laRocheStop))&&(bonneville.test(b)||closeTo(task.to,bonnevilleStop));
  if(!outbound&&!inbound)return null;
@@ -3174,6 +3203,8 @@ function proximiti360Reference(task,a,b){
   name:'Proxim iTi Agile · ligne 360 · Bonneville ↔ La Roche-sur-Foron',
   status:'Horaires officiels à vérifier pour ce trajet',
   timetable,
+  serviceDay:day,
+  outbound,
   timetableDirection:outbound?'Bonneville Gare → La Roche-sur-Foron Gare':'La Roche-sur-Foron Gare → Bonneville Gare',
   note:timetable.length+' courses dans ce sens ce jour. Être à l’arrêt 5 min avant l’heure indiquée. Le bus peut passer dans les 15 min suivantes. Réservation obligatoire pour les arrêts sur demande et les correspondances garanties sur demande, au plus tard 30 min avant le départ.',
   url:'https://www.proximiti.fr/wp-content/uploads/2026/07/360-a-partir-du-24-08-2026.pdf',
