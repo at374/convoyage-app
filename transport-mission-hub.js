@@ -3180,7 +3180,8 @@ const PROXIMITI_STATIONS=[
  {name:'Bonneville Gare',lat:46.077887,lon:6.41667},
  {name:'La Roche-sur-Foron Gare',lat:46.067986,lon:6.303527},
  {name:'La Roche-sur-Foron Rochexpo',lat:46.071138,lon:6.306889},
- {name:'Amancy Chef-lieu',lat:46.073897,lon:6.329154}
+ {name:'Amancy Chef-lieu',lat:46.073897,lon:6.329154},
+ {name:'Bonneville Hôtel de Ville',lat:46.077575,lon:6.408054}
 ];
 function proximitiJourneys(task,line){
  const origin=pt(task.from),destination=pt(task.to);
@@ -3207,9 +3208,9 @@ function proximitiJourneys(task,line){
  return journeys;
 }
 function proximitiReference(task,a,b,line){
- const [bonnevilleStop,laRocheStop,rochexpoStop,amancyStop]=PROXIMITI_STATIONS;
+ const [bonnevilleStop,laRocheStop,rochexpoStop,amancyStop,townHall]=PROXIMITI_STATIONS;
  const closeTo=(point,stop)=>!!pt(point)&&meters(pt(point),stop)<=2000;
- const isBonneville=(point,text)=>/\bbonneville\b/i.test(text)||closeTo(point,bonnevilleStop);
+ const isBonneville=(point,text)=>/\bbonneville\b/i.test(text)||closeTo(point,bonnevilleStop)||closeTo(point,townHall);
  const availableStops=line==='380'?[laRocheStop,rochexpoStop,amancyStop]:[laRocheStop,rochexpoStop];
  const otherStop=(point,text)=>{
   const gps=pt(point);
@@ -3229,7 +3230,13 @@ function proximitiReference(task,a,b,line){
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||day<'2026-11-28'||day>'2026-12-13'||['2026-11-29','2026-12-06','2026-12-13'].includes(day))return null;
  const orange=['2026-11-28','2026-12-05','2026-12-12'].includes(day);
- const [fromPoint,toPoint]=outbound?[bonnevilleStop,stop]:[stop,bonnevilleStop];
+ const bonnevillePoint=pt(outbound?task.from:task.to);
+ const useTownHall=bonnevillePoint
+  ?meters(bonnevillePoint,townHall)<meters(bonnevillePoint,bonnevilleStop)
+  :/h[oô]tel de ville/i.test(outbound?a:b);
+ const bonneville=useTownHall?townHall:bonnevilleStop;
+ const [fromPoint,toPoint]=outbound?[bonneville,stop]:[stop,bonneville];
+
  const stationTimes=(line==='380'?PROXIMITI_380:PROXIMITI_360)[orange?1:0][outbound?1:0];
  // Écarts vérifiés sur chaque course de la fiche officielle, par rapport à la gare de La Roche.
  const [departureShift,arrivalShift]=stop===amancyStop?[7,-10]:stop===rochexpoStop?[1,-2]:[0,0];
@@ -3238,10 +3245,15 @@ function proximitiReference(task,a,b,line){
   const total=hour*60+minute+minutes;
   return [Math.floor(total/60),total%60].map(part=>String(part).padStart(2,'0')).join(':');
  };
- const timetable=stop!==laRocheStop?stationTimes.map(time=>{
+ // The last green-period 360 toward Bonneville Gare ends before the town hall.
+ const servesTownHall=useTownHall&&line==='360'&&!outbound&&!orange?stationTimes.slice(0,-1):stationTimes;
+ const [bonnevilleDeparture,bonnevilleArrival]=line==='360'?[-2,3]:[1,-2];
+ const timetable=servesTownHall.map(time=>{
   const [departure,arrival]=time.split('–');
-  return outbound?departure+'–'+shift(arrival,arrivalShift):shift(departure,departureShift)+'–'+arrival;
- }):stationTimes;
+  const departOffset=outbound?(useTownHall?bonnevilleDeparture:0):departureShift;
+  const arrivalOffset=outbound?arrivalShift:(useTownHall?bonnevilleArrival:0);
+  return shift(departure,departOffset)+'–'+shift(arrival,arrivalOffset);
+ });
  return {
   name:'Proxim iTi Agile · ligne '+line+(stop===amancyStop?' · Bonneville ↔ Amancy':' · Bonneville ↔ La Roche-sur-Foron'),
   status:'Horaires officiels à vérifier pour ce trajet',
