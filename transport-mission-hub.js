@@ -3178,14 +3178,15 @@ const PROXIMITI_380=[
 ];
 const PROXIMITI_STATIONS=[
  {name:'Bonneville Gare',lat:46.077887,lon:6.41667},
- {name:'La Roche-sur-Foron Gare',lat:46.067986,lon:6.303527}
+ {name:'La Roche-sur-Foron Gare',lat:46.067986,lon:6.303527},
+ {name:'La Roche-sur-Foron Rochexpo',lat:46.071138,lon:6.306889}
 ];
 function proximitiJourneys(task,line){
  const origin=pt(task.from),destination=pt(task.to);
  if(!origin||!destination)return [];
  const reference=proximitiReference(task,endpointText(task.from),endpointText(task.to),line);
  if(!reference)return [];
- const [fromPoint,toPoint]=reference.outbound?PROXIMITI_STATIONS:[...PROXIMITI_STATIONS].reverse();
+ const {fromPoint,toPoint}=reference;
  if(meters(origin,fromPoint)>2000||meters(destination,toPoint)>2000)return [];
  const dateTime=clock=>Date.parse(reference.serviceDay+'T'+clock+':00+01:00');
  const earliest=ms(task.earliestDeparture), latest=ms(task.latestArrival);
@@ -3205,23 +3206,39 @@ function proximitiJourneys(task,line){
  return journeys;
 }
 function proximitiReference(task,a,b,line){
- const bonneville=/\bbonneville\b/i,laRoche=/\bla roche(?:[- ]sur[- ]foron|\b)/i;
+ const bonneville=/\bbonneville\b/i,laRoche=/\bla roche(?:[- ]sur[- ]foron|\b)|\brochexpo\b/i;
  const closeTo=(point,stop)=>!!pt(point)&&meters(pt(point),stop)<=2000;
- const [bonnevilleStop,laRocheStop]=PROXIMITI_STATIONS;
- const outbound=(bonneville.test(a)||closeTo(task.from,bonnevilleStop))&&(laRoche.test(b)||closeTo(task.to,laRocheStop));
- const inbound=(laRoche.test(a)||closeTo(task.from,laRocheStop))&&(bonneville.test(b)||closeTo(task.to,bonnevilleStop));
+ const [bonnevilleStop,laRocheStop,rochexpoStop]=PROXIMITI_STATIONS;
+ const outbound=(bonneville.test(a)||closeTo(task.from,bonnevilleStop))&&(laRoche.test(b)||closeTo(task.to,laRocheStop)||closeTo(task.to,rochexpoStop));
+ const inbound=(laRoche.test(a)||closeTo(task.from,laRocheStop)||closeTo(task.from,rochexpoStop))&&(bonneville.test(b)||closeTo(task.to,bonnevilleStop));
  if(!outbound&&!inbound)return null;
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||day<'2026-11-28'||day>'2026-12-13'||['2026-11-29','2026-12-06','2026-12-13'].includes(day))return null;
  const orange=['2026-11-28','2026-12-05','2026-12-12'].includes(day);
- const timetable=(line==='380'?PROXIMITI_380:PROXIMITI_360)[orange?1:0][outbound?1:0];
+ const point=pt(outbound?task.to:task.from);
+ const atRochexpo=point?meters(point,rochexpoStop)<meters(point,laRocheStop):/\brochexpo\b/i.test(outbound?b:a);
+ const rocheStop=atRochexpo?rochexpoStop:laRocheStop;
+ const [fromPoint,toPoint]=outbound?[bonnevilleStop,rocheStop]:[rocheStop,bonnevilleStop];
+ const stationTimes=(line==='380'?PROXIMITI_380:PROXIMITI_360)[orange?1:0][outbound?1:0];
+ // The official 360 and 380 grids both give Rochexpo one minute later toward Bonneville
+ // and two minutes earlier toward La Roche, for every displayed course in both periods.
+ const shift=(clock,minutes)=>{
+  const [hour,minute]=clock.split(':').map(Number);
+  const total=hour*60+minute+minutes;
+  return [Math.floor(total/60),total%60].map(part=>String(part).padStart(2,'0')).join(':');
+ };
+ const timetable=atRochexpo?stationTimes.map(time=>{
+  const [departure,arrival]=time.split('–');
+  return outbound?departure+'–'+shift(arrival,-2):shift(departure,1)+'–'+arrival;
+ }):stationTimes;
  return {
   name:'Proxim iTi Agile · ligne '+line+' · Bonneville ↔ La Roche-sur-Foron',
   status:'Horaires officiels à vérifier pour ce trajet',
   timetable,
   serviceDay:day,
-  outbound,
-  timetableDirection:outbound?'Bonneville Gare → La Roche-sur-Foron Gare':'La Roche-sur-Foron Gare → Bonneville Gare',
+  fromPoint,
+  toPoint,
+  timetableDirection:fromPoint.name+' → '+toPoint.name,
   note:timetable.length+' courses dans ce sens ce jour. Être à l’arrêt 5 min avant l’heure indiquée. Le bus peut passer dans les 15 min suivantes. Réservation obligatoire pour les arrêts sur demande et les correspondances garanties sur demande, au plus tard 30 min avant le départ.',
   url:'https://www.proximiti.fr/wp-content/uploads/2026/07/'+line+'-a-partir-du-24-08-2026.pdf',
   bookingUrl:'https://www.proximiti.fr/vos-deplacements/itineraire-enregistrement/',
