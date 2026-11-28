@@ -1378,8 +1378,13 @@ function makeProviders(r,opts={}){
   };
 
  const fetcher=opts.fetcher||((url,init)=>gtfsCacheFetch(r,url,init));
- const P={proximiti360:{name:'Proxim iTi Agile · ligne 360',enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!proximiti360Reference(task,endpointText(task.from),endpointText(task.to)),
-  disabledReason:'hors axe ou calendrier de la ligne 360',run:async task=>proximiti360Journeys(task)}};
+ const P={};
+ for(const line of ['360','380'])P['proximiti'+line]={
+  name:'Proxim iTi Agile · ligne '+line,
+  enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!proximitiReference(task,endpointText(task.from),endpointText(task.to),line),
+  disabledReason:'hors axe ou calendrier de la ligne '+line,
+  run:async task=>proximitiJourneys(task,line)
+ };
  // 22/11/2026 (Laurent : blocages répétés de 30-40 s mesurés sur son téléphone, réseau très lent — 0 à 5 Ko/s
  // vu sur ses captures) : un seul incident du worker (erreur réseau pendant un téléchargement GTFS sur une
  // connexion instable, par exemple) mettait __cpHubWorkerOff à true DÉFINITIVEMENT pour le reste de la
@@ -3160,16 +3165,27 @@ const PROXIMITI_360=[
   ['08:57–09:37','11:57–12:37','14:57–15:37','17:57–18:37']
  ]
 ];
-const PROXIMITI_360_STATIONS=[
+// Fiche officielle 380, pages 2 à 7 : départ indiqué et arrivée maximale, de gare à gare.
+const PROXIMITI_380=[
+ [
+  ['05:41–06:17','06:41–07:17','07:41–08:17','08:41–09:17','10:41–11:17','12:41–13:17','14:41–15:17','15:41–16:17','16:41–17:17','17:41–18:17','18:41–19:17','19:41–20:17'],
+  ['05:42–06:17','06:42–07:17','07:42–08:17','08:42–09:17','10:42–11:17','12:42–13:17','14:42–15:17','15:42–16:17','16:42–17:17','17:42–18:17','18:42–19:17','19:42–20:17']
+ ],
+ [
+  ['09:42–10:16','12:42–13:16','15:42–16:16','18:42–19:16'],
+  ['07:42–08:19','10:42–11:19','13:42–14:19','16:42–17:19']
+ ]
+];
+const PROXIMITI_STATIONS=[
  {name:'Bonneville Gare',lat:46.077887,lon:6.41667},
  {name:'La Roche-sur-Foron Gare',lat:46.067986,lon:6.303527}
 ];
-function proximiti360Journeys(task){
+function proximitiJourneys(task,line){
  const origin=pt(task.from),destination=pt(task.to);
  if(!origin||!destination)return [];
- const reference=proximiti360Reference(task,endpointText(task.from),endpointText(task.to));
+ const reference=proximitiReference(task,endpointText(task.from),endpointText(task.to),line);
  if(!reference)return [];
- const [fromPoint,toPoint]=reference.outbound?PROXIMITI_360_STATIONS:[...PROXIMITI_360_STATIONS].reverse();
+ const [fromPoint,toPoint]=reference.outbound?PROXIMITI_STATIONS:[...PROXIMITI_STATIONS].reverse();
  if(meters(origin,fromPoint)>2000||meters(destination,toPoint)>2000)return [];
  const dateTime=clock=>Date.parse(reference.serviceDay+'T'+clock+':00+01:00');
  const earliest=ms(task.earliestDeparture), latest=ms(task.latestArrival);
@@ -3179,35 +3195,35 @@ function proximiti360Journeys(task){
   const ready=dateTime(publishedDeparture)-5*60000, arrival=dateTime(maximumArrival);
   if(ready<earliest||arrival>latest-marginFor(task)*60000)continue;
   journeys.push({
-   sources:['Proxim iTi Agile · ligne 360'],
+   sources:[reference.name],
    missing:['Proxim iTi Agile : vérifier la course et la réservation éventuelle auprès de l’opérateur'],
-   legs:[{kind:'ride',mode:'bus',line:'360',provider:'Proxim iTi Agile',
+   legs:[{kind:'ride',mode:'bus',line,provider:'Proxim iTi Agile',
     from:fromPoint.name,to:toPoint.name,fromPoint,toPoint,
     departure:new Date(ready).toISOString(),arrival:new Date(arrival).toISOString(),agilePublishedDeparture:publishedDeparture}]
   });
  }
  return journeys;
 }
-function proximiti360Reference(task,a,b){
+function proximitiReference(task,a,b,line){
  const bonneville=/\bbonneville\b/i,laRoche=/\bla roche(?:[- ]sur[- ]foron|\b)/i;
  const closeTo=(point,stop)=>!!pt(point)&&meters(pt(point),stop)<=2000;
- const [bonnevilleStop,laRocheStop]=PROXIMITI_360_STATIONS;
+ const [bonnevilleStop,laRocheStop]=PROXIMITI_STATIONS;
  const outbound=(bonneville.test(a)||closeTo(task.from,bonnevilleStop))&&(laRoche.test(b)||closeTo(task.to,laRocheStop));
  const inbound=(laRoche.test(a)||closeTo(task.from,laRocheStop))&&(bonneville.test(b)||closeTo(task.to,bonnevilleStop));
  if(!outbound&&!inbound)return null;
  const day=parisDayParts(task.latestArrival||task.earliestDeparture)?.day;
  if(!day||day<'2026-11-28'||day>'2026-12-13'||['2026-11-29','2026-12-06','2026-12-13'].includes(day))return null;
  const orange=['2026-11-28','2026-12-05','2026-12-12'].includes(day);
- const timetable=PROXIMITI_360[orange?1:0][outbound?1:0];
+ const timetable=(line==='380'?PROXIMITI_380:PROXIMITI_360)[orange?1:0][outbound?1:0];
  return {
-  name:'Proxim iTi Agile · ligne 360 · Bonneville ↔ La Roche-sur-Foron',
+  name:'Proxim iTi Agile · ligne '+line+' · Bonneville ↔ La Roche-sur-Foron',
   status:'Horaires officiels à vérifier pour ce trajet',
   timetable,
   serviceDay:day,
   outbound,
   timetableDirection:outbound?'Bonneville Gare → La Roche-sur-Foron Gare':'La Roche-sur-Foron Gare → Bonneville Gare',
   note:timetable.length+' courses dans ce sens ce jour. Être à l’arrêt 5 min avant l’heure indiquée. Le bus peut passer dans les 15 min suivantes. Réservation obligatoire pour les arrêts sur demande et les correspondances garanties sur demande, au plus tard 30 min avant le départ.',
-  url:'https://www.proximiti.fr/wp-content/uploads/2026/07/360-a-partir-du-24-08-2026.pdf',
+  url:'https://www.proximiti.fr/wp-content/uploads/2026/07/'+line+'-a-partir-du-24-08-2026.pdf',
   bookingUrl:'https://www.proximiti.fr/vos-deplacements/itineraire-enregistrement/',
   phone:'04 50 62 29 39'
  };
@@ -3215,8 +3231,10 @@ function proximiti360Reference(task,a,b){
 function tadFor(task){
  const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
  const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
- const proximiti=proximiti360Reference(task||{},a,b);
- if(proximiti)base.push(proximiti);
+ for(const line of ['360','380']){
+  const reference=proximitiReference(task||{},a,b,line);
+  if(reference)base.push(reference);
+ }
  const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
  if(pipa){
   if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
