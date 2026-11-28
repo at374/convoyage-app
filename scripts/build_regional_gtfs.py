@@ -58,6 +58,8 @@ EXTRACT = [
     {'id': 'smtut-thiers', 'network': 'SMTUT Thiers', 'pattern': '\\bthiers\\b', 'bounds': [45.69, 3.36, 46.03, 3.74]},
     {'id': 'mobivie-vichy', 'network': 'MobiVie Vichy', 'pattern': '\\bvichy\\b', 'bounds': [46.06, 3.37, 46.17, 3.49]},
     {'id': 'le37-roussillon', 'network': 'Le 37 Péage-de-Roussillon', 'pattern': 'peage-de-roussillon', 'bounds': [45.3, 4.75, 45.47, 5.07]},
+    # 28/11/2026 : présente dans l'agrégat (oura-agencies.json) mais jamais extraite.
+    {'id': 'navette-panoramique-domes', 'network': 'Navette Panoramique des Dômes', 'pattern': 'panoramique des domes', 'bounds': [45.72, 2.90, 45.83, 3.15]},
 ]
 # Flux propres recopiés tels quels (après validation).
 # Flux trop lourds pour être recopiés tels quels : réduits à une zone géographique (bbox sur stops.txt)
@@ -133,8 +135,10 @@ FILTERED_MIRROR = [
      'pattern': r'remi\s*36', 'route_ids': {'REMI36:Line:U'},
      'bounds': [46.90, 1.95, 47.26, 2.15], 'download_limit': 30_000_000},
     # Nice : le zip d'origine est en ZIP64 (illisible sur le téléphone) → recompressé via le filtre d'emprise.
+    # 28/11/2026 : la nouvelle publication pesait 93 Mo décompressés (stop_times.txt), refusés par le chargeur
+    # (64 Mo) -> identifiants de courses courts et colonnes inutiles retirées (mêmes courses, mêmes horaires, ~34 Mo).
     {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'url': 'https://transport.data.gouv.fr/resources/83178/download',
-     'bounds': [43.55, 7.0, 43.9, 7.5], 'download_limit': 60 * 1024 * 1024},
+     'bounds': [43.55, 7.0, 43.9, 7.5], 'slim': True, 'compact_ids': 'laz', 'download_limit': 60 * 1024 * 1024},
     # RTM Marseille : 69 Mo décompressés (51 000 courses) → centre-ville + courses des 45 prochains jours seulement.
     {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download',
      'bounds': [43.25, 5.33, 43.34, 5.46], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
@@ -349,6 +353,10 @@ MIRROR = [
      'url': 'https://static.data.gouv.fr/resources/offre-de-transport-de-la-c-a-beaune-cote-sud-gtfs/20251230-134445/gtfs-30-12-2025-04-15.zip', 'bounds': [46.92, 4.70, 47.12, 4.95]},
     {'id': 'taneo-nevers', 'network': "Tanéo (Nevers Agglomération)",
      'url': 'https://static.data.gouv.fr/resources/versions-des-horaires-theoriques-des-lignes-du-reseau-de-bus-au-format-gtfs/20260907-053329/gtfs-2026-09-v2.zip', 'bounds': [46.92, 3.05, 47.08, 3.28]},
+    # 28/11/2026 : voisin de la Drôme. Jeu officiel « Réseau urbain TCVO » (transport.data.gouv.fr, ressource 82715,
+    # ODbL + conditions particulières), calendrier du 01/09/2026 au 31/08/2027.
+    {'id': 'tcvo-orange', 'network': 'TCVO (Orange)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/d6c75600-f730-421e-93df-74a143d3e723', 'bounds': [44.05, 4.70, 44.22, 4.92]},
     {'id': 'orizo-avignon', 'network': 'Orizo (Grand Avignon)', 'dataset': 'gtfs-et-gtfs-rt-reseau-orizo-grand-avignon',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/40b26c33-9be2-47ea-a46c-8bda9f63273e', 'bounds': [43.85, 4.7, 44.05, 4.95]},
     {'id': 'agglo-bus-gap', 'network': "L'Agglo en Bus (Gap)", 'dataset': 'horaires-theoriques-et-temps-reels-du-reseau-de-transports-lagglo-en-bus-communaute-dagglomeration-gap-tallard-durance',
